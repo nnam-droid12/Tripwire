@@ -21,3 +21,4 @@ Thumbs.db
 .vscode/
 .idea/
 eval/scenarios/audio/
+config/tripwire.json

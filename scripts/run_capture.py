@@ -48,13 +48,14 @@ def build_watchers(bus: EventBus, args: argparse.Namespace) -> list[threading.Th
     return watchers
 
 
-def run_until_stopped(watchers: list[threading.Thread], seconds: float) -> None:
-    """Start watchers, wait for the deadline or Ctrl+C, then stop them cleanly."""
+def run_until_stopped(watchers: list[threading.Thread], seconds: float, stop: threading.Event | None = None) -> None:
+    """Start watchers, wait for the deadline, Ctrl+C or ``stop``, then stop them cleanly."""
+    stop = stop or threading.Event()
     for w in watchers:
         w.start()
     deadline = time.time() + seconds if seconds else None
     try:
-        while deadline is None or time.time() < deadline:
+        while (deadline is None or time.time() < deadline) and not stop.is_set():
             time.sleep(0.2)
     except KeyboardInterrupt:
         pass

@@ -93,6 +93,7 @@ class Orchestrator:
         self.log = log
         self.analyze_screen = analyze_screen
         self.action = Action.LOG
+        self.paused = False  # set from the tray; capture keeps running but nothing is analysed
         self.verdicts: list[Verdict] = []
         self.decisions: list[tuple[Action, Verdict]] = []
         self._screen_worker = _Worker("screen-analyst", self._analyze_frame, self._error, latest_only=True)
@@ -115,6 +116,8 @@ class Orchestrator:
     # -- routing -------------------------------------------------------------------
 
     def handle(self, event: Event) -> None:
+        if self.paused and event.source != "intervention":
+            return
         if event.source == "screen" and event.kind == "frame_kept":
             if self.analyze_screen:
                 self._screen_worker.submit(event)
@@ -122,6 +125,8 @@ class Orchestrator:
             self._call_worker.submit(event)
         elif event.source in ("process", "network", "clipboard"):
             self._apply_tier0(event)
+        elif event.source == "intervention":
+            self.case.note("intervention", event.data.get("summary", event.kind), ts=event.ts)
 
     def _apply_tier0(self, event: Event) -> None:
         summary = event.data.get("summary", event.kind)
@@ -155,6 +160,10 @@ class Orchestrator:
     def _on_case_update(self, update: CaseUpdate) -> None:
         if self.action < Action.HARD_STOP and self.policy.should_judge(update.confidence, len(update.stages_present)):
             self._judge_worker.submit(Event("judge", "request", {"tier1_confidence": update.confidence}))
+
+    def reset_action(self, to: Action = Action.NUDGE) -> None:
+        """After a hard stop is dismissed: let fresh evidence escalate again."""
+        self.action = min(self.action, to)
 
     def _run_judge(self, _request: Event) -> None:
         if self.action == Action.HARD_STOP:

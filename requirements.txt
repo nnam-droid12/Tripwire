@@ -8,4 +8,5 @@ numpy>=1.26
 sounddevice>=0.4
 psutil>=5.9
 pywin32>=306; sys_platform == "win32"
+pystray>=0.19
 pytest>=8

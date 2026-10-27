@@ -36,6 +36,7 @@ from core.config import LOGS_DIR, REPO_ROOT
 from core.events import Event, EventBus
 from core.orchestrator import Orchestrator
 from core.policy import Action, EscalationPolicy, Verdict
+from analysts.interventionist import Interventionist
 
 SCENARIOS = REPO_ROOT / "eval" / "scenarios"
 SPEAKER_LABELS = {"caller": "A", "senior": "B"}
@@ -112,7 +113,16 @@ def publish_item(bus: EventBus, item: TimedItem) -> None:
         bus.publish(Event("audio", "transcript", {**p, "summary": f'Speaker {p["speaker"]}: "{p["text"]}"'}))
 
 
-def replay(scenario_path: Path, mode: str = "text", speed: float = 1.0, log=print, policy: EscalationPolicy | None = None) -> ReplayResult:
+def replay(
+    scenario_path: Path,
+    mode: str = "text",
+    speed: float = 1.0,
+    log=print,
+    policy: EscalationPolicy | None = None,
+    interventions: str = "off",
+    kill_only: set[str] | None = None,
+    overlay_seconds: float | None = None,
+) -> ReplayResult:
     """Run one scenario end to end; return the CaseFile, verdicts and final action."""
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
     bus = EventBus(LOGS_DIR / f"replay_{scenario['name']}_{int(time.time())}.jsonl")
@@ -121,6 +131,15 @@ def replay(scenario_path: Path, mode: str = "text", speed: float = 1.0, log=prin
     case.on_update(lambda u: log(format_update(u)))
     bus.subscribe(lambda e: log(e.summary()))
     orchestrator.start()
+    interventionist = None
+    if interventions != "off":
+        # replayed AnyDesk events are synthetic, so only explicitly named stand-in exes may be killed
+        interventionist = Interventionist(
+            bus, case, orchestrator, kill_mode="live" if interventions == "live" else "dry",
+            kill_only=kill_only or set(), extra_tools={exe: f"{exe} (stand-in)" for exe in (kill_only or set())},
+            overlay_auto_hide_s=overlay_seconds,
+        )
+        interventionist.start()
 
     audio: AudioWatcher | None = None
     if mode == "audio":
@@ -145,7 +164,12 @@ def replay(scenario_path: Path, mode: str = "text", speed: float = 1.0, log=prin
             audio.start()
         audio.join()
     orchestrator.drain()
-    return ReplayResult(scenario, case, orchestrator.action, orchestrator.verdicts, orchestrator.decisions)
+    if interventionist:
+        time.sleep(overlay_seconds or 0)  # let the warning finish speaking / showing
+        interventionist.stop()
+    # the highest action reached counts, even if the warning was later dismissed
+    peak = max((a for a, _ in orchestrator.decisions), default=Action.LOG)
+    return ReplayResult(scenario, case, peak, orchestrator.verdicts, orchestrator.decisions)
 
 
 def _sleep_until(t0: float, target: float) -> None:
@@ -190,13 +214,19 @@ def main() -> None:
     parser.add_argument("--speed", type=float, default=1.0, help="time compression for text mode")
     parser.add_argument("--quiet", action="store_true", help="only print verdicts and the summary")
     parser.add_argument("--always-judge", action="store_true", help="stress test: send every CaseFile update to the judge")
+    parser.add_argument("--interventions", choices=("off", "dry", "live"), default="off", help="show the warning, speak, and (live) terminate stand-in processes")
+    parser.add_argument("--kill-only", action="append", default=[], help="exe name the hard stop may terminate (stand-in for AnyDesk in demos)")
+    parser.add_argument("--overlay-seconds", type=float, default=None, help="auto-hide the warning after N seconds (demos/tests only)")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
     log = partial(print, flush=True)
     results = []
     for path in args.scenarios:
         policy = EscalationPolicy(judge_min_confidence=0.0, judge_min_stages=0) if args.always_judge else None
-        result = replay(path, args.mode, args.speed, (lambda _: None) if args.quiet else log, policy)
+        result = replay(
+            path, args.mode, args.speed, (lambda _: None) if args.quiet else log, policy,
+            args.interventions, set(args.kill_only), args.overlay_seconds,
+        )
         log(f"\n##### {result.scenario['name']}")
         if not args.quiet:
             print_casefile(result.case, log)

@@ -1,0 +1,11 @@
+{
+  "family_name": "David",
+  "protected_name": "Margaret",
+  "trusted_remote_ids": {
+    "AnyDesk": ["123456789"]
+  },
+  "pin_salt": "",
+  "pin_hash": "",
+  "cooldown_s": 60,
+  "kill_remote_on_hard_stop": true
+}

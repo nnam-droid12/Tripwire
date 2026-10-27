@@ -15,7 +15,9 @@ from dataclasses import dataclass
 
 import psutil
 
+from agent.allowlist import latest_incoming_id
 from core.events import Event, EventBus
+from core.settings import Settings, mask_id
 
 # Executable name (lower-case) -> product name. Covers the tools most often
 # abused in tech-support scams, plus Windows' built-in Quick Assist and
@@ -72,14 +74,27 @@ class ProcessWatcher(threading.Thread):
     corroborates it by seeing the session window.
 
     Inbound Windows Remote Desktop (local port 3389) is reported directly.
+
+    Family allowlist: when a session starts, the remote party's ID is read
+    from the tool's connection log (``agent/allowlist.py``). A registered
+    family ID produces ``trusted_remote_session`` instead, which is not
+    scam evidence.
     """
 
-    def __init__(self, bus: EventBus, interval_s: float = 1.0, settle_s: float = 15.0, extra_tools: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        bus: EventBus,
+        interval_s: float = 1.0,
+        settle_s: float = 15.0,
+        extra_tools: dict[str, str] | None = None,
+        settings: Settings | None = None,
+    ) -> None:
         super().__init__(name="process-watcher", daemon=True)
         self.bus = bus
         self.interval_s = interval_s
         self.settle_s = settle_s
         self.extra_tools = {k.lower(): v for k, v in (extra_tools or {}).items()}
+        self.settings = settings or Settings.load()
         self._halt = threading.Event()
         self._seen: dict[int, dict] = {}  # pid -> {tool, first_seen, baseline, session}
         self._rdp_active = False
@@ -127,9 +142,7 @@ class ProcessWatcher(threading.Thread):
             new = endpoints - (info["baseline"] or set())
             if new and not info["session"]:
                 info["session"] = True
-                self.bus.publish(
-                    Event("network", "remote_session_suspected", {"tool": info["tool"], "pid": pid, "new_endpoints": len(new), "summary": f"{info['tool']} opened {len(new)} new remote connection(s): possible live session"})
-                )
+                self.bus.publish(session_event(info["tool"], pid, len(new), self.settings))
             elif not new and info["session"]:
                 info["session"] = False
                 self.bus.publish(Event("network", "remote_session_ended", {"tool": info["tool"], "pid": pid, "summary": f"{info['tool']} session connections closed"}))
@@ -144,6 +157,19 @@ class ProcessWatcher(threading.Thread):
             self._rdp_active = active
             kind = "remote_session_suspected" if active else "remote_session_ended"
             self.bus.publish(Event("network", kind, {"tool": "Windows Remote Desktop", "summary": f"inbound Remote Desktop {'connected' if active else 'disconnected'}"}))
+
+
+def session_event(tool: str, pid: int, new_endpoints: int, settings: Settings) -> Event:
+    """``remote_session_suspected``, or ``trusted_remote_session`` for an allowlisted remote ID."""
+    remote_id = latest_incoming_id(tool) if tool in ("AnyDesk", "TeamViewer") else None
+    who = f"remote ID {mask_id(remote_id)}"
+    if settings.is_trusted(tool, remote_id):
+        return Event("network", "trusted_remote_session", {"tool": tool, "pid": pid, "remote_id": mask_id(remote_id), "summary": f"{tool} session from trusted family {who}"})
+    return Event(
+        "network",
+        "remote_session_suspected",
+        {"tool": tool, "pid": pid, "new_endpoints": new_endpoints, "remote_id": mask_id(remote_id), "summary": f"{tool} opened {new_endpoints} new remote connection(s), {who}: possible live session"},
+    )
 
 
 # -- clipboard -------------------------------------------------------------------

@@ -1,7 +1,7 @@
 {
   "name": "scam_pc_safeguard",
   "label": "scam",
-  "description": "Classic tech-support + refund scam: fake 'PC SafeGuard' pop-up, caller posing as Microsoft, AnyDesk install, bank login under remote control, fake overpayment, gift cards, secrecy coaching. All brands except the impersonated 'Microsoft' are fictional.",
+  "description": "Classic tech-support + refund scam: fake 'PC SafeGuard' pop-up, caller posing as Microsoft, AnyDesk install, bank login under remote control, fake overpayment, gift cards, secrecy coaching. All brands except the impersonated 'Microsoft' are fictional. Ends with the caller telling her to close Tripwire's warning.",
   "expected": {
     "min_action": "hard_stop"
   },
@@ -54,6 +54,10 @@
     {
       "speaker": "caller",
       "text": "No, no. Do not tell the bank, they are part of the investigation. If the teller asks, say it is a present for your grandchildren."
+    },
+    {
+      "speaker": "caller",
+      "text": "Ma'am, that red screen is the virus talking. Just close that box and stay on the line with me."
     }
   ],
   "events": [

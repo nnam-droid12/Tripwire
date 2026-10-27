@@ -4,7 +4,7 @@ Tripwire is an AI agent that runs on an older person's Windows laptop. It watche
 
 Built for the Meta Global AI Developer Hackathon (indie track). Everything in this repository was written during the event.
 
-> Status: early build. Stage D done: the Tier-2 CaseJudge issues verdicts; the scripted scam reaches hard_stop and benign look-alikes do not.
+> Status: early build. Stage E done: graduated interventions (spoken nudge; full-screen hard stop that speaks, ends remote access and resists being closed).
 
 ## How it works
 
@@ -89,10 +89,33 @@ python -m eval.replay eval/scenarios/benign_*.json --speed 3 --quiet --always-ju
 | `benign_grandson_banking` | benign | log | Grandson asks her to log in to her bank; judge (forced): not a scam, 0.90 |
 | `benign_family_remote_help` | benign | log | Son fixes the printer over AnyDesk; judge (forced): not a scam, 0.90 |
 | `benign_antivirus_alert` | benign | log | "Threat blocked, no action needed" pop-up; no signals raised |
+| `benign_family_allowlisted` | benign | log | Same printer fix, son's AnyDesk ID on the family allowlist |
 
 Four hand-written scenarios are a smoke test, not an evaluation; Stage G adds a larger set and detection/false-alarm/time-to-detection metrics.
 
-Run live with `python -m scripts.run_tripwire`.
+## Interventions
+
+| Action | What happens |
+|---|---|
+| log | Written to the session log only |
+| nudge | One calm sentence spoken aloud, e.g. "Just so you know, Microsoft never phones people about viruses." |
+| hard_stop | Full-screen warning, spoken aloud; remote-access tools terminated; family alert queued |
+
+The hard stop is built to resist the scammer:
+
+- It cannot be closed with Alt+F4 and stays on top. It is dismissed with the family PIN, or by the senior after a 60-second cooldown.
+- If the caller says "close that box" or "uninstall it" while it is up, the cooldown restarts and Tripwire says so out loud.
+- Pausing or quitting from the tray icon needs the family PIN and is refused during an alert.
+- Legitimate family help is allowlisted by the helper's AnyDesk/TeamViewer ID, read from the tool's connection log.
+
+```bash
+python -m scripts.set_pin --family-name David --trust AnyDesk:123456789   # PIN prompt; stored hashed in config/tripwire.json
+python -m eval.replay eval/scenarios/scam_pc_safeguard.json --speed 2 --interventions live --kill-only notepad.exe --overlay-seconds 30
+```
+
+The second command replays the scam with real interventions, using Notepad as a stand-in for AnyDesk. Start Notepad first.
+
+Run live with `python -m scripts.run_tripwire` (tray icon, interventions on).
 
 ## Safety
 
@@ -102,4 +125,4 @@ Run live with `python -m scripts.run_tripwire`.
 
 ## Open-source libraries
 
-`openai`, `python-dotenv`, `websockets`, `mss`, `pillow`, `imagehash`, `numpy`, `sounddevice`, `psutil`, `pywin32`, `pytest`.
+`openai`, `python-dotenv`, `websockets`, `mss`, `pillow`, `imagehash`, `numpy`, `sounddevice`, `psutil`, `pywin32`, `pystray`, `pytest`.

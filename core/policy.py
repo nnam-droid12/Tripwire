@@ -43,6 +43,7 @@ class Verdict:
     reasons: list[dict[str, str]]
     recommended_action: Action
     family_message: str
+    senior_message: str = ""
     tier1_confidence: float = 0.0
     ts: float = field(default_factory=time.time)
 
@@ -54,6 +55,7 @@ class Verdict:
             "reasons": self.reasons,
             "recommended_action": self.recommended_action.label,
             "family_message": self.family_message,
+            "senior_message": self.senior_message,
             "tier1_confidence": self.tier1_confidence,
             "ts": self.ts,
         }
