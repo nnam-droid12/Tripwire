@@ -29,6 +29,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from functools import partial
+from typing import Callable
 from pathlib import Path
 
 from agent.capture_audio import AudioWatcher, wav_frames
@@ -139,6 +140,8 @@ def replay(
     kill_only: set[str] | None = None,
     overlay_seconds: float | None = None,
     report: bool = False,
+    on_item: Callable[[TimedItem], None] | None = None,
+    on_call_start: Callable[[], None] | None = None,
 ) -> ReplayResult:
     """Run one scenario end to end; return the CaseFile, verdicts and final action."""
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
@@ -176,17 +179,27 @@ def replay(
     log(f"=== replaying {scenario['name']} ({scenario['label']}) mode={mode} speed={speed} ===")
     t0 = time.monotonic()
     started_wall = time.time()
-    audio_started = False
+    call_started = False
+    call_start = scenario.get("call_start", 0)
+
+    def start_call() -> None:
+        if audio:
+            audio.start()
+        if on_call_start:  # e.g. the demo plays the call through the speakers
+            on_call_start()
+
     for item in build_timeline(scenario, mode):
-        if audio and not audio_started and item.t >= scenario.get("call_start", 0):
-            _sleep_until(t0, scenario.get("call_start", 0) / speed)
-            audio.start()
-            audio_started = True
+        if not call_started and item.t >= call_start:
+            _sleep_until(t0, call_start / speed)
+            start_call()
+            call_started = True
         _sleep_until(t0, item.t / speed)
+        if on_item:  # e.g. the demo shows the frame on the real screen
+            on_item(item)
         publish_item(bus, item)
+    if not call_started:
+        start_call()
     if audio:
-        if not audio_started:
-            audio.start()
         audio.join()
     orchestrator.drain()
     if interventionist:

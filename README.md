@@ -4,7 +4,19 @@ Tripwire is an AI agent that runs on an older person's Windows laptop. It watche
 
 Built for the Meta Global AI Developer Hackathon (indie track). Everything in this repository was written during the event.
 
-> Status: Stage G done: evaluation harness with a synthetic (Muse Image) screen set and 12 replayed scenarios. Results below.
+**At a glance:** on 12 replayed scenarios (5 scams, 7 benign look-alikes, 2 runs each), Tripwire stopped **every scam** with **zero false alarms**, a median of **27 s** after the first sign. Half of the scams were stopped **before money was asked for**. See [Results](#results).
+
+### Meta tools, and what each one does here
+
+| Tool | Job in Tripwire |
+|---|---|
+| **Muse Spark Open** (Baseten) | Always-on Tier-1 narrator: reads every changed screenshot and every call line, and tags kill-chain signals |
+| **Muse Spark** (`muse-spark-1.3`, Meta Model API) | The CaseJudge: reasons over the whole session and is the only component that can authorize a hard stop. It also writes the family's plain-language incident story |
+| **Muse Voice Transcribe** | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode) |
+| **SAM 3.1** | Outlines the threat (the fake warning, the scammer's number) on already-redacted screenshots for the family |
+| **Muse Image** | Generated the synthetic scam and look-alike screens used to evaluate the screen analyst |
+
+**Try it:** `python -m scripts.demo` stages a scam on your screen and lets Tripwire stop it ([docs/DEMO.md](docs/DEMO.md)).
 
 ## How it works
 
