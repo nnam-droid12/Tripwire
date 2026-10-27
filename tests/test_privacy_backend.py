@@ -42,9 +42,10 @@ def backend(tmp_path, monkeypatch):
     monkeypatch.setenv("TRIPWIRE_DASHBOARD_KEY", "family-key")
     for var in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"):
         monkeypatch.delenv(var, raising=False)
-    import core.config, backend.sms, backend.main
+    import core.config, backend.sms, backend.storage, backend.main
     importlib.reload(core.config)
     importlib.reload(backend.sms)
+    importlib.reload(backend.storage)
     main = importlib.reload(backend.main)
     monkeypatch.setattr(main, "highlight", lambda png, prompts=None: (png, []))
     monkeypatch.setattr(main, "narrate", lambda incident: {"title": "Test", "steps": [], "next": []})

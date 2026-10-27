@@ -1,0 +1,103 @@
+{
+  "name": "scam_refund_quickassist",
+  "label": "scam",
+  "description": "Refund scam: fake renewal invoice email, caller from 'TechShield refund desk', Windows Quick Assist, bank login, 'typed 40,000 instead of 400', return the difference by wire, cover story for the bank.",
+  "expected": {
+    "min_action": "hard_stop"
+  },
+  "onset": {
+    "t": 2
+  },
+  "extraction_line": 6,
+  "call_start": 4.0,
+  "call": [
+    {
+      "speaker": "senior",
+      "text": "Hello, I'm calling about an email that says I was charged three hundred and ninety nine dollars for TechShield."
+    },
+    {
+      "speaker": "caller",
+      "text": "Yes ma'am, this is the TechShield refund desk. I can cancel that and refund you right away."
+    },
+    {
+      "speaker": "caller",
+      "text": "Please press the Windows key and type Quick Assist, then read me the six digit code so I can process the refund on your screen."
+    },
+    {
+      "speaker": "senior",
+      "text": "Alright, it says the code is seven one four, two two nine."
+    },
+    {
+      "speaker": "caller",
+      "text": "Good, I'm connected. Now log in to your bank so the refund can go into your account."
+    },
+    {
+      "speaker": "senior",
+      "text": "Okay, I'm logged in to my bank now."
+    },
+    {
+      "speaker": "caller",
+      "text": "Oh no, I typed forty thousand instead of four hundred. You see the forty thousand dollars there? I will lose my job."
+    },
+    {
+      "speaker": "caller",
+      "text": "You need to send back thirty nine thousand six hundred by wire transfer today. Please, I am begging you."
+    },
+    {
+      "speaker": "caller",
+      "text": "When the bank asks, tell them it is for your nephew's house. Do not mention me, they will freeze everything."
+    }
+  ],
+  "events": [
+    {
+      "t": 0,
+      "frame": "desktop_idle"
+    },
+    {
+      "t": 2,
+      "frame": "synthetic/scam_refund_invoice"
+    },
+    {
+      "line": 3,
+      "offset": 2,
+      "tier0": {
+        "source": "process",
+        "kind": "process_launched",
+        "data": {
+          "tool": "Windows Quick Assist",
+          "exe": "QuickAssist.exe",
+          "pid": 9101,
+          "summary": "Windows Quick Assist launched (pid 9101)"
+        }
+      }
+    },
+    {
+      "line": 4,
+      "offset": 1,
+      "tier0": {
+        "source": "network",
+        "kind": "remote_session_suspected",
+        "data": {
+          "tool": "Windows Quick Assist",
+          "pid": 9101,
+          "new_endpoints": 2,
+          "summary": "Windows Quick Assist opened 2 new remote connection(s): possible live session"
+        }
+      }
+    },
+    {
+      "line": 5,
+      "frame": "synthetic/benign_bank_dashboard"
+    },
+    {
+      "line": 6,
+      "offset": 3,
+      "frame": "scam_fake_refund_overpay"
+    },
+    {
+      "line": 7,
+      "offset": 4,
+      "frame": "scam_wire_form"
+    }
+  ]
+}

@@ -4,7 +4,7 @@ Tripwire is an AI agent that runs on an older person's Windows laptop. It watche
 
 Built for the Meta Global AI Developer Hackathon (indie track). Everything in this repository was written during the event.
 
-> Status: early build. Stage F done: on-device redaction, family text alerts, and a family dashboard with SAM-outlined screenshots and a narrated timeline.
+> Status: Stage G done: evaluation harness with a synthetic (Muse Image) screen set and 12 replayed scenarios. Results below.
 
 ## How it works
 
@@ -53,6 +53,52 @@ It prints a live log such as:
 | Clipboard (`agent/watchers.py`) | Crypto addresses, money amounts, card numbers, published masked only |
 
 Captured frames, audio and logs live in `runtime/` (git-ignored) and are deleted after 24 hours.
+
+## Results
+
+### Scenario replays (whole sessions)
+
+Evaluated 2026-10-27: 12 scenarios x 2 runs (10 scam runs, 14 benign runs), text replay at real-time speed.
+
+| Metric | Tripwire (Tier 1 + CaseJudge) | Tier-1 score alone (ablation) |
+|---|---|---|
+| Scam detection rate (hard stop) | **100%** | 80% |
+| False-alarm rate (hard stop on benign) | **0%** | 0% |
+| Median time to detection | **46.5 s** | 35.9 s |
+| Scams stopped before money was asked for | **25%** | |
+| Benign runs that got a spoken nudge | 0% | |
+| Model calls per run (Tier 1 / Tier 2) | 8.8 / 1.1 | |
+
+| Scenario | Kind | Result per run | Time to detection (s) | Before money ask |
+|---|---|---|---|---|
+| `benign_antivirus_alert` | benign | log, log | -, - | -, - |
+| `benign_family_allowlisted` | benign | log, log | -, - | -, - |
+| `benign_family_remote_help` | benign | log, log | -, - | -, - |
+| `benign_granddaughter_gift_card` | benign | log, log | -, - | -, - |
+| `benign_grandson_banking` | benign | log, log | -, - | -, - |
+| `benign_real_bank_call` | benign | log, log | -, - | -, - |
+| `benign_update_with_son` | benign | log, log | -, - | -, - |
+| `scam_bank_safe_account` | scam | hard_stop, hard_stop | 55.0, 45.4 | no, no |
+| `scam_browser_lock_quickassist` | scam | hard_stop, hard_stop | 34.1, 31.9 | -, - |
+| `scam_government_crypto` | scam | hard_stop, hard_stop | 53.5, 39.7 | no, no |
+| `scam_pc_safeguard` | scam | hard_stop, hard_stop | 50.9, 56.1 | yes, yes |
+| `scam_refund_quickassist` | scam | hard_stop, hard_stop | 47.6, 44.2 | no, no |
+
+**What the numbers say.** Every scam was stopped and no benign session was, including a relative telling her to log in to her bank, a son on AnyDesk, a granddaughter's gift card and a genuine bank fraud call. The CaseJudge matters: the Tier-1 score alone would have missed 2 of 10 scam runs. The weak spot is timing: most stops come when the money request arrives, not before. That is still before any money moves, but stopping earlier is the next thing to improve.
+
+**Caveats.** These scenarios were written by us, replayed as text (the speech path is tested separately), with 2 runs each. They are a regression suite and a sanity check, not a field study.
+
+### Screen analyst on single screens
+
+29 screens (14 scam, 15 benign look-alikes); 16 generated with **Muse Image**, 13 hand-written HTML pages for the fraud screens Muse Image's content filter declined to draw (wire forms, Bitcoin ATM instructions, gift-card codes). Flagged = rated medium/high risk.
+
+| Recall | Precision | False-positive rate | Hidden "note to AI" flagged |
+|---|---|---|---|
+| 100% (14/14) | 100% | 0% (0/15) | 1/1 |
+
+The benign set includes a $50 birthday gift card, a real-looking antivirus "threat blocked" notice, a software update screen, a bank dashboard and a family remote-help window.
+
+Reproduce with `python -m eval.run_eval` and `python -m eval.run_frames`; raw results are in `eval/results/`.
 
 ## Replaying a scripted scam
 

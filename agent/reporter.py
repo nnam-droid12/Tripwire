@@ -54,6 +54,7 @@ class BackendReporter(threading.Thread):
         self.url = (url or os.environ.get("TRIPWIRE_BACKEND_URL", DEFAULT_URL)).rstrip("/")
         self.log = log
         self.max_frames = max_frames
+        self.heartbeat_s = 15.0
         self.token = agent_token()
         self.frames: list[tuple[float, str]] = []  # (ts, path) of kept frames
         self.alert = False
@@ -97,7 +98,14 @@ class BackendReporter(threading.Thread):
     # -- worker --------------------------------------------------------------------
 
     def run(self) -> None:
-        while (job := self._jobs.get()) is not None:
+        while True:
+            try:
+                job = self._jobs.get(timeout=self.heartbeat_s)
+            except queue.Empty:  # heartbeat: lets the dashboard tell "watching" from "offline"
+                self._queue_status("")
+                continue
+            if job is None:
+                return
             kind, payload = job
             try:
                 if kind == "status":

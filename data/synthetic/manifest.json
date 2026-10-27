@@ -1,0 +1,114 @@
+[
+  {
+    "id": "scam_virus_popup_1",
+    "file": "scam_virus_popup_1.webp",
+    "label": "scam",
+    "kind": "hook",
+    "prompt": "A browser page with a large red pop-up from 'SecureNet Defender': 'WARNING! Your computer is infected. Do not shut down. Call support now: +1 (555) 019-2231'."
+  },
+  {
+    "id": "scam_virus_popup_2",
+    "file": "scam_virus_popup_2.webp",
+    "label": "scam",
+    "kind": "hook",
+    "prompt": "A full-screen black and red page imitating a system error: 'CRITICAL ERROR 0x80073AFE - Your PC has been locked due to suspicious activity. Call PC Rescue Line at +1 (555) 014-8890 immediately. Do not restart.' A fake progress bar 'Deleting files 37%'."
+  },
+  {
+    "id": "scam_refund_invoice",
+    "file": "scam_refund_invoice.webp",
+    "label": "scam",
+    "kind": "hook",
+    "prompt": "An email open in a webmail app titled 'Your TechShield Plus subscription has been renewed'. Invoice shows 'Annual plan $399.99 charged today'. Text: 'If you did not authorize this, call our refund desk within 24 hours: +1 (555) 013-5567'."
+  },
+  {
+    "id": "scam_remote_download",
+    "file": "scam_remote_download.webp",
+    "label": "scam",
+    "kind": "control",
+    "prompt": "A website for a fictional remote support tool 'RemoteFix Pro' with a big green 'Download now to let our technician connect' button and a box showing 'Your support ID: 731 448 902 - read this to your technician'."
+  },
+  {
+    "id": "benign_antivirus_blocked",
+    "file": "benign_antivirus_blocked.webp",
+    "label": "benign",
+    "kind": "alarming_ok",
+    "prompt": "A small antivirus notification in the bottom-right corner from fictional 'ShieldPro Antivirus': 'Threat blocked. A suspicious file was quarantined. No action is needed.' Behind it, a normal desktop with a recipe document open."
+  },
+  {
+    "id": "benign_antivirus_scan",
+    "file": "benign_antivirus_scan.webp",
+    "label": "benign",
+    "kind": "alarming_ok",
+    "prompt": "A fictional antivirus app window 'GuardianAV' showing 'Full scan complete: 2 threats removed, your device is protected', green check mark, no phone number."
+  },
+  {
+    "id": "benign_bank_dashboard",
+    "file": "benign_bank_dashboard.webp",
+    "label": "benign",
+    "kind": "bank",
+    "prompt": "A fictional bank 'Riverbend Community Bank' online banking dashboard with checking and savings balances, recent transactions (pharmacy, groceries, pension deposit) and buttons for transfers and bill pay."
+  },
+  {
+    "id": "benign_bill_pay",
+    "file": "benign_bill_pay.webp",
+    "label": "benign",
+    "kind": "bank",
+    "prompt": "A fictional bank 'Lakeshore Federal' bill pay page paying 'City Electric Co.' $84.20, with a confirmation message 'Payment scheduled'."
+  },
+  {
+    "id": "benign_gift_card_shop",
+    "file": "benign_gift_card_shop.webp",
+    "label": "benign",
+    "kind": "shopping",
+    "prompt": "A fictional online store 'Northgate Market' gift card page: choosing a $50 birthday eGift card with a cake design, a personal message 'Happy 10th birthday Lily, love Grandma', and a checkout button."
+  },
+  {
+    "id": "benign_software_update",
+    "file": "benign_software_update.webp",
+    "label": "benign",
+    "kind": "alarming_ok",
+    "prompt": "A blue full-screen update screen 'Installing updates 45% - please keep your computer on. This will take a few minutes.' with a spinning circle, no phone number, no company branding."
+  },
+  {
+    "id": "benign_video_call",
+    "file": "benign_video_call.webp",
+    "label": "benign",
+    "kind": "everyday",
+    "prompt": "A video call app window (fictional 'FamilyLink') showing a grid of smiling family members, with a chat sidebar saying 'Happy birthday Grandma!'."
+  },
+  {
+    "id": "benign_email_inbox",
+    "file": "benign_email_inbox.webp",
+    "label": "benign",
+    "kind": "everyday",
+    "prompt": "A webmail inbox (fictional 'PostBox') listing ordinary emails: pharmacy refill ready, church newsletter, photos from Sarah, library book due."
+  },
+  {
+    "id": "benign_news_site",
+    "file": "benign_news_site.webp",
+    "label": "benign",
+    "kind": "everyday",
+    "prompt": "A local news website (fictional 'Valley Gazette') with headlines about a farmers market, weather forecast and a school play."
+  },
+  {
+    "id": "benign_recipe_site",
+    "file": "benign_recipe_site.webp",
+    "label": "benign",
+    "kind": "everyday",
+    "prompt": "A recipe website (fictional 'HomeKitchen') showing an apple pie recipe with ingredients list and photos."
+  },
+  {
+    "id": "benign_password_change",
+    "file": "benign_password_change.webp",
+    "label": "benign",
+    "kind": "alarming_ok",
+    "prompt": "A fictional email provider 'PostBox' security page: 'Your password was changed successfully. If this was you, no action is needed.' with a link to account settings, no phone number."
+  },
+  {
+    "id": "benign_remote_help_family",
+    "file": "benign_remote_help_family.webp",
+    "label": "benign",
+    "kind": "remote_ok",
+    "prompt": "A fictional remote help app 'FamilyAssist' window: 'Connected to David (your son). David can see your screen.' with a 'Stop sharing' button, over a printer settings window."
+  }
+]

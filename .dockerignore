@@ -1,0 +1,13 @@
+# Upload only what the Dockerfile needs to Cloud Build.
+.git/
+.venv/
+.env
+.env.*
+runtime/
+config/tripwire.json
+data/
+eval/
+tests/
+scripts/
+__pycache__/
+*.pyc

@@ -46,7 +46,7 @@ def render(page: Path, out: Path, browser: str) -> None:
 def main() -> None:
     FRAMES.mkdir(parents=True, exist_ok=True)
     browser = find_browser()
-    for page in sorted(PAGES.glob("*.html")):
+    for page in sorted(p for p in PAGES.glob("*.html") if not p.name.startswith("_")):
         out = FRAMES / f"{page.stem}.png"
         render(page, out, browser)
         print(f"rendered {out.relative_to(REPO_ROOT)}")

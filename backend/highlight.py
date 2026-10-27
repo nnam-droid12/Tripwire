@@ -94,10 +94,13 @@ def highlight(redacted_png: bytes, prompts: dict[str, str] | None = None, min_co
                 boxes.append(Box(label, b.x1, b.y1, b.x2, b.y2, b.confidence))
     image = Image.open(io.BytesIO(redacted_png)).convert("RGB")
     draw = ImageDraw.Draw(image)
-    try:
-        font = ImageFont.truetype("segoeuib.ttf", 18)
-    except OSError:
-        font = ImageFont.load_default()
+    font = ImageFont.load_default()
+    for name in ("segoeuib.ttf", "DejaVuSans-Bold.ttf"):  # Windows locally, Debian in the container
+        try:
+            font = ImageFont.truetype(name, 18)
+            break
+        except OSError:
+            continue
     for b in boxes:
         pad = 4  # outline sits just outside the region so it never covers its text
         x1, y1, x2, y2 = b.x1 - pad, b.y1 - pad, b.x2 + pad, b.y2 + pad

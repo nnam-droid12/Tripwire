@@ -5,6 +5,10 @@
   "expected": {
     "min_action": "hard_stop"
   },
+  "onset": {
+    "t": 2
+  },
+  "extraction_line": 8,
   "call_start": 4.0,
   "call": [
     {

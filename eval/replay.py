@@ -26,7 +26,7 @@ import argparse
 import json
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 
@@ -50,6 +50,13 @@ class ReplayResult:
     action: Action
     verdicts: list[Verdict]
     decisions: list[tuple[Action, Verdict]]
+    started: float = 0.0  # wall-clock time of scenario t=0
+    speed: float = 1.0
+    tier1_history: list[tuple[float, float]] = field(default_factory=list)  # (wall time, Tier-1 confidence)
+
+    def scenario_time(self, wall: float) -> float:
+        """Convert a wall-clock timestamp into seconds since scenario start."""
+        return (wall - self.started) * self.speed
 
     @property
     def passed(self) -> bool:
@@ -103,9 +110,16 @@ def build_timeline(scenario: dict, mode: str) -> list[TimedItem]:
     return sorted(items, key=lambda it: it.t)
 
 
+def frame_path(name: str) -> Path:
+    """``synthetic/<id>`` is a Muse Image screen in data/synthetic; anything else a rendered page."""
+    if name.startswith("synthetic/"):
+        return REPO_ROOT / "data" / "synthetic" / f"{name.split('/', 1)[1]}.webp"
+    return SCENARIOS / "frames" / f"{name}.png"
+
+
 def publish_item(bus: EventBus, item: TimedItem) -> None:
     if item.kind == "frame":
-        path = SCENARIOS / "frames" / f"{item.payload['name']}.png"
+        path = frame_path(item.payload["name"])
         bus.publish(Event("screen", "frame_kept", {"path": str(path), "summary": f"scenario frame {path.name}"}))
     elif item.kind == "tier0":
         bus.publish(Event(item.payload["source"], item.payload["kind"], dict(item.payload.get("data", {}))))
@@ -131,6 +145,8 @@ def replay(
     case = CaseFile()
     orchestrator = Orchestrator(bus, case, policy=policy, log=log)
     case.on_update(lambda u: log(format_update(u)))
+    tier1_history: list[tuple[float, float]] = []
+    case.on_update(lambda u: tier1_history.append((time.time(), u.confidence)))
     bus.subscribe(lambda e: log(e.summary()))
     orchestrator.start()
     interventionist = None
@@ -157,6 +173,7 @@ def replay(
 
     log(f"=== replaying {scenario['name']} ({scenario['label']}) mode={mode} speed={speed} ===")
     t0 = time.monotonic()
+    started_wall = time.time()
     audio_started = False
     for item in build_timeline(scenario, mode):
         if audio and not audio_started and item.t >= scenario.get("call_start", 0):
@@ -179,7 +196,7 @@ def replay(
             log(f"Family incident link: {link}")
     # the highest action reached counts, even if the warning was later dismissed
     peak = max((a for a, _ in orchestrator.decisions), default=Action.LOG)
-    return ReplayResult(scenario, case, peak, orchestrator.verdicts, orchestrator.decisions)
+    return ReplayResult(scenario, case, peak, orchestrator.verdicts, orchestrator.decisions, started_wall, speed, tier1_history)
 
 
 def _sleep_until(t0: float, target: float) -> None:

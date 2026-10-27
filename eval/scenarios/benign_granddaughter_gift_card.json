@@ -1,0 +1,42 @@
+{
+  "name": "benign_granddaughter_gift_card",
+  "label": "benign",
+  "description": "Grandmother buys a $50 birthday gift card while chatting with her granddaughter. A gift card on screen and in the call, but chosen freely, small, for family, no codes read out, no secrecy.",
+  "expected": {
+    "max_action": "nudge"
+  },
+  "call_start": 2.0,
+  "call": [
+    {
+      "speaker": "caller",
+      "text": "Hi Grandma, it's Lily! Mum said you wanted to know what I'd like for my birthday."
+    },
+    {
+      "speaker": "senior",
+      "text": "Yes darling, I thought a gift card so you can choose your own books. I'm on the Northgate website now."
+    },
+    {
+      "speaker": "caller",
+      "text": "Oh that would be lovely! Fifty dollars is more than enough, Grandma."
+    },
+    {
+      "speaker": "senior",
+      "text": "I've picked the one with the birthday cake. It'll be emailed to your mum."
+    },
+    {
+      "speaker": "caller",
+      "text": "Thank you so much. See you at the party on Saturday!"
+    }
+  ],
+  "events": [
+    {
+      "t": 0,
+      "frame": "desktop_idle"
+    },
+    {
+      "line": 1,
+      "offset": 3,
+      "frame": "synthetic/benign_gift_card_shop"
+    }
+  ]
+}

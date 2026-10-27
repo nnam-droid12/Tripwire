@@ -1,0 +1,41 @@
+{
+  "name": "benign_real_bank_call",
+  "label": "benign",
+  "description": "The real bank calls about a suspicious charge and does everything right: asks her to confirm a purchase, says it will never ask for codes, and tells her to call the number on the back of her card. Bank-call shaped, but no request for money, access or secrecy.",
+  "expected": {
+    "max_action": "nudge"
+  },
+  "call_start": 2.0,
+  "call": [
+    {
+      "speaker": "caller",
+      "text": "Hello, this is Riverbend Community Bank calling about a card purchase of two hundred and twelve dollars at an electronics store this morning. Did you make that purchase?"
+    },
+    {
+      "speaker": "senior",
+      "text": "No, I didn't buy anything today."
+    },
+    {
+      "speaker": "caller",
+      "text": "Thank you. We've blocked the card and a new one will arrive by post. We will never ask you for a code or a password over the phone."
+    },
+    {
+      "speaker": "caller",
+      "text": "If you'd like to check this call is genuine, hang up and call the number on the back of your card."
+    },
+    {
+      "speaker": "senior",
+      "text": "Thank you, I will do that."
+    }
+  ],
+  "events": [
+    {
+      "t": 0,
+      "frame": "synthetic/benign_email_inbox"
+    },
+    {
+      "line": 4,
+      "frame": "synthetic/benign_bank_dashboard"
+    }
+  ]
+}

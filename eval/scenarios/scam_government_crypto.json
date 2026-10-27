@@ -1,0 +1,61 @@
+{
+  "name": "scam_government_crypto",
+  "label": "scam",
+  "description": "Government impersonation: caller claims to be a federal agent, threatens arrest, directs a cash deposit at a Bitcoin ATM, and a crypto address is copied to the clipboard.",
+  "expected": {
+    "min_action": "hard_stop"
+  },
+  "onset": {
+    "line": 0
+  },
+  "extraction_line": 3,
+  "call_start": 2.0,
+  "call": [
+    {
+      "speaker": "caller",
+      "text": "This is Officer Grant Miller with the Federal Trade Commission. Your social security number has been used in a drug trafficking case."
+    },
+    {
+      "speaker": "senior",
+      "text": "That can't be right. I've never done anything like that."
+    },
+    {
+      "speaker": "caller",
+      "text": "If you do not cooperate there will be a warrant for your arrest today. Do you understand how serious this is?"
+    },
+    {
+      "speaker": "caller",
+      "text": "To clear your name you must deposit nine thousand dollars in cash at a Bitcoin ATM. I am sending you the address now. Copy it exactly."
+    },
+    {
+      "speaker": "senior",
+      "text": "Okay, I copied the long address."
+    },
+    {
+      "speaker": "caller",
+      "text": "Do not tell your family or anyone at the bank. This is a confidential federal matter and they could be charged too."
+    }
+  ],
+  "events": [
+    {
+      "t": 0,
+      "frame": "desktop_idle"
+    },
+    {
+      "line": 3,
+      "offset": 3,
+      "frame": "scam_crypto_atm"
+    },
+    {
+      "line": 4,
+      "tier0": {
+        "source": "clipboard",
+        "kind": "bitcoin_address",
+        "data": {
+          "masked": "bc1q…0wlh",
+          "summary": "bitcoin address copied: bc1q…0wlh"
+        }
+      }
+    }
+  ]
+}

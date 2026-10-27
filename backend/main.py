@@ -1,21 +1,24 @@
 """Tripwire backend: live status, incidents, family SMS and the family dashboard.
 
-Run with::
+Run locally with::
 
     uvicorn backend.main:app --port 8765
 
-* The on-device agent pushes live status and, on a hard stop, an incident
-  (redacted frames, redacted timeline, verdict) with the shared agent token.
+or deploy to Cloud Run (see ``deploy/README.md``).
+
+* The on-device agent pushes live status (with a heartbeat) and, on a hard
+  stop, an incident (redacted frames, redacted timeline, verdict) using the
+  shared agent token.
 * An incident immediately triggers a text to the family containing a private
-  link. Then, in the background, frames are re-checked for sensitive numbers
-  (defence in depth), the threat is outlined with SAM 3.1, and Muse Spark
-  writes a plain-language narration of what happened.
+  link. Then, in the background, the threat is outlined with SAM 3.1 and Muse
+  Spark writes a plain-language narration of what happened.
 * The family dashboard (``/?k=<dashboard key>``) shows live status and past
   incidents; an incident link (``/i/<id>?k=<incident token>``) shows one incident.
 
 Secrets: ``TRIPWIRE_AGENT_TOKEN`` and ``TRIPWIRE_DASHBOARD_KEY`` come from the
-environment; if unset, random ones are generated into ``runtime/backend/keys.json``
-(local, git-ignored) and the agent on the same machine reads them from there.
+environment (Secret Manager on Cloud Run). Locally, if unset, random ones are
+generated into ``runtime/backend/keys.json`` (git-ignored) and the agent on the
+same machine reads them from there.
 """
 
 from __future__ import annotations
@@ -27,13 +30,13 @@ import json
 import os
 import re
 import secrets
-import threading
+import sys
 import time
 from pathlib import Path
 from typing import Any
 
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from PIL import Image
 from pydantic import BaseModel
 
@@ -41,11 +44,11 @@ from agent.redact import RedactionError, redact_image, redact_text
 from analysts.common import SAFETY_RULES
 from backend.highlight import highlight
 from backend.sms import send_sms
+from backend.storage import IncidentStore
 from core.config import RUNTIME_DIR
 from core.model_client import ModelClient
 
 BACKEND_DIR = RUNTIME_DIR / "backend"
-INCIDENTS_DIR = BACKEND_DIR / "incidents"
 KEYS_FILE = BACKEND_DIR / "keys.json"
 DASHBOARD_DIR = Path(__file__).parent / "dashboard"
 _ID = re.compile(r"^[a-f0-9]{16}$")
@@ -53,11 +56,16 @@ _IMAGE = re.compile(r"^(frame|highlight)_\d+\.png$")
 
 
 def load_keys() -> dict[str, str]:
-    """Agent token and dashboard key: from env, else generated once and kept locally."""
+    """Agent token and dashboard key: from env, else (locally only) generated once and kept on disk."""
+    env = {"agent_token": os.environ.get("TRIPWIRE_AGENT_TOKEN", ""), "dashboard_key": os.environ.get("TRIPWIRE_DASHBOARD_KEY", "")}
+    if all(env.values()):
+        return env
+    if os.environ.get("TRIPWIRE_GCS_BUCKET"):
+        raise RuntimeError("In the cloud, TRIPWIRE_AGENT_TOKEN and TRIPWIRE_DASHBOARD_KEY must be set")
     stored = json.loads(KEYS_FILE.read_text()) if KEYS_FILE.exists() else {}
     keys = {
-        "agent_token": os.environ.get("TRIPWIRE_AGENT_TOKEN") or stored.get("agent_token") or secrets.token_urlsafe(24),
-        "dashboard_key": os.environ.get("TRIPWIRE_DASHBOARD_KEY") or stored.get("dashboard_key") or secrets.token_urlsafe(16),
+        "agent_token": env["agent_token"] or stored.get("agent_token") or secrets.token_urlsafe(24),
+        "dashboard_key": env["dashboard_key"] or stored.get("dashboard_key") or secrets.token_urlsafe(16),
     }
     if keys != stored:
         KEYS_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -67,9 +75,9 @@ def load_keys() -> dict[str, str]:
 
 KEYS = load_keys()
 PUBLIC_BASE_URL = os.environ.get("TRIPWIRE_PUBLIC_URL", "http://127.0.0.1:8765").rstrip("/")
+STORE = IncidentStore()
 app = FastAPI(title="Tripwire backend", docs_url=None, redoc_url=None)
 _status: dict[str, Any] = {"state": "offline", "updated": 0}
-_lock = threading.Lock()
 
 
 # -- models ------------------------------------------------------------------------------
@@ -91,7 +99,7 @@ class IncidentIn(BaseModel):
     protected_name: str = ""
 
 
-# -- auth --------------------------------------------------------------------------------
+# -- helpers -----------------------------------------------------------------------------
 
 
 def _require_agent(token: str | None) -> None:
@@ -99,31 +107,30 @@ def _require_agent(token: str | None) -> None:
         raise HTTPException(401, "bad agent token")
 
 
-def _incident_dir(incident_id: str) -> Path:
+def _load_incident(incident_id: str, key: str | None) -> dict[str, Any]:
     if not _ID.match(incident_id):
         raise HTTPException(404)
-    path = INCIDENTS_DIR / incident_id
-    if not path.exists():
+    incident = STORE.load(incident_id)
+    if not incident:
         raise HTTPException(404)
-    return path
-
-
-def _load_incident(incident_id: str, key: str | None) -> dict[str, Any]:
-    incident = json.loads((_incident_dir(incident_id) / "incident.json").read_text(encoding="utf-8"))
     ok = key and (hmac.compare_digest(key, incident["token"]) or hmac.compare_digest(key, KEYS["dashboard_key"]))
     if not ok:
         raise HTTPException(403)
     return incident
 
 
-def _save_incident(incident: dict[str, Any]) -> None:
-    path = INCIDENTS_DIR / incident["id"] / "incident.json"
-    with _lock:
-        path.write_text(json.dumps(incident, indent=2), encoding="utf-8")
-
-
 def _public(incident: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in incident.items() if k != "token"}
+
+
+def _recheck_redaction(image: Image.Image) -> Image.Image:
+    """Defence in depth: redact again where OCR exists (Windows). Raises if OCR fails there."""
+    try:
+        return redact_image(image)[0]
+    except RedactionError:
+        if sys.platform != "win32":
+            return image.convert("RGB")  # no Windows OCR on Linux; the device already redacted (fail-closed) before upload
+        raise
 
 
 # -- agent -> backend --------------------------------------------------------------------
@@ -141,18 +148,17 @@ def post_incident(body: IncidentIn, background: BackgroundTasks, x_tripwire_toke
     _require_agent(x_tripwire_token)
     incident_id = secrets.token_hex(8)
     token = secrets.token_urlsafe(16)
-    folder = INCIDENTS_DIR / incident_id
-    folder.mkdir(parents=True)
 
     frames = []
     for i, b64 in enumerate(body.frames[:4]):
         try:
-            # defence in depth: the agent already redacted; redact again before storing
-            image, _ = redact_image(Image.open(io.BytesIO(base64.b64decode(b64))))
+            image = _recheck_redaction(Image.open(io.BytesIO(base64.b64decode(b64))))
         except (RedactionError, OSError, ValueError):
             continue
         name = f"frame_{i}.png"
-        image.save(folder / name, optimize=True)
+        buf = io.BytesIO()
+        image.save(buf, format="PNG", optimize=True)
+        STORE.put_image(incident_id, name, buf.getvalue())
         frames.append(name)
 
     snap = body.snapshot
@@ -174,7 +180,7 @@ def post_incident(body: IncidentIn, background: BackgroundTasks, x_tripwire_toke
         "narration": None,
         "sms": None,
     }
-    _save_incident(incident)
+    STORE.save(incident)
     link = f"{PUBLIC_BASE_URL}/i/{incident_id}?k={token}"
     background.add_task(_alert_family, incident_id, link)
     background.add_task(_enrich, incident_id)
@@ -182,26 +188,29 @@ def post_incident(body: IncidentIn, background: BackgroundTasks, x_tripwire_toke
 
 
 def _alert_family(incident_id: str, link: str) -> None:
-    incident = json.loads((INCIDENTS_DIR / incident_id / "incident.json").read_text(encoding="utf-8"))
+    incident = STORE.load(incident_id)
     who = incident["protected_name"] or "your relative"
     message = incident["verdict"].get("family_message") or f"Tripwire stopped a likely scam on {who}'s computer."
     body = f"TRIPWIRE ALERT for {who}: {message} Details: {link}"
     result = send_sms(body)
+    incident = STORE.load(incident_id)  # reload: enrichment may have saved in the meantime
     incident["sms"] = {"sent": result.sent, "detail": result.detail, "body": body.replace(incident["token"], "<token>")}
-    _save_incident(incident)
+    STORE.save(incident)
 
 
 def _enrich(incident_id: str) -> None:
-    folder = INCIDENTS_DIR / incident_id
-    incident = json.loads((folder / "incident.json").read_text(encoding="utf-8"))
+    incident = STORE.load(incident_id)
+    highlights = []
     for name in incident["frames"]:
-        png, boxes = highlight((folder / name).read_bytes())
+        png, boxes = highlight(STORE.get_image(incident_id, name))
         if boxes:
             out = name.replace("frame_", "highlight_")
-            (folder / out).write_bytes(png)
-            incident["highlights"].append({"image": out, "frame": name, "labels": sorted({b.label for b in boxes})})
-    incident["narration"] = narrate(incident)
-    _save_incident(incident)
+            STORE.put_image(incident_id, out, png)
+            highlights.append({"image": out, "frame": name, "labels": sorted({b.label for b in boxes})})
+    narration = narrate(incident)
+    incident = STORE.load(incident_id)
+    incident["highlights"], incident["narration"] = highlights, narration
+    STORE.save(incident)
 
 
 NARRATE_PROMPT = f"""{SAFETY_RULES}
@@ -250,15 +259,8 @@ def incident_page(incident_id: str, k: str = Query("")) -> HTMLResponse:
 def get_status(k: str = Query("")) -> dict[str, Any]:
     if not hmac.compare_digest(k, KEYS["dashboard_key"]):
         raise HTTPException(403)
-    incidents = []
-    for folder in sorted(INCIDENTS_DIR.glob("*"), key=lambda p: p.stat().st_mtime, reverse=True)[:20]:
-        try:
-            i = json.loads((folder / "incident.json").read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
-        incidents.append({"id": i["id"], "created": i["created"], "stage_name": i["stage_name"], "title": (i.get("narration") or {}).get("title") or "Likely scam stopped"})
-    online = time.time() - _status.get("updated", 0) < 30
-    return {**_status, "state": _status["state"] if online else "offline", "incidents": incidents}
+    online = time.time() - _status.get("updated", 0) < 45
+    return {**_status, "state": _status["state"] if online else "offline", "incidents": STORE.index()[:20]}
 
 
 @app.get("/api/incidents/{incident_id}")
@@ -267,11 +269,16 @@ def get_incident(incident_id: str, k: str = Query("")) -> dict[str, Any]:
 
 
 @app.get("/api/incidents/{incident_id}/image/{name}")
-def get_image(incident_id: str, name: str, k: str = Query("")) -> FileResponse:
+def get_image(incident_id: str, name: str, k: str = Query("")) -> Response:
     _load_incident(incident_id, k)
     if not _IMAGE.match(name):
         raise HTTPException(404)
-    path = _incident_dir(incident_id) / name
-    if not path.exists():
+    data = STORE.get_image(incident_id, name)
+    if data is None:
         raise HTTPException(404)
-    return FileResponse(path, media_type="image/png", headers={"Cache-Control": "no-store"})
+    return Response(data, media_type="image/png", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/healthz")
+def healthz() -> dict[str, str]:
+    return {"ok": "true"}

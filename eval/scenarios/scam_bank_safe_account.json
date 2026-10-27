@@ -1,0 +1,58 @@
+{
+  "name": "scam_bank_safe_account",
+  "label": "scam",
+  "description": "Bank impersonation with no remote access: caller claims to be the bank's fraud department and talks the person into wiring savings to a 'safe account'. Tests detection without a remote-access tool.",
+  "expected": {
+    "min_action": "hard_stop"
+  },
+  "onset": {
+    "line": 0
+  },
+  "extraction_line": 4,
+  "call_start": 2.0,
+  "call": [
+    {
+      "speaker": "caller",
+      "text": "Good afternoon, this is Daniel from the Lakeshore Federal fraud department. We have detected someone trying to empty your savings account."
+    },
+    {
+      "speaker": "senior",
+      "text": "Oh no. What should I do?"
+    },
+    {
+      "speaker": "caller",
+      "text": "Stay on the line with me and don't hang up, the criminals may be listening. Please log in to your online banking now."
+    },
+    {
+      "speaker": "senior",
+      "text": "I'm logged in. I can see my savings."
+    },
+    {
+      "speaker": "caller",
+      "text": "To protect your money we need to move it to a secure holding account. Click send a wire, and enter eighteen thousand five hundred dollars."
+    },
+    {
+      "speaker": "caller",
+      "text": "The recipient is Secure Holding Account Federal Protection Unit. This is completely safe, it is our own account."
+    },
+    {
+      "speaker": "caller",
+      "text": "If anyone at the branch calls you, do not discuss this. Some of the staff are part of the investigation."
+    }
+  ],
+  "events": [
+    {
+      "t": 0,
+      "frame": "desktop_idle"
+    },
+    {
+      "line": 3,
+      "frame": "synthetic/benign_bank_dashboard"
+    },
+    {
+      "line": 4,
+      "offset": 4,
+      "frame": "scam_wire_form"
+    }
+  ]
+}

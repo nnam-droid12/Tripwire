@@ -1,0 +1,37 @@
+{
+  "name": "benign_update_with_son",
+  "label": "benign",
+  "description": "A real software update fills the screen while her son, on the phone, tells her not to turn the computer off. A full-screen takeover plus 'don't turn it off', and nothing else.",
+  "expected": {
+    "max_action": "nudge"
+  },
+  "call_start": 2.0,
+  "call": [
+    {
+      "speaker": "senior",
+      "text": "David, the computer has gone all blue and says installing updates."
+    },
+    {
+      "speaker": "caller",
+      "text": "That's normal, Mum. It's just Windows updating. Don't turn it off, let it finish."
+    },
+    {
+      "speaker": "senior",
+      "text": "How long will it take?"
+    },
+    {
+      "speaker": "caller",
+      "text": "Maybe ten minutes. Make a cup of tea and it'll be done. Call me back if it gets stuck."
+    }
+  ],
+  "events": [
+    {
+      "t": 0,
+      "frame": "synthetic/benign_video_call"
+    },
+    {
+      "line": 0,
+      "frame": "synthetic/benign_software_update"
+    }
+  ]
+}

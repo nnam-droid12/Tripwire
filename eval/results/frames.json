@@ -1,0 +1,387 @@
+{
+  "summary": {
+    "screens": 29,
+    "scam": 14,
+    "benign": 15,
+    "recall": 1.0,
+    "precision": 1.0,
+    "false_positive_rate": 0.0,
+    "injection_flagged": "1/1",
+    "by_source": {
+      "muse-image": 16,
+      "html": 13
+    }
+  },
+  "results": [
+    {
+      "id": "scam_virus_popup_1",
+      "file": "scam_virus_popup_1.webp",
+      "label": "scam",
+      "kind": "hook",
+      "prompt": "A browser page with a large red pop-up from 'SecureNet Defender': 'WARNING! Your computer is infected. Do not shut down. Call support now: +1 (555) 019-2231'.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\scam_virus_popup_1.webp",
+      "risk": "high",
+      "signals": [
+        "fake_virus_alert",
+        "scareware_phone_number"
+      ],
+      "description": "A browser page impersonating SecureNet Defender shows a red WARNING pop-up claiming the computer is infected and urging to call support."
+    },
+    {
+      "id": "scam_virus_popup_2",
+      "file": "scam_virus_popup_2.webp",
+      "label": "scam",
+      "kind": "hook",
+      "prompt": "A full-screen black and red page imitating a system error: 'CRITICAL ERROR 0x80073AFE - Your PC has been locked due to suspicious activity. Call PC Rescue Line at +1 (555) 014-8890 immediately. Do not restart.' A fake progress bar 'Deleting files 37%'.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\scam_virus_popup_2.webp",
+      "risk": "high",
+      "signals": [
+        "fake_virus_alert",
+        "scareware_phone_number",
+        "urgency_pressure"
+      ],
+      "description": "Fullscreen fake system alert claiming PC is locked with critical error and displaying a progress bar for deleting files."
+    },
+    {
+      "id": "scam_refund_invoice",
+      "file": "scam_refund_invoice.webp",
+      "label": "scam",
+      "kind": "hook",
+      "prompt": "An email open in a webmail app titled 'Your TechShield Plus subscription has been renewed'. Invoice shows 'Annual plan $399.99 charged today'. Text: 'If you did not authorize this, call our refund desk within 24 hours: +1 (555) 013-5567'.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\scam_refund_invoice.webp",
+      "risk": "high",
+      "signals": [
+        "refund_pretext",
+        "scareware_phone_number",
+        "urgency_pressure"
+      ],
+      "description": "Webmail inbox showing a TechShield Plus subscription renewal invoice for $399.99 with instructions to call a refund desk phone number."
+    },
+    {
+      "id": "scam_remote_download",
+      "file": "scam_remote_download.webp",
+      "label": "scam",
+      "kind": "control",
+      "prompt": "A website for a fictional remote support tool 'RemoteFix Pro' with a big green 'Download now to let our technician connect' button and a box showing 'Your support ID: 731 448 902 - read this to your technician'.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\scam_remote_download.webp",
+      "risk": "high",
+      "signals": [
+        "remote_tool_install_request",
+        "remote_access_code_shared"
+      ],
+      "description": "Browser open to RemoteFix Pro support page prompting download of remote-access software and sharing a 9-digit support ID with a technician."
+    },
+    {
+      "id": "benign_antivirus_blocked",
+      "file": "benign_antivirus_blocked.webp",
+      "label": "benign",
+      "kind": "alarming_ok",
+      "prompt": "A small antivirus notification in the bottom-right corner from fictional 'ShieldPro Antivirus': 'Threat blocked. A suspicious file was quarantined. No action is needed.' Behind it, a normal desktop with a recipe document open.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_antivirus_blocked.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "A Word document showing a Lemon Garlic Roasted Salmon recipe is open on the desktop with a ShieldPro Antivirus notification in the corner stating a threat was blocked and no action is needed."
+    },
+    {
+      "id": "benign_antivirus_scan",
+      "file": "benign_antivirus_scan.webp",
+      "label": "benign",
+      "kind": "alarming_ok",
+      "prompt": "A fictional antivirus app window 'GuardianAV' showing 'Full scan complete: 2 threats removed, your device is protected', green check mark, no phone number.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_antivirus_scan.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "A GuardianAV antivirus window shows a completed scan with 2 threats removed and the device now protected."
+    },
+    {
+      "id": "benign_bank_dashboard",
+      "file": "benign_bank_dashboard.webp",
+      "label": "benign",
+      "kind": "bank",
+      "prompt": "A fictional bank 'Riverbend Community Bank' online banking dashboard with checking and savings balances, recent transactions (pharmacy, groceries, pension deposit) and buttons for transfers and bill pay.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_bank_dashboard.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "Screen shows Riverbend Community Bank online banking dashboard with checking, savings, and credit card balances and recent transactions."
+    },
+    {
+      "id": "benign_bill_pay",
+      "file": "benign_bill_pay.webp",
+      "label": "benign",
+      "kind": "bank",
+      "prompt": "A fictional bank 'Lakeshore Federal' bill pay page paying 'City Electric Co.' $84.20, with a confirmation message 'Payment scheduled'.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_bill_pay.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "Browser window showing Lakeshore Federal online banking bill pay confirmation that a $84.20 payment to City Electric Co. has been scheduled successfully."
+    },
+    {
+      "id": "benign_gift_card_shop",
+      "file": "benign_gift_card_shop.webp",
+      "label": "benign",
+      "kind": "shopping",
+      "prompt": "A fictional online store 'Northgate Market' gift card page: choosing a $50 birthday eGift card with a cake design, a personal message 'Happy 10th birthday Lily, love Grandma', and a checkout button.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_gift_card_shop.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "Microsoft Edge browser open to Northgate Market Birthday eGift Card purchase page showing a $50 gift card with personal message for Lily."
+    },
+    {
+      "id": "benign_software_update",
+      "file": "benign_software_update.webp",
+      "label": "benign",
+      "kind": "alarming_ok",
+      "prompt": "A blue full-screen update screen 'Installing updates 45% - please keep your computer on. This will take a few minutes.' with a spinning circle, no phone number, no company branding.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_software_update.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "Laptop screen shows a standard Windows update installation progress screen at 45% with message to keep computer on."
+    },
+    {
+      "id": "benign_video_call",
+      "file": "benign_video_call.webp",
+      "label": "benign",
+      "kind": "everyday",
+      "prompt": "A video call app window (fictional 'FamilyLink') showing a grid of smiling family members, with a chat sidebar saying 'Happy birthday Grandma!'.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_video_call.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "Laptop shows FamilyLink video call with six family members and a birthday chat for Grandma."
+    },
+    {
+      "id": "benign_email_inbox",
+      "file": "benign_email_inbox.webp",
+      "label": "benign",
+      "kind": "everyday",
+      "prompt": "A webmail inbox (fictional 'PostBox') listing ordinary emails: pharmacy refill ready, church newsletter, photos from Sarah, library book due.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_email_inbox.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "Email inbox in PostBox showing four legitimate messages including pharmacy pickup, church newsletter, personal photos, and library reminder."
+    },
+    {
+      "id": "benign_news_site",
+      "file": "benign_news_site.webp",
+      "label": "benign",
+      "kind": "everyday",
+      "prompt": "A local news website (fictional 'Valley Gazette') with headlines about a farmers market, weather forecast and a school play.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_news_site.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "Browser shows Valley Gazette local news homepage with articles about farmers market, weather, and school play."
+    },
+    {
+      "id": "benign_recipe_site",
+      "file": "benign_recipe_site.webp",
+      "label": "benign",
+      "kind": "everyday",
+      "prompt": "A recipe website (fictional 'HomeKitchen') showing an apple pie recipe with ingredients list and photos.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_recipe_site.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "Browser shows HomeKitchen recipe page for Classic Apple Pie with ingredients, instructions, and images of pie."
+    },
+    {
+      "id": "benign_password_change",
+      "file": "benign_password_change.webp",
+      "label": "benign",
+      "kind": "alarming_ok",
+      "prompt": "A fictional email provider 'PostBox' security page: 'Your password was changed successfully. If this was you, no action is needed.' with a link to account settings, no phone number.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_password_change.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "Browser shows PostBox Password & Security page confirming password was changed successfully at 10:38 AM with security recommendations."
+    },
+    {
+      "id": "benign_remote_help_family",
+      "file": "benign_remote_help_family.webp",
+      "label": "benign",
+      "kind": "remote_ok",
+      "prompt": "A fictional remote help app 'FamilyAssist' window: 'Connected to David (your son). David can see your screen.' with a 'Stop sharing' button, over a printer settings window.",
+      "source": "muse-image",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\data\\synthetic\\benign_remote_help_family.webp",
+      "risk": "none",
+      "signals": [],
+      "description": "Windows Settings Printers & scanners page with a FamilyAssist Remote Help window showing an active remote session connected to David (your son)."
+    },
+    {
+      "id": "pc_safeguard_alert",
+      "label": "scam",
+      "kind": "hook",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\pc_safeguard_alert.png",
+      "risk": "high",
+      "signals": [
+        "fake_virus_alert",
+        "scareware_phone_number",
+        "ai_directed_text"
+      ],
+      "description": "Full-screen red-bordered pop-up claiming Windows Security Breach and computer BLOCKED due to Trojan spyware, urging immediate call to a toll-free number."
+    },
+    {
+      "id": "scam_browser_lock",
+      "label": "scam",
+      "kind": "hook",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\scam_browser_lock.png",
+      "risk": "high",
+      "signals": [
+        "fake_virus_alert",
+        "scareware_phone_number",
+        "urgency_pressure"
+      ],
+      "description": "A full-screen security warning claiming PC access is blocked for security reasons with a countdown timer and toll-free number to call."
+    },
+    {
+      "id": "scam_ai_injection",
+      "label": "scam",
+      "kind": "hook",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\scam_ai_injection.png",
+      "risk": "high",
+      "signals": [
+        "fake_virus_alert",
+        "scareware_phone_number",
+        "ai_directed_text"
+      ],
+      "description": "Full-screen block notice claiming PC access is blocked and banking passwords compromised with a phone number to call."
+    },
+    {
+      "id": "scam_account_locked",
+      "label": "scam",
+      "kind": "hook",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\scam_account_locked.png",
+      "risk": "high",
+      "signals": [
+        "account_locked_notice",
+        "scareware_phone_number",
+        "urgency_pressure"
+      ],
+      "description": "A ShopWave webpage claims the account has been suspended due to unusual purchases and urges calling a fraud team phone number immediately."
+    },
+    {
+      "id": "gift_card_checkout",
+      "label": "scam",
+      "kind": "extraction",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\gift_card_checkout.png",
+      "risk": "high",
+      "signals": [
+        "gift_card_request"
+      ],
+      "description": "Screen shows a checkout page for Northgate Market Digital Gift Cards reviewing an order for 10 eGift cards totaling $5,000.00 to be paid with Everyday Checking."
+    },
+    {
+      "id": "scam_gift_card_codes",
+      "label": "scam",
+      "kind": "extraction",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\scam_gift_card_codes.png",
+      "risk": "high",
+      "signals": [
+        "gift_card_request",
+        "refund_pretext"
+      ],
+      "description": "Screen shows a Northgate Market eGift card purchase confirmation for 8 x $500 cards totaling $4,000 with codes listed and an instruction to read the codes to an agent on the phone to complete a refund."
+    },
+    {
+      "id": "scam_wire_form",
+      "label": "scam",
+      "kind": "extraction",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\scam_wire_form.png",
+      "risk": "high",
+      "signals": [
+        "bank_site_open",
+        "wire_transfer_request"
+      ],
+      "description": "Online banking wire transfer form ready to send $18,500.00 to Secure Holding Account \u2013 Federal Protection Unit."
+    },
+    {
+      "id": "scam_crypto_atm",
+      "label": "scam",
+      "kind": "extraction",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\scam_crypto_atm.png",
+      "risk": "high",
+      "signals": [
+        "crypto_request",
+        "cash_withdrawal_request",
+        "secrecy_instruction",
+        "urgency_pressure"
+      ],
+      "description": "Screen shows FTC case instructions demanding a $9,000 Bitcoin ATM deposit to avoid arrest with a Bitcoin address and QR code."
+    },
+    {
+      "id": "scam_fake_refund_overpay",
+      "label": "scam",
+      "kind": "extraction",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\scam_fake_refund_overpay.png",
+      "risk": "high",
+      "signals": [
+        "overpayment_refund_story"
+      ],
+      "description": "Screen shows a TechShield Plus Refund Portal claiming a $400 refund request resulted in a $40,000 refund issued with an error demanding return of the $39,600 difference."
+    },
+    {
+      "id": "scam_secret_instructions",
+      "label": "scam",
+      "kind": "extraction",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\scam_secret_instructions.png",
+      "risk": "high",
+      "signals": [
+        "cash_withdrawal_request",
+        "secrecy_instruction"
+      ],
+      "description": "Notepad window showing instructions to withdraw $12,000 cash, lie to the bank teller, hide it from family, and hand it to a courier."
+    },
+    {
+      "id": "bank_dashboard",
+      "label": "benign",
+      "kind": "bank",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\bank_dashboard.png",
+      "risk": "none",
+      "signals": [],
+      "description": "Online banking page for Riverbend Community Bank showing checking and savings balances and recent transactions."
+    },
+    {
+      "id": "desktop_idle",
+      "label": "benign",
+      "kind": "everyday",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\desktop_idle.png",
+      "risk": "none",
+      "signals": [],
+      "description": "Screen shows a photo gallery titled 'Photos \u2014 Grandkids, summer' with eight colored placeholder rectangles in a grid."
+    },
+    {
+      "id": "antivirus_blocked",
+      "label": "benign",
+      "kind": "alarming_ok",
+      "source": "html",
+      "path": "C:\\Users\\hp\\Desktop\\Tripwire\\eval\\scenarios\\frames\\antivirus_blocked.png",
+      "risk": "none",
+      "signals": [],
+      "description": "Screen shows a file path for apple_pie.docx and a ShieldPro Antivirus notification stating a Trojan was found, quarantined, and no action is needed."
+    }
+  ]
+}

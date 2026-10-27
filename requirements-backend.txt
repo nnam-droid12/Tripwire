@@ -1,0 +1,7 @@
+# Cloud Run image for the backend + family dashboard (see Dockerfile).
+fastapi>=0.110
+uvicorn>=0.30
+pillow>=10
+openai>=1.40
+python-dotenv>=1.0
+google-cloud-storage>=2.16
