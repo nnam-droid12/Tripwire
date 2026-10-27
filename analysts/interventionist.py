@@ -29,8 +29,40 @@ from core.settings import Settings
 if TYPE_CHECKING:
     from core.orchestrator import Orchestrator
 
-DEFAULT_NUDGE = "Just so you know, Microsoft and banks never phone people out of the blue about viruses or refunds. It is okay to hang up."
+# Nudges are a fixed, reviewed set (not model free text): calm wording we control, and all of
+# them are synthesized at start-up so they play instantly in the natural voice.
+NUDGES = {
+    "tech": "Just so you know, Microsoft and Apple never phone people about viruses. It is okay to hang up.",
+    "bank": "Just so you know, your bank will never ask you to move money or read out a code. It is okay to hang up and call the number on your card.",
+    "government": "Just so you know, government agencies never demand payment over the phone or threaten arrest. It is okay to hang up.",
+    "refund": "Just so you know, real companies never need to see your screen to give you a refund. It is okay to hang up.",
+    "remote": "Just so you know, only let someone control your computer if you called them yourself. It is okay to hang up.",
+    "generic": "Just so you know, this call has some signs of a scam. It is okay to hang up and call someone you trust.",
+}
+RESIST_LINE = "Do not close this warning. The person on the phone is trying to stop me from protecting you. Please hang up."
+COMMON_BRANDS = [None, "Microsoft", "Apple", "Amazon", "your bank"]
 GENERIC_BRANDS = {"windows", "security", "support", "technical support", "tech support"}
+
+
+def choose_nudge(brands: set[str], signals: set[str]) -> str:
+    """Pick the nudge that best matches what the caller claims to be."""
+    b = " ".join(brands).lower()
+    if any(x in b for x in ("ftc", "trade commission", "irs", "social security", "police", "officer", "government", "federal agent")):
+        return NUDGES["government"]
+    if any(x in b for x in ("bank", "credit union", "fraud department", "fraud team")):
+        return NUDGES["bank"]
+    if "refund_pretext" in signals or "overpayment_refund_story" in signals:
+        return NUDGES["refund"]
+    if any(x in b for x in ("microsoft", "apple", "windows")) or "fake_virus_alert" in signals:
+        return NUDGES["tech"]
+    if signals & {"remote_tool_install_request", "remote_access_code_shared", "remote_session_active"}:
+        return NUDGES["remote"]
+    return NUDGES["generic"]
+
+
+def prewarm_phrases() -> list[str]:
+    """Everything Tripwire may need to say urgently, synthesized ahead of time."""
+    return [hard_stop_speech(b) for b in COMMON_BRANDS] + [RESIST_LINE] + list(NUDGES.values())
 
 
 def hard_stop_speech(brand: str | None) -> str:
@@ -65,7 +97,7 @@ class Interventionist:
     ) -> None:
         self.bus, self.case, self.orchestrator = bus, case, orchestrator
         self.settings = settings or Settings.load()
-        self.speaker = speaker or Speaker()
+        self.speaker = speaker or Speaker(prewarm=prewarm_phrases())
         self.gate = DismissGate(self.settings)
         self.overlay = WarningOverlay(self.gate, self._on_dismiss, overlay_auto_hide_s) if show_overlay else None
         self.kill_mode, self.kill_only, self.extra_tools = kill_mode, kill_only, extra_tools
@@ -87,8 +119,9 @@ class Interventionist:
 
     def handle(self, event: Event) -> None:
         if event.source == "decision" and event.kind == "nudge":
-            verdict = event.data.get("verdict", {})
-            self.speaker.say(verdict.get("senior_message") or DEFAULT_NUDGE)
+            brands = set().union(*self.case.brands.values())
+            signals = {s.name for s in self.case.active_signals()}
+            self.speaker.say(choose_nudge(brands, signals))
             self._publish("nudge_spoken", "Spoke a calm nudge")
         elif event.source == "decision" and event.kind == "hard_stop":
             self._hard_stop(event.data.get("verdict", {}))
@@ -130,7 +163,7 @@ class Interventionist:
         self.gate.restart_cooldown()
         if self.overlay:
             self.overlay.restart_cooldown()
-        self.speaker.say("Do not close this warning. The person on the phone is trying to stop me from protecting you. Please hang up.", urgent=True)
+        self.speaker.say(RESIST_LINE, urgent=True)
         self.case.add_signals("call", [("disable_protection", text)])
         self._publish("disable_attempt_resisted", f'Caller tried to get the warning closed: "{text[:120]}"')
 

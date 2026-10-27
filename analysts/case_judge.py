@@ -46,8 +46,7 @@ Reply with one JSON object and nothing else:
   "stage": <0-5, furthest kill-chain stage actually reached>,
   "reasons": [{{"reason": "<short>", "evidence": "<quote or event from the record>"}}],
   "recommended_action": "log|nudge|hard_stop",
-  "family_message": "<2 short plain sentences for a family member: what is happening and what to do. Never include account, card or phone numbers.>",
-  "senior_message": "<one calm, kind sentence to be spoken aloud to the protected person, e.g. 'Just so you know, Microsoft never phones people about viruses.' No numbers.>"}}"""
+  "family_message": "<2 short plain sentences for a family member: what is happening and what to do. Never include account, card or phone numbers.>"}}"""
 
 
 def _clock(ts: float) -> str:
@@ -93,6 +92,5 @@ class CaseJudge:
             reasons=reasons,
             recommended_action=Action.parse(data.get("recommended_action")),
             family_message=str(data.get("family_message", ""))[:400],
-            senior_message=str(data.get("senior_message", ""))[:300],
             tier1_confidence=snapshot.get("confidence", 0.0),
         )

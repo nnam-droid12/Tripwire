@@ -141,10 +141,13 @@ Four hand-written scenarios are a smoke test, not an evaluation; Stage G adds a 
 
 ## Interventions
 
+Warnings are spoken in a natural female US-English voice (Google Cloud Text-to-Speech, Chirp 3 HD). The urgent phrases are synthesized at start-up, so they play instantly and without internet; if synthesis ever fails, the built-in Windows voice speaks instead.
+
+
 | Action | What happens |
 |---|---|
 | log | Written to the session log only |
-| nudge | One calm sentence spoken aloud, e.g. "Just so you know, Microsoft never phones people about viruses." |
+| nudge | One calm sentence spoken aloud in a natural voice, chosen to match who the caller claims to be, e.g. "Just so you know, Microsoft and Apple never phone people about viruses. It is okay to hang up." |
 | hard_stop | Full-screen warning, spoken aloud; remote-access tools terminated; family alert queued |
 
 The hard stop is built to resist the scammer:
@@ -185,4 +188,4 @@ Run live with `python -m scripts.run_tripwire` (tray icon, interventions on).
 
 ## Open-source libraries
 
-`openai`, `python-dotenv`, `websockets`, `mss`, `pillow`, `imagehash`, `numpy`, `sounddevice`, `psutil`, `pywin32`, `pystray`, `winrt` (Windows OCR bindings), `fastapi`, `uvicorn`, `pytest`, `httpx`.
+`openai`, `python-dotenv`, `websockets`, `mss`, `pillow`, `imagehash`, `numpy`, `sounddevice`, `psutil`, `pywin32`, `pystray`, `winrt` (Windows OCR bindings), `fastapi`, `uvicorn`, `google-auth`, `requests`, `google-cloud-storage` (backend), `pytest`, `httpx`.

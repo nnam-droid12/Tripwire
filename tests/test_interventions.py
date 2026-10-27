@@ -85,3 +85,35 @@ def test_family_is_alerted_once_per_session() -> None:
         bus.publish(Event("decision", "hard_stop", {"verdict": {"family_message": "m", "reasons": []}}))
         iv._on_dismiss("cooldown")
     assert seen.count("warning_shown") == 3 and seen.count("family_alert_requested") == 1
+
+
+def test_nudge_matches_the_claimed_organisation() -> None:
+    from analysts.interventionist import NUDGES, choose_nudge, prewarm_phrases
+
+    assert choose_nudge({"microsoft"}, set()) == NUDGES["tech"]
+    assert choose_nudge({"lakeshore federal fraud department"}, set()) == NUDGES["bank"]
+    assert choose_nudge({"federal trade commission"}, set()) == NUDGES["government"]
+    assert choose_nudge({"techshield"}, {"refund_pretext"}) == NUDGES["refund"]
+    assert choose_nudge(set(), {"remote_access_code_shared"}) == NUDGES["remote"]
+    assert choose_nudge(set(), set()) == NUDGES["generic"]
+    assert all(n in prewarm_phrases() for n in NUDGES.values())  # every nudge is ready before it is needed
+
+
+def test_speaker_falls_back_to_windows_voice_when_synthesis_fails() -> None:
+    from agent.tts import Speaker
+
+    class _Broken:
+        def synthesize(self, text):
+            raise OSError("offline")
+
+        def _headers(self):
+            raise OSError("offline")
+
+    spoken: list[str] = []
+    sp = Speaker(voice=_Broken())
+    sp._sapi = spoken.append  # don't actually speak in tests
+    sp.start()
+    sp.say("Hang up the phone now.")
+    sp.stop()
+    sp.join(timeout=5)
+    assert spoken == ["Hang up the phone now."]

@@ -16,6 +16,8 @@ winrt-Windows.Storage.Streams>=2.0; sys_platform == "win32"
 winrt-Windows.Foundation>=2.0; sys_platform == "win32"
 winrt-Windows.Foundation.Collections>=2.0; sys_platform == "win32"
 winrt-Windows.Globalization>=2.0; sys_platform == "win32"
+google-auth>=2.29
+requests>=2.31
 fastapi>=0.110
 uvicorn>=0.30
 pytest>=8
