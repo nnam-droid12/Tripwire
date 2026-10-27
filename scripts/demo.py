@@ -7,7 +7,8 @@ Usage::
 
 What happens:
 
-* the scenario's screens (fake pop-up, bank page, gift cards) appear full-screen;
+* the scenario's screens (fake pop-up, bank page, gift cards) appear in a
+  1280x720 window, and Tripwire's warning covers that window only;
 * the call plays through the speakers, two voices: scammer and victim;
 * the same audio is streamed to Muse Voice Transcribe, as the live microphone would be;
 * Notepad stands in for AnyDesk, so the hard stop has a real process to end;
@@ -23,6 +24,7 @@ Only Notepad is ever terminated, never a real remote-access tool.
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 import time
@@ -55,7 +57,10 @@ def main() -> None:
     if not wav.exists():
         subprocess.run([sys.executable, "-m", "scripts.make_call_audio", str(scenario_path)], check=True, cwd=REPO_ROOT)
 
-    stage = subprocess.Popen([sys.executable, "-m", "scripts.demo_stage"], stdin=subprocess.PIPE, text=True, cwd=REPO_ROOT)
+    stage = subprocess.Popen([sys.executable, "-m", "scripts.demo_stage"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, cwd=REPO_ROOT)
+    region = stage.stdout.readline().split()  # "REGION x,y,w,h" once the window is up
+    if len(region) == 2 and region[0] == "REGION":
+        os.environ["TRIPWIRE_OVERLAY_REGION"] = region[1]  # warning covers the demo window, not the whole screen
     stand_in = subprocess.Popen(["notepad.exe"])  # the "AnyDesk" the hard stop will end
     player: list[subprocess.Popen] = []
 
@@ -68,7 +73,6 @@ def main() -> None:
         if any(f"[{src}" in line for src in KEY_EVENTS) or "transcript" in line:
             print(line, flush=True)
 
-    time.sleep(2)  # let the stage window open
     try:
         result = replay(
             scenario_path, mode="audio", log=log, interventions="live", kill_only={"notepad.exe"},

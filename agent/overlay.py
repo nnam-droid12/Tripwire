@@ -16,6 +16,7 @@ threads talk to it through :meth:`show`, :meth:`hide` and
 
 from __future__ import annotations
 
+import os
 import queue
 import threading
 from typing import Callable
@@ -33,6 +34,9 @@ class WarningOverlay(threading.Thread):
         self.gate = gate
         self.on_dismiss = on_dismiss
         self.auto_hide_s = auto_hide_s  # tests/demos only
+        # Demos only: cover one window ("x,y,w,h" in screen pixels) instead of the whole screen.
+        region = os.environ.get("TRIPWIRE_OVERLAY_REGION")
+        self.region = tuple(int(v) for v in region.split(",")) if region else None
         self.visible = False
         self._commands: queue.Queue[tuple[str, dict]] = queue.Queue()
         self._ready = threading.Event()
@@ -80,22 +84,24 @@ class WarningOverlay(threading.Thread):
 
     def _build(self) -> None:
         tk, root = self.tk, self.root
-        big = ("Segoe UI", 54, "bold")
-        mid = ("Segoe UI", 26)
-        small = ("Segoe UI", 18)
+        # sizes are designed for 1080 px of height; a demo region scales them down
+        k = self.region[3] / 1080 * 0.8 if self.region else root.winfo_screenheight() / 1080
+        big = ("Segoe UI", round(54 * k), "bold")
+        mid = ("Segoe UI", round(26 * k))
+        small = ("Segoe UI", max(9, round(18 * k)))
         frame = tk.Frame(root, bg=BG)
         frame.place(relx=0.5, rely=0.47, anchor="center")
-        self.headline = tk.Label(frame, text="", font=big, fg=FG, bg=BG, wraplength=1500, justify="center")
-        self.headline.pack(pady=(0, 18))
-        tk.Label(frame, text="Hang up the phone now.", font=("Segoe UI", 40, "bold"), fg=ACCENT, bg=BG).pack(pady=(0, 18))
-        self.reasons = tk.Label(frame, text="", font=mid, fg=FG, bg=BG, wraplength=1400, justify="left")
-        self.reasons.pack(pady=(0, 18))
+        self.headline = tk.Label(frame, text="", font=big, fg=FG, bg=BG, wraplength=round(1500 * k), justify="center")
+        self.headline.pack(pady=(0, round(18 * k)))
+        tk.Label(frame, text="Hang up the phone now.", font=("Segoe UI", round(40 * k), "bold"), fg=ACCENT, bg=BG).pack(pady=(0, round(18 * k)))
+        self.reasons = tk.Label(frame, text="", font=mid, fg=FG, bg=BG, wraplength=round(1400 * k), justify="left")
+        self.reasons.pack(pady=(0, round(18 * k)))
         tk.Label(
             frame,
             text="Microsoft, Apple and your bank never call you about viruses or refunds.\n"
             "To check your account, call your bank\nusing the number on the BACK OF YOUR CARD.",
-            font=mid, fg=FG, bg=BG, justify="center", wraplength=1400,
-        ).pack(pady=(0, 14))
+            font=mid, fg=FG, bg=BG, justify="center", wraplength=round(1400 * k),
+        ).pack(pady=(0, round(14 * k)))
         self.family = tk.Label(frame, text="", font=small, fg=FG, bg=BG)
         self.family.pack(pady=(0, 24))
 
@@ -134,8 +140,11 @@ class WarningOverlay(threading.Thread):
         self.family.config(text=f"We have let {family_name} know.")
         self.status.config(text="")
         self.gate.restart_cooldown()
-        w, h = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
-        self.root.geometry(f"{w}x{h}+0+0")
+        if self.region:
+            x, y, w, h = self.region
+        else:
+            x, y, w, h = 0, 0, self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        self.root.geometry(f"{w}x{h}+{x}+{y}")
         self.root.deiconify()
         self.root.attributes("-topmost", True)
         self.root.focus_force()
