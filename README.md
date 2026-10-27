@@ -176,7 +176,7 @@ uvicorn backend.main:app --port 8765    # backend + family dashboard; prints not
 python -m scripts.run_tripwire          # first run shows the consent screen
 ```
 
-Set `TWILIO_*` and `FAMILY_PHONE_NUMBER` in `.env` to send real texts; otherwise they are written to `runtime/backend/sms_outbox.log`. For the link to open on a family member's phone, the backend must be reachable from the internet (for example, through a tunnel) and `TRIPWIRE_PUBLIC_URL` set to that address.
+**Texts run in demo mode.** Twilio trial accounts can only send fixed templates to verified US numbers, so Tripwire's own alert cannot be sent on a trial. Without full Twilio settings, the text Tripwire would send is logged and shown on the incident page, labelled "Demo mode: not sent". To send real texts, set `TWILIO_*` and a US `FAMILY_PHONE_NUMBER` on an upgraded Twilio account with US texting registration (toll-free verification or A2P 10DLC). For the link to open on a family member's phone, the backend must be reachable from the internet (for example, through a tunnel) and `TRIPWIRE_PUBLIC_URL` set to that address.
 
 Run live with `python -m scripts.run_tripwire` (tray icon, interventions on).
 

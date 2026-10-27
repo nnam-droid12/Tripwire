@@ -24,6 +24,8 @@
   .t { color:var(--muted); font-variant-numeric:tabular-nums; }
   .muted { color:var(--muted); font-size:15px; }
   details summary { cursor:pointer; color:var(--muted); }
+  .badge { font-size:13px; font-weight:600; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
+  .sms { background:var(--bg); border-radius:16px 16px 16px 4px; padding:12px 16px; max-width:520px; overflow-wrap:anywhere; }
   .log { font:13px/1.5 Consolas, monospace; white-space:pre-wrap; overflow-wrap:anywhere; margin-top:10px; }
 </style>
 </head>
@@ -38,6 +40,8 @@
   <section class="card"><h2>What was on the screen</h2><div id="shots" class="muted">Preparing screenshots…</div>
     <p class="muted">Account and card numbers were blacked out on the computer before anything was sent.</p></section>
   <section class="card"><h2>What happened</h2><ol class="steps" id="steps"><li class="muted">Writing the summary…</li></ol></section>
+  <section class="card" id="sms-card" hidden><h2>Text message to the family <span class="badge" id="sms-badge"></span></h2>
+    <div class="sms" id="sms-body"></div></section>
   <section class="card"><details><summary>Full record</summary><div class="log" id="log"></div></details></section>
 </main>
 <script>
@@ -72,6 +76,11 @@ async function load() {
   if (n && n.next && n.next.length) {
     document.getElementById("next-card").hidden = false;
     document.getElementById("next").innerHTML = n.next.map(x => `<li>${esc(x)}</li>`).join("");
+  }
+  if (i.sms) {
+    document.getElementById("sms-card").hidden = false;
+    document.getElementById("sms-badge").textContent = i.sms.sent ? "Sent" : "Demo mode: not sent";
+    document.getElementById("sms-body").textContent = i.sms.body.replace("?k=<token>", "");
   }
   document.getElementById("log").textContent = i.timeline.map(t => `${hhmm(t.ts)} [${t.source}] ${t.text}`).join("\n");
   if (!n) setTimeout(load, 3000); // narration and highlights are still being prepared
