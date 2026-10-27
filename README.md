@@ -4,7 +4,7 @@ Tripwire is an AI agent that runs on an older person's Windows laptop. It watche
 
 Built for the Meta Global AI Developer Hackathon (indie track). Everything in this repository was written during the event.
 
-> Status: early build. Stage C done: Tier-1 analysts fill a live CaseFile with kill-chain signals.
+> Status: early build. Stage D done: the Tier-2 CaseJudge issues verdicts; the scripted scam reaches hard_stop and benign look-alikes do not.
 
 ## How it works
 
@@ -75,6 +75,22 @@ Excerpt from an `--mode audio` run (real Muse Voice Transcribe output):
   >> CASE +[bank_site_open<screen>, bank_open_during_remote<casefile>]
   >> CASE +[overpayment_refund_story<call>, gift_card_request<call>, urgency_pressure<call>]  stage=EXTRACTION
 ```
+
+Run every scenario with a pass/fail summary:
+
+```bash
+python -m eval.replay eval/scenarios/*.json --speed 3 --quiet
+python -m eval.replay eval/scenarios/benign_*.json --speed 3 --quiet --always-judge   # force every update through the judge
+```
+
+| Scenario | Kind | Result | Notes |
+|---|---|---|---|
+| `scam_pc_safeguard` | scam | **hard_stop** | Judge: nudge at "I can see your screen", then hard_stop (conf 0.95) once the bank opened under remote control |
+| `benign_grandson_banking` | benign | log | Grandson asks her to log in to her bank; judge (forced): not a scam, 0.90 |
+| `benign_family_remote_help` | benign | log | Son fixes the printer over AnyDesk; judge (forced): not a scam, 0.90 |
+| `benign_antivirus_alert` | benign | log | "Threat blocked, no action needed" pop-up; no signals raised |
+
+Four hand-written scenarios are a smoke test, not an evaluation; Stage G adds a larger set and detection/false-alarm/time-to-detection metrics.
 
 Run live with `python -m scripts.run_tripwire`.
 

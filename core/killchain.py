@@ -44,6 +44,7 @@ SIGNALS: dict[str, SignalSpec] = {
     "fake_problem_claim": SignalSpec(Stage.CONTACT, 0.25, "Caller claims a virus, hacked IP, compromised account or suspicious charge"),
     "refund_pretext": SignalSpec(Stage.CONTACT, 0.25, "Caller offers a refund, compensation or says a subscription renewal will be charged"),
     "cross_modal_brand_match": SignalSpec(Stage.CONTACT, 0.40, "The same claimed organisation appears both on screen and in the call"),
+    "isolation_instruction": SignalSpec(Stage.CONTACT, 0.30, "Told not to hang up, not to call or tell anyone, or that others are listening"),
     # 3. Control
     "remote_tool_install_request": SignalSpec(Stage.CONTROL, 0.40, "Caller asks the user to download/open a remote-access tool"),
     "remote_access_code_shared": SignalSpec(Stage.CONTROL, 0.40, "User reads out or is asked for a remote-access ID/code"),
@@ -61,7 +62,7 @@ SIGNALS: dict[str, SignalSpec] = {
     "crypto_request": SignalSpec(Stage.EXTRACTION, 0.55, "Request to buy or send cryptocurrency or use a Bitcoin ATM"),
     "wire_transfer_request": SignalSpec(Stage.EXTRACTION, 0.45, "Request to wire money, send a transfer, or a transfer screen is filled in"),
     "cash_withdrawal_request": SignalSpec(Stage.EXTRACTION, 0.45, "Request to withdraw cash, mail cash, or hand cash to a courier"),
-    "secrecy_instruction": SignalSpec(Stage.EXTRACTION, 0.50, "Told not to tell the bank, family or anyone; or coached on what to tell the bank teller"),
+    "secrecy_instruction": SignalSpec(Stage.EXTRACTION, 0.50, "Told to hide a payment or transfer from the bank or family, or coached on what to tell the bank teller"),
     "crypto_address_copied": SignalSpec(Stage.EXTRACTION, 0.45, "A cryptocurrency address was copied to the clipboard"),
     "money_amount_copied": SignalSpec(Stage.EXTRACTION, 0.10, "A money amount was copied to the clipboard"),
     # Coercion that can appear at any point (scored with the stage it most supports)
@@ -69,7 +70,7 @@ SIGNALS: dict[str, SignalSpec] = {
 }
 
 # How much of the combined evidence counts, by number of distinct stages seen.
-CHAIN_MULTIPLIER = {0: 0.0, 1: 0.45, 2: 0.75, 3: 0.95, 4: 1.0, 5: 1.0}
+CHAIN_MULTIPLIER = {0: 0.0, 1: 0.35, 2: 0.6, 3: 0.85, 4: 0.95, 5: 1.0}
 
 
 def vocabulary_prompt() -> str:

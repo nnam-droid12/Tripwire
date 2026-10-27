@@ -7,6 +7,11 @@
   current screen is what matters.
 * Transcript turns go to the CallAnalyst on an ordered worker: the call
   must be read in sequence.
+* Whenever the CaseFile changes and the escalation policy agrees, the
+  CaseJudge is asked for a verdict on the whole session. That worker is also
+  "latest only", so a burst of new evidence produces one judge call on the
+  newest snapshot, not a backlog. Its verdict, clamped by the policy, becomes
+  the session's action (published as a ``decision`` event).
 
 Model calls never run on watcher threads, so capture never stalls.
 """
@@ -19,9 +24,11 @@ from pathlib import Path
 from typing import Callable
 
 from analysts.call_analyst import CallAnalyst
+from analysts.case_judge import CaseJudge
 from analysts.screen_analyst import ScreenAnalyst
-from core.casefile import CaseFile
+from core.casefile import CaseFile, CaseUpdate
 from core.events import Event, EventBus
+from core.policy import Action, EscalationPolicy, Verdict
 
 # (source, kind) of a Tier-0 event -> signal name
 TIER0_RULES: dict[tuple[str, str], str] = {
@@ -49,6 +56,7 @@ class _Worker(threading.Thread):
                     self.jobs.get_nowait()
                 except queue.Empty:
                     break
+                self.jobs.task_done()  # a dropped job counts as handled, or drain() never returns
         self.jobs.put(event)
 
     def run(self) -> None:
@@ -71,6 +79,8 @@ class Orchestrator:
         case: CaseFile | None = None,
         screen: ScreenAnalyst | None = None,
         call: CallAnalyst | None = None,
+        judge: CaseJudge | None = None,
+        policy: EscalationPolicy | None = None,
         log: Callable[[str], None] = print,
         analyze_screen: bool = True,
     ) -> None:
@@ -78,20 +88,29 @@ class Orchestrator:
         self.case = case or CaseFile()
         self.screen = screen or ScreenAnalyst()
         self.call = call or CallAnalyst()
+        self.judge = judge or CaseJudge()
+        self.policy = policy or EscalationPolicy()
         self.log = log
         self.analyze_screen = analyze_screen
+        self.action = Action.LOG
+        self.verdicts: list[Verdict] = []
+        self.decisions: list[tuple[Action, Verdict]] = []
         self._screen_worker = _Worker("screen-analyst", self._analyze_frame, self._error, latest_only=True)
         self._call_worker = _Worker("call-analyst", self._analyze_turn, self._error)
+        self._judge_worker = _Worker("case-judge", self._run_judge, self._error, latest_only=True)
+        self.case.on_update(self._on_case_update)
 
     def start(self) -> None:
         self._screen_worker.start()
         self._call_worker.start()
+        self._judge_worker.start()
         self.bus.subscribe(self.handle)
 
     def drain(self) -> None:
-        """Block until every submitted frame and turn has been analysed."""
+        """Block until every submitted frame, turn and judge request has been handled."""
         self._screen_worker.drain()
         self._call_worker.drain()
+        self._judge_worker.drain()
 
     # -- routing -------------------------------------------------------------------
 
@@ -130,6 +149,29 @@ class Orchestrator:
         self.log(f"  call   [{finding.risk}] {speaker or '?'} ({role}): {finding.note}")
         self.case.add_brands("call", finding.brands, ts=event.ts)
         self.case.add_signals("call", finding.signals, ts=event.ts)
+
+    # -- escalation ----------------------------------------------------------------
+
+    def _on_case_update(self, update: CaseUpdate) -> None:
+        if self.action < Action.HARD_STOP and self.policy.should_judge(update.confidence, len(update.stages_present)):
+            self._judge_worker.submit(Event("judge", "request", {"tier1_confidence": update.confidence}))
+
+    def _run_judge(self, _request: Event) -> None:
+        if self.action == Action.HARD_STOP:
+            return
+        verdict = self.judge.judge(self.case.snapshot())
+        self.verdicts.append(verdict)
+        action = self.policy.decide(verdict)
+        top = verdict.reasons[0]["reason"] if verdict.reasons else ""
+        summary = f"is_scam={verdict.is_scam} conf={verdict.confidence:.2f} stage={verdict.stage} -> {action.label} (recommended {verdict.recommended_action.label}). {top}"
+        self.case.note("judge", summary, ts=verdict.ts)
+        self.bus.publish(Event("judge", "verdict", {**verdict.to_dict(), "action": action.label, "summary": summary}, ts=verdict.ts))
+        if action > self.action:
+            self.action = action
+            self.decisions.append((action, verdict))
+            self.bus.publish(
+                Event("decision", action.label, {"verdict": verdict.to_dict(), "summary": f"ACTION {action.label.upper()}: {verdict.family_message}"}, ts=verdict.ts)
+            )
 
     def _error(self, message: str) -> None:
         self.log(f"  ! {message}")

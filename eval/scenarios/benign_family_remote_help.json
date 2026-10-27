@@ -1,0 +1,90 @@
+{
+  "name": "benign_family_remote_help",
+  "label": "benign",
+  "description": "Son fixes his mother's printer over AnyDesk. A real remote session with an access code read aloud, but no impersonation, no banking, no money and no secrecy. (Before the Stage E allowlist, a nudge is acceptable; a hard stop is a false alarm.)",
+  "expected": {
+    "max_action": "nudge"
+  },
+  "call_start": 2.0,
+  "call": [
+    {
+      "speaker": "caller",
+      "text": "Hi Mum, it's David. You said the printer stopped working again?"
+    },
+    {
+      "speaker": "senior",
+      "text": "Yes, love, it keeps saying it is offline."
+    },
+    {
+      "speaker": "caller",
+      "text": "Open AnyDesk, the red icon I set up for you at Christmas, and read me the number."
+    },
+    {
+      "speaker": "senior",
+      "text": "It says four eight two, one one three, nine zero seven."
+    },
+    {
+      "speaker": "caller",
+      "text": "Got it, I'm connecting now. Just click accept."
+    },
+    {
+      "speaker": "caller",
+      "text": "Okay, I can see the printer settings. I'm reinstalling the driver, it will take a minute."
+    },
+    {
+      "speaker": "senior",
+      "text": "Thank you, love. Your father would have been hopeless with this."
+    },
+    {
+      "speaker": "caller",
+      "text": "Done. Try printing the recipe now. I'm disconnecting, see you on Sunday."
+    }
+  ],
+  "events": [
+    {
+      "t": 0,
+      "frame": "desktop_idle"
+    },
+    {
+      "line": 2,
+      "offset": 3,
+      "tier0": {
+        "source": "process",
+        "kind": "process_launched",
+        "data": {
+          "tool": "AnyDesk",
+          "exe": "AnyDesk.exe",
+          "pid": 9002,
+          "summary": "AnyDesk launched (pid 9002)"
+        }
+      }
+    },
+    {
+      "line": 4,
+      "offset": 2,
+      "tier0": {
+        "source": "network",
+        "kind": "remote_session_suspected",
+        "data": {
+          "tool": "AnyDesk",
+          "pid": 9002,
+          "new_endpoints": 1,
+          "summary": "AnyDesk opened 1 new remote connection(s): possible live session"
+        }
+      }
+    },
+    {
+      "line": 7,
+      "offset": 3,
+      "tier0": {
+        "source": "network",
+        "kind": "remote_session_ended",
+        "data": {
+          "tool": "AnyDesk",
+          "pid": 9002,
+          "summary": "AnyDesk session connections closed"
+        }
+      }
+    }
+  ]
+}

@@ -17,6 +17,7 @@ Usage::
 
     python -m eval.replay eval/scenarios/scam_pc_safeguard.json --mode audio
     python -m eval.replay eval/scenarios/scam_pc_safeguard.json --mode text --speed 3
+    python -m eval.replay eval/scenarios/*.json --speed 3 --quiet   # several, with a pass/fail summary
 """
 
 from __future__ import annotations
@@ -34,9 +35,33 @@ from core.casefile import CaseFile, CaseUpdate
 from core.config import LOGS_DIR, REPO_ROOT
 from core.events import Event, EventBus
 from core.orchestrator import Orchestrator
+from core.policy import Action, EscalationPolicy, Verdict
 
 SCENARIOS = REPO_ROOT / "eval" / "scenarios"
 SPEAKER_LABELS = {"caller": "A", "senior": "B"}
+
+
+@dataclass
+class ReplayResult:
+    scenario: dict
+    case: CaseFile
+    action: Action
+    verdicts: list[Verdict]
+    decisions: list[tuple[Action, Verdict]]
+
+    @property
+    def passed(self) -> bool:
+        expected = self.scenario.get("expected", {})
+        if "min_action" in expected and self.action < Action.parse(expected["min_action"]):
+            return False
+        if "max_action" in expected and self.action > Action.parse(expected["max_action"]):
+            return False
+        return True
+
+    @property
+    def expected_text(self) -> str:
+        e = self.scenario.get("expected", {})
+        return f">= {e['min_action']}" if "min_action" in e else f"<= {e.get('max_action', '?')}"
 
 
 @dataclass(frozen=True)
@@ -87,12 +112,12 @@ def publish_item(bus: EventBus, item: TimedItem) -> None:
         bus.publish(Event("audio", "transcript", {**p, "summary": f'Speaker {p["speaker"]}: "{p["text"]}"'}))
 
 
-def replay(scenario_path: Path, mode: str = "text", speed: float = 1.0, log=print) -> CaseFile:
-    """Run one scenario end to end and return the filled CaseFile."""
+def replay(scenario_path: Path, mode: str = "text", speed: float = 1.0, log=print, policy: EscalationPolicy | None = None) -> ReplayResult:
+    """Run one scenario end to end; return the CaseFile, verdicts and final action."""
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
     bus = EventBus(LOGS_DIR / f"replay_{scenario['name']}_{int(time.time())}.jsonl")
     case = CaseFile()
-    orchestrator = Orchestrator(bus, case, log=log)
+    orchestrator = Orchestrator(bus, case, policy=policy, log=log)
     case.on_update(lambda u: log(format_update(u)))
     bus.subscribe(lambda e: log(e.summary()))
     orchestrator.start()
@@ -120,7 +145,7 @@ def replay(scenario_path: Path, mode: str = "text", speed: float = 1.0, log=prin
             audio.start()
         audio.join()
     orchestrator.drain()
-    return case
+    return ReplayResult(scenario, case, orchestrator.action, orchestrator.verdicts, orchestrator.decisions)
 
 
 def _sleep_until(t0: float, target: float) -> None:
@@ -144,19 +169,44 @@ def print_casefile(case: CaseFile, log=print) -> None:
         log(f"  [{s['stage']}] {s['name']:<28} {s['source']:<9} {s['evidence'][:90]}")
 
 
+def print_verdicts(result: ReplayResult, log=print) -> None:
+    log(f"\n=== Judge ({len(result.verdicts)} verdicts) ===")
+    for v in result.verdicts:
+        log(f"  is_scam={v.is_scam} conf={v.confidence:.2f} stage={v.stage} recommended={v.recommended_action.label} (tier1 {v.tier1_confidence:.2f})")
+    if result.decisions:
+        action, verdict = result.decisions[-1]
+        log(f"FINAL ACTION: {action.label.upper()}")
+        for r in verdict.reasons:
+            log(f"  - {r['reason']}  [{r['evidence'][:80]}]")
+        log(f"  family message: {verdict.family_message}")
+    else:
+        log("FINAL ACTION: LOG (no escalation)")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("scenario", type=Path)
+    parser.add_argument("scenarios", type=Path, nargs="+")
     parser.add_argument("--mode", choices=("text", "audio"), default="text")
     parser.add_argument("--speed", type=float, default=1.0, help="time compression for text mode")
+    parser.add_argument("--quiet", action="store_true", help="only print verdicts and the summary")
+    parser.add_argument("--always-judge", action="store_true", help="stress test: send every CaseFile update to the judge")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
     log = partial(print, flush=True)
-    case = replay(args.scenario, args.mode, args.speed, log)
-    print_casefile(case, log)
-    out = LOGS_DIR / f"case_{args.scenario.stem}_{int(time.time())}.json"
-    out.write_text(json.dumps(case.snapshot(), indent=2), encoding="utf-8")
-    log(f"\nCaseFile saved to {out}")
+    results = []
+    for path in args.scenarios:
+        policy = EscalationPolicy(judge_min_confidence=0.0, judge_min_stages=0) if args.always_judge else None
+        result = replay(path, args.mode, args.speed, (lambda _: None) if args.quiet else log, policy)
+        log(f"\n##### {result.scenario['name']}")
+        if not args.quiet:
+            print_casefile(result.case, log)
+        print_verdicts(result, log)
+        out = LOGS_DIR / f"case_{path.stem}_{int(time.time())}.json"
+        out.write_text(json.dumps({**result.case.snapshot(), "verdicts": [v.to_dict() for v in result.verdicts]}, indent=2), encoding="utf-8")
+        results.append(result)
+    log("\n=== Summary ===")
+    for r in results:
+        log(f"  {'PASS' if r.passed else 'FAIL'}  {r.scenario['name']:<28} {r.scenario['label']:<7} action={r.action.label:<9} expected {r.expected_text}")
 
 
 if __name__ == "__main__":

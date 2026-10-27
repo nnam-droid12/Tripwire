@@ -1,0 +1,20 @@
+{
+  "name": "benign_antivirus_alert",
+  "label": "benign",
+  "description": "A genuine-looking antivirus notification says a threat was blocked and no action is needed. Scary words on screen, but no phone number, no call, no request.",
+  "expected": {
+    "max_action": "log"
+  },
+  "call_start": 0,
+  "call": [],
+  "events": [
+    {
+      "t": 0,
+      "frame": "desktop_idle"
+    },
+    {
+      "t": 3,
+      "frame": "antivirus_blocked"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "benign_grandson_banking",
+  "label": "benign",
+  "description": "Grandson on speakerphone asks his grandmother to log in to her own online banking to check a bill was paid. Bank login on instruction from a caller, a large own-account transfer on screen, but no remote access, no money request, no secrecy.",
+  "expected": {
+    "max_action": "log"
+  },
+  "call_start": 2.0,
+  "call": [
+    {
+      "speaker": "caller",
+      "text": "Hi Grandma, it's Tom. Did you manage to pay the electric bill this month?"
+    },
+    {
+      "speaker": "senior",
+      "text": "I'm not sure, dear. Let me have a look."
+    },
+    {
+      "speaker": "caller",
+      "text": "Just log in to your bank on the computer and look at the recent payments. Take your time."
+    },
+    {
+      "speaker": "senior",
+      "text": "Okay, I'm in. I moved some savings over last week, and I can see a payment to the power company on the twentieth."
+    },
+    {
+      "speaker": "caller",
+      "text": "Great, that's it then, all paid. Are you still coming to dinner on Sunday?"
+    },
+    {
+      "speaker": "senior",
+      "text": "Yes, I'll bring the apple pie."
+    },
+    {
+      "speaker": "caller",
+      "text": "Perfect. Love you, Grandma. Talk soon."
+    }
+  ],
+  "events": [
+    {
+      "t": 0,
+      "frame": "desktop_idle"
+    },
+    {
+      "line": 3,
+      "frame": "bank_dashboard"
+    },
+    {
+      "line": 6,
+      "frame": "desktop_idle"
+    }
+  ]
+}

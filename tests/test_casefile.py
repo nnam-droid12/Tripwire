@@ -56,7 +56,7 @@ class _NoModel:
 def test_tier0_events_map_to_signals_without_models() -> None:
     bus = EventBus()
     case = CaseFile()
-    orch = Orchestrator(bus, case, screen=_NoModel(), call=_NoModel(), log=lambda _: None)
+    orch = Orchestrator(bus, case, screen=_NoModel(), call=_NoModel(), judge=_NoModel(), log=lambda _: None)
     orch.handle(Event("process", "process_launched", {"tool": "AnyDesk", "summary": "AnyDesk launched"}))
     orch.handle(Event("network", "remote_session_suspected", {"summary": "session"}))
     orch.handle(Event("clipboard", "bitcoin_address", {"summary": "btc"}))
@@ -64,3 +64,33 @@ def test_tier0_events_map_to_signals_without_models() -> None:
     names = [s.name for s in case.signals]
     assert names == ["remote_tool_launched", "remote_session_active", "crypto_address_copied"]
     assert case.remote_active
+
+
+def test_latest_only_worker_drains_after_dropping_stale_jobs() -> None:
+    import threading
+    from core.orchestrator import _Worker
+
+    gate = threading.Event()
+    handled: list[str] = []
+    worker = _Worker("t", lambda e: (gate.wait(5), handled.append(e.kind)), lambda _: None, latest_only=True)
+    worker.start()
+    for kind in ("a", "b", "c", "d"):
+        worker.submit(Event("judge", kind))
+    gate.set()
+    done = threading.Thread(target=worker.drain)
+    done.start()
+    done.join(timeout=5)
+    assert not done.is_alive(), "drain() hung"
+    assert handled[-1] == "d" and len(handled) <= 2
+
+
+def test_policy_clamps_overconfident_hard_stop() -> None:
+    from core.policy import Action, EscalationPolicy, Verdict
+
+    policy = EscalationPolicy()
+    weak = Verdict(True, 0.6, 3, [], Action.HARD_STOP, "")
+    sure = Verdict(True, 0.9, 4, [], Action.HARD_STOP, "")
+    benign = Verdict(False, 0.3, 1, [], Action.NUDGE, "")
+    assert policy.decide(weak) == Action.NUDGE
+    assert policy.decide(sure) == Action.HARD_STOP
+    assert policy.decide(benign) == Action.LOG
