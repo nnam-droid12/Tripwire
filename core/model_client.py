@@ -19,12 +19,13 @@ import json
 import os
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,7 @@ class ProviderConfig:
     api_key: str
     base_url: str
     model: str
+    reasoning_effort: str | None = None
 
     @classmethod
     def from_env(cls, name: str) -> "ProviderConfig":
@@ -46,7 +48,8 @@ class ProviderConfig:
         missing = [k for k, v in (("API_KEY", api_key), ("BASE_URL", base_url), ("MODEL", model)) if not v]
         if missing:
             raise RuntimeError(f"Provider '{name}' is missing env vars: {', '.join(prefix + '_' + m for m in missing)}")
-        return cls(name=name, api_key=api_key, base_url=base_url, model=model)
+        effort = os.environ.get(f"{prefix}_REASONING_EFFORT") or None
+        return cls(name=name, api_key=api_key, base_url=base_url, model=model, reasoning_effort=effort)
 
 
 class ModelClient:
@@ -61,8 +64,15 @@ class ModelClient:
         """Create a client for ``baseten``, ``meta`` or ``fireworks`` from env vars."""
         return cls(ProviderConfig.from_env(name))
 
-    def chat(self, messages: list[dict[str, Any]], *, temperature: float = 0.2, max_tokens: int = 512, **kwargs: Any) -> str:
-        """Send a chat completion and return the assistant text."""
+    def chat(self, messages: list[dict[str, Any]], *, temperature: float = 0.2, max_tokens: int = 2048, **kwargs: Any) -> str:
+        """Send a chat completion and return the assistant text.
+
+        Muse Spark models reason before answering, and reasoning tokens count
+        against ``max_tokens``; a small budget yields an empty reply. Hence the
+        generous default and the per-provider ``reasoning_effort``.
+        """
+        if self.config.reasoning_effort and "reasoning_effort" not in kwargs:
+            kwargs["reasoning_effort"] = self.config.reasoning_effort
         resp = self._client.chat.completions.create(
             model=self.config.model,
             messages=messages,

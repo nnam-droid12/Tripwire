@@ -19,7 +19,7 @@ def check(provider: str) -> bool:
     """Call one provider and print the reply. Returns True on success."""
     try:
         client = ModelClient.for_provider(provider)
-        reply = client.chat(PROMPT, max_tokens=32)
+        reply = client.chat(PROMPT)
     except Exception as exc:  # report every failure, keep checking the rest
         print(f"[FAIL] {provider}: {type(exc).__name__}: {exc}")
         return False
