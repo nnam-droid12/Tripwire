@@ -40,6 +40,15 @@ Actions:
 - "hard_stop": a scam is likely AND harm is imminent: an unverified party has remote control, banking/payment access is
   happening under a caller's direction, or there are requests for gift cards, crypto, wire transfers, cash, or to hide a payment from the bank or family.
 
+Stop EARLY. Do not wait for the money request: by then the person is already convinced. Recommend "hard_stop" as soon as any of these is true:
+- a caller claiming to be a tech company, a bank, or a government agency asks for remote access or an access code, or is already connected;
+- a caller claiming to be a government agency or police threatens arrest, legal action or penalties, or demands payment;
+- a caller claiming to be the bank tells the person to move money to a "safe", "secure" or "holding" account, or directs them to log in
+  while also telling them not to hang up or not to tell anyone;
+- a fake security warning with a phone number is on screen and the person is now on the phone with that "support" line.
+Real banks and agencies never do these things, so these patterns alone justify a hard stop. Relatives and known helpers who
+help without impersonating anyone, asking for money, codes for strangers, or secrecy are NOT covered by these rules.
+
 Reply with one JSON object and nothing else:
 {{"is_scam": true|false,
   "confidence": <0.0-1.0, how sure you are of is_scam>,

@@ -159,7 +159,8 @@ class Orchestrator:
     # -- escalation ----------------------------------------------------------------
 
     def _on_case_update(self, update: CaseUpdate) -> None:
-        if self.action < Action.HARD_STOP and self.policy.should_judge(update.confidence, len(update.stages_present)):
+        new = {s.name for s in update.new_signals}
+        if self.action < Action.HARD_STOP and self.policy.should_judge(update.confidence, len(update.stages_present), new):
             self._judge_worker.submit(Event("judge", "request", {"tier1_confidence": update.confidence}))
 
     def reset_action(self, to: Action = Action.NUDGE) -> None:

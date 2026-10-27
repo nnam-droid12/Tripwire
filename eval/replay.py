@@ -26,6 +26,7 @@ import argparse
 import json
 import sys
 import time
+import uuid
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
@@ -141,7 +142,8 @@ def replay(
 ) -> ReplayResult:
     """Run one scenario end to end; return the CaseFile, verdicts and final action."""
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
-    bus = EventBus(LOGS_DIR / f"replay_{scenario['name']}_{int(time.time())}.jsonl")
+    # unique per run: parallel eval runs started in the same second used to share one log file
+    bus = EventBus(LOGS_DIR / f"replay_{scenario['name']}_{int(time.time())}_{uuid.uuid4().hex[:6]}.jsonl")
     case = CaseFile()
     orchestrator = Orchestrator(bus, case, policy=policy, log=log)
     case.on_update(lambda u: log(format_update(u)))

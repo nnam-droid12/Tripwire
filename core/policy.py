@@ -59,6 +59,14 @@ class Verdict:
         }
 
 
+# Signals that send the case to the judge straight away, whatever the Tier-1 score.
+EARLY_SIGNS = {
+    "impersonation_claim", "isolation_instruction", "urgency_pressure", "remote_tool_install_request",
+    "remote_access_code_shared", "remote_session_active", "disable_protection", "ai_directed_text",
+    "login_instruction", "secrecy_instruction",
+}
+
+
 @dataclass
 class EscalationPolicy:
     judge_min_confidence: float = 0.4
@@ -66,9 +74,18 @@ class EscalationPolicy:
     hard_stop_min: float = 0.8
     nudge_min: float = 0.5
 
-    def should_judge(self, tier1_confidence: float, stages_present: int) -> bool:
-        """Tier-1 says "medium or worse", or at least two kill-chain stages co-occur."""
-        return tier1_confidence >= self.judge_min_confidence or stages_present >= self.judge_min_stages
+    def should_judge(self, tier1_confidence: float, stages_present: int, new_signals: set[str] | None = None) -> bool:
+        """Tier-1 says "medium or worse", two kill-chain stages co-occur, or a strong early sign just appeared.
+
+        The early signs matter because a scam can sit in one stage (Contact) while
+        doing real damage: "this is the FTC, a warrant for your arrest" scores low on
+        the chain but should reach the judge immediately.
+        """
+        return (
+            tier1_confidence >= self.judge_min_confidence
+            or stages_present >= self.judge_min_stages
+            or bool((new_signals or set()) & EARLY_SIGNS)
+        )
 
     def decide(self, verdict: Verdict) -> Action:
         """Clamp the judge's recommendation to what its own certainty supports."""

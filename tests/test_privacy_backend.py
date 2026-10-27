@@ -40,8 +40,10 @@ def backend(tmp_path, monkeypatch):
     monkeypatch.setenv("TRIPWIRE_RUNTIME_DIR", str(tmp_path))
     monkeypatch.setenv("TRIPWIRE_AGENT_TOKEN", "agent-secret")
     monkeypatch.setenv("TRIPWIRE_DASHBOARD_KEY", "family-key")
-    for var in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"):
-        monkeypatch.delenv(var, raising=False)
+    # Empty (not deleted): reloading core.config re-reads .env, which only fills *unset* variables.
+    # Otherwise the test would send a real text through Twilio.
+    for var in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER", "FAMILY_PHONE_NUMBER"):
+        monkeypatch.setenv(var, "")
     import core.config
 
     # Point RUNTIME_DIR at tmp *before* backend.main is first imported, so the test
