@@ -4,7 +4,7 @@ Tripwire is an AI agent that runs on an older person's Windows laptop. It watche
 
 Built for the Meta Global AI Developer Hackathon (indie track). Everything in this repository was written during the event.
 
-> Status: early build. Stage E done: graduated interventions (spoken nudge; full-screen hard stop that speaks, ends remote access and resists being closed).
+> Status: early build. Stage F done: on-device redaction, family text alerts, and a family dashboard with SAM-outlined screenshots and a narrated timeline.
 
 ## How it works
 
@@ -115,6 +115,20 @@ python -m eval.replay eval/scenarios/scam_pc_safeguard.json --speed 2 --interven
 
 The second command replays the scam with real interventions, using Notepad as a stand-in for AnyDesk. Start Notepad first.
 
+## Privacy and family alerts
+
+- **Redacted on the device.** Before any screenshot leaves the laptop, Windows' built-in OCR finds account, card and SSN numbers and covers them with solid boxes. Money amounts and the scammer's phone number stay visible, because they are evidence. If redaction fails, the frame is not sent.
+- **SAM 3.1 outlines the threat** (the fake warning, the scammer's number) on the already-redacted screenshot for the family.
+- **One text per incident** with a private link. The linked page shows what to do now, the outlined screenshots, and a plain-language story of what happened, written by Muse Spark.
+- Rolling 24-hour retention, a one-time consent screen, and an always-visible tray icon.
+
+```bash
+uvicorn backend.main:app --port 8765    # backend + family dashboard; prints nothing, keys in runtime/backend/keys.json
+python -m scripts.run_tripwire          # first run shows the consent screen
+```
+
+Set `TWILIO_*` and `FAMILY_PHONE_NUMBER` in `.env` to send real texts; otherwise they are written to `runtime/backend/sms_outbox.log`. For the link to open on a family member's phone, the backend must be reachable from the internet (for example, through a tunnel) and `TRIPWIRE_PUBLIC_URL` set to that address.
+
 Run live with `python -m scripts.run_tripwire` (tray icon, interventions on).
 
 ## Safety
@@ -125,4 +139,4 @@ Run live with `python -m scripts.run_tripwire` (tray icon, interventions on).
 
 ## Open-source libraries
 
-`openai`, `python-dotenv`, `websockets`, `mss`, `pillow`, `imagehash`, `numpy`, `sounddevice`, `psutil`, `pywin32`, `pystray`, `pytest`.
+`openai`, `python-dotenv`, `websockets`, `mss`, `pillow`, `imagehash`, `numpy`, `sounddevice`, `psutil`, `pywin32`, `pystray`, `winrt` (Windows OCR bindings), `fastapi`, `uvicorn`, `pytest`, `httpx`.

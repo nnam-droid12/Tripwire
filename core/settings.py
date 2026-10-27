@@ -30,6 +30,7 @@ class Settings:
     pin_hash: str = ""
     cooldown_s: float = 60.0
     kill_remote_on_hard_stop: bool = True
+    consent_given_at: float = 0.0
 
     @classmethod
     def load(cls, path: Path = SETTINGS_PATH) -> "Settings":

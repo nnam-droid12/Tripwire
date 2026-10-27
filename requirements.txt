@@ -9,4 +9,14 @@ sounddevice>=0.4
 psutil>=5.9
 pywin32>=306; sys_platform == "win32"
 pystray>=0.19
+winrt-runtime>=2.0; sys_platform == "win32"
+winrt-Windows.Media.Ocr>=2.0; sys_platform == "win32"
+winrt-Windows.Graphics.Imaging>=2.0; sys_platform == "win32"
+winrt-Windows.Storage.Streams>=2.0; sys_platform == "win32"
+winrt-Windows.Foundation>=2.0; sys_platform == "win32"
+winrt-Windows.Foundation.Collections>=2.0; sys_platform == "win32"
+winrt-Windows.Globalization>=2.0; sys_platform == "win32"
+fastapi>=0.110
+uvicorn>=0.30
 pytest>=8
+httpx>=0.27

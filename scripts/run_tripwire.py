@@ -2,13 +2,12 @@
 
 Usage::
 
-    python -m scripts.run_tripwire                           # mic + watchers; screen captured but not analysed
-    python -m scripts.run_tripwire --allow-unredacted-frames # also send screenshots to the ScreenAnalyst
-    python -m scripts.run_tripwire --kill dry                # report, but do not terminate, remote-access tools
+    uvicorn backend.main:app --port 8765          # in another terminal: family alerts + dashboard
+    python -m scripts.run_tripwire                # screen, mic, watchers, judge, interventions, tray
+    python -m scripts.run_tripwire --kill dry     # report, but do not terminate, remote-access tools
 
-Until on-device redaction lands (Stage F), live screenshots are only sent to
-the model with the explicit flag, because the real screen may show account
-numbers.
+Screenshots are redacted on this computer before any model sees them; a
+frame that cannot be redacted is not sent.
 """
 
 from __future__ import annotations
@@ -20,6 +19,8 @@ import threading
 import time
 from functools import partial
 
+from agent.consent import ensure_consent
+from agent.reporter import BackendReporter
 from agent.tray import TrayIcon
 from analysts.interventionist import Interventionist
 from core.casefile import CaseFile
@@ -42,7 +43,8 @@ def _sync_tray(tray: TrayIcon, event) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     add_capture_args(parser)
-    parser.add_argument("--allow-unredacted-frames", action="store_true", help="send live screenshots to the model before redaction exists")
+    parser.add_argument("--no-screen-analysis", action="store_true", help="capture the screen locally but do not analyse it")
+    parser.add_argument("--no-backend", action="store_true", help="do not report to the backend (no family alerts)")
     parser.add_argument("--kill", choices=("live", "dry", "off"), default="live", help="what a hard stop does to remote-access tools")
     parser.add_argument("--no-tray", action="store_true")
     args = parser.parse_args()
@@ -50,19 +52,23 @@ def main() -> None:
     log = partial(print, flush=True)
 
     settings = Settings.load()
+    if not ensure_consent(settings):
+        log("Tripwire was not turned on.")
+        return
     stamp = int(time.time())
     bus = EventBus(LOGS_DIR / f"session_{stamp}.jsonl")
     bus.subscribe(lambda e: log(e.summary()))
     case = CaseFile()
     case.on_update(lambda u: log(format_update(u)))
-    orchestrator = Orchestrator(bus, case, log=log, analyze_screen=args.allow_unredacted_frames)
+    orchestrator = Orchestrator(bus, case, log=log, analyze_screen=not args.no_screen_analysis)
     orchestrator.start()
     interventionist = Interventionist(
         bus, case, orchestrator, settings, kill_mode=args.kill, extra_tools={exe: f"{exe} (test)" for exe in args.watch}
     )
     interventionist.start()
-    if not args.allow_unredacted_frames:
-        log("Screen frames are captured locally but NOT analysed (no redaction yet; see --allow-unredacted-frames).")
+    reporter = None if args.no_backend else BackendReporter(bus, case, orchestrator, settings, log=log)
+    if reporter:
+        reporter.start()
 
     quit_requested = threading.Event()
     tray = None
@@ -80,6 +86,8 @@ def main() -> None:
     run_until_stopped(build_watchers(bus, args), args.seconds, quit_requested)
     orchestrator.drain()
     interventionist.stop()
+    if reporter:
+        reporter.stop()
     if tray:
         tray.stop()
     print_casefile(case, log)

@@ -70,6 +70,7 @@ class Interventionist:
         self.overlay = WarningOverlay(self.gate, self._on_dismiss, overlay_auto_hide_s) if show_overlay else None
         self.kill_mode, self.kill_only, self.extra_tools = kill_mode, kill_only, extra_tools
         self.active = False
+        self.family_alerted = False  # one text per session; a re-shown warning does not text again
         self.trusted_tools: set[str] = set()
 
     def start(self) -> None:
@@ -109,7 +110,9 @@ class Interventionist:
         self.speaker.say(hard_stop_speech(brand), urgent=True)
         self._publish("warning_shown", "Full-screen warning shown and spoken aloud")
         self._end_remote_sessions()
-        self._publish("family_alert_requested", f"Family alert requested: {verdict.get('family_message', '')}", message=verdict.get("family_message", ""))
+        if not self.family_alerted:
+            self.family_alerted = True
+            self._publish("family_alert_requested", f"Family alert requested: {verdict.get('family_message', '')}", message=verdict.get("family_message", ""))
 
     def _end_remote_sessions(self) -> None:
         if self.kill_mode == "off" or not self.settings.kill_remote_on_hard_stop:

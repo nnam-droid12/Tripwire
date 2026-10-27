@@ -37,6 +37,7 @@ from core.events import Event, EventBus
 from core.orchestrator import Orchestrator
 from core.policy import Action, EscalationPolicy, Verdict
 from analysts.interventionist import Interventionist
+from agent.reporter import BackendReporter
 
 SCENARIOS = REPO_ROOT / "eval" / "scenarios"
 SPEAKER_LABELS = {"caller": "A", "senior": "B"}
@@ -122,6 +123,7 @@ def replay(
     interventions: str = "off",
     kill_only: set[str] | None = None,
     overlay_seconds: float | None = None,
+    report: bool = False,
 ) -> ReplayResult:
     """Run one scenario end to end; return the CaseFile, verdicts and final action."""
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
@@ -140,6 +142,10 @@ def replay(
             overlay_auto_hide_s=overlay_seconds,
         )
         interventionist.start()
+    reporter = None
+    if report:
+        reporter = BackendReporter(bus, case, orchestrator, log=log)
+        reporter.start()
 
     audio: AudioWatcher | None = None
     if mode == "audio":
@@ -167,6 +173,10 @@ def replay(
     if interventionist:
         time.sleep(overlay_seconds or 0)  # let the warning finish speaking / showing
         interventionist.stop()
+    if reporter:
+        reporter.stop()
+        for link in reporter.incident_links:
+            log(f"Family incident link: {link}")
     # the highest action reached counts, even if the warning was later dismissed
     peak = max((a for a, _ in orchestrator.decisions), default=Action.LOG)
     return ReplayResult(scenario, case, peak, orchestrator.verdicts, orchestrator.decisions)
@@ -217,6 +227,7 @@ def main() -> None:
     parser.add_argument("--interventions", choices=("off", "dry", "live"), default="off", help="show the warning, speak, and (live) terminate stand-in processes")
     parser.add_argument("--kill-only", action="append", default=[], help="exe name the hard stop may terminate (stand-in for AnyDesk in demos)")
     parser.add_argument("--overlay-seconds", type=float, default=None, help="auto-hide the warning after N seconds (demos/tests only)")
+    parser.add_argument("--report", action="store_true", help="push status and incidents to the backend (uvicorn backend.main:app --port 8765)")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
     log = partial(print, flush=True)
@@ -225,7 +236,7 @@ def main() -> None:
         policy = EscalationPolicy(judge_min_confidence=0.0, judge_min_stages=0) if args.always_judge else None
         result = replay(
             path, args.mode, args.speed, (lambda _: None) if args.quiet else log, policy,
-            args.interventions, set(args.kill_only), args.overlay_seconds,
+            args.interventions, set(args.kill_only), args.overlay_seconds, args.report,
         )
         log(f"\n##### {result.scenario['name']}")
         if not args.quiet:

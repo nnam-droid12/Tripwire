@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Tripwire Family</title>
+<style>
+  :root { --bg:#f6f4ef; --card:#fff; --ink:#1d2329; --muted:#5d6670; --line:#e3ded4; --ok:#1f7a4d; --warn:#b26a00; --alert:#b3261e; --off:#7b8590; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14171a; --card:#1d2226; --ink:#eef1f3; --muted:#a3adb7; --line:#2c3338; --ok:#45b07c; --warn:#e0a03a; --alert:#ff6b5f; --off:#8a949d; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:18px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:22px; margin:0 0 20px; letter-spacing:.2px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px; }
+  .state { display:flex; align-items:center; gap:14px; }
+  .dot { width:18px; height:18px; border-radius:50%; background:var(--off); flex:none; }
+  .state b { font-size:26px; }
+  .muted { color:var(--muted); font-size:15px; }
+  .chain { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:16px; }
+  .chain div { padding:8px 4px; border-radius:8px; text-align:center; font-size:13px; background:var(--bg); color:var(--muted); border:1px solid var(--line); }
+  .chain div.on { background:var(--alert); color:#fff; border-color:var(--alert); }
+  a.inc { display:block; padding:14px 0; border-top:1px solid var(--line); color:var(--ink); text-decoration:none; }
+  a.inc:first-child { border-top:0; }
+  a.inc span { display:block; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Tripwire &middot; family view</h1>
+  <section class="card">
+    <div class="state"><div class="dot" id="dot"></div><div><b id="state">Connecting…</b><div class="muted" id="detail"></div></div></div>
+    <div class="chain" id="chain"></div>
+  </section>
+  <section class="card">
+    <h2 style="font-size:18px;margin:0 0 6px">Alerts</h2>
+    <div id="incidents" class="muted">None so far.</div>
+  </section>
+</main>
+<script>
+const key = new URLSearchParams(location.search).get("k") || "";
+const STAGES = ["Hook", "Contact", "Control", "Access", "Extraction"];
+const LABEL = { watching: ["Watching", "--ok"], paused: ["Paused", "--off"], alert: ["Scam alert on screen", "--alert"], offline: ["Tripwire is offline", "--off"] };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function refresh() {
+  try {
+    const r = await fetch(`/api/status?k=${encodeURIComponent(key)}`);
+    if (!r.ok) throw new Error(r.status);
+    const s = await r.json();
+    const [label, color] = LABEL[s.state] || [s.state, "--warn"];
+    document.getElementById("state").textContent = label;
+    document.getElementById("dot").style.background = `var(${s.state === "watching" && s.action === "nudge" ? "--warn" : color})`;
+    document.getElementById("detail").textContent = s.state === "offline" ? "" :
+      (s.summary || (s.stage ? `Furthest stage: ${STAGES[s.stage - 1]}` : "Nothing suspicious right now."));
+    document.getElementById("chain").innerHTML = STAGES.map((n, i) => `<div class="${s.state !== "offline" && i < s.stage ? "on" : ""}">${n}</div>`).join("");
+    document.getElementById("incidents").innerHTML = s.incidents.length ? s.incidents.map(i =>
+      `<a class="inc" href="/i/${i.id}?k=${encodeURIComponent(key)}"><span><b>${esc(i.title)}</b></span><span class="muted">${new Date(i.created * 1000).toLocaleString()} &middot; reached ${esc(i.stage_name.toLowerCase())}</span></a>`).join("") : "None so far.";
+  } catch (e) {
+    document.getElementById("state").textContent = "Cannot reach Tripwire";
+  }
+}
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>

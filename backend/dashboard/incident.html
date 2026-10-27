@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Tripwire Alert</title>
+<style>
+  :root { --bg:#f6f4ef; --card:#fff; --ink:#1d2329; --muted:#5d6670; --line:#e3ded4; --alert:#b3261e; --alertbg:#fbe9e7; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14171a; --card:#1d2226; --ink:#eef1f3; --muted:#a3adb7; --line:#2c3338; --alert:#ff6b5f; --alertbg:#3a1f1d; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:18px/1.55 "Segoe UI", system-ui, sans-serif; }
+  main { max-width:820px; margin:0 auto; padding:24px 16px 48px; }
+  .banner { background:var(--alertbg); border:1px solid var(--alert); border-radius:14px; padding:18px 20px; margin-bottom:16px; }
+  .banner h1 { margin:0 0 6px; font-size:24px; color:var(--alert); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px; }
+  h2 { font-size:18px; margin:0 0 12px; }
+  img { width:100%; height:auto; border-radius:8px; border:1px solid var(--line); display:block; }
+  figure { margin:0 0 12px; }
+  figcaption { color:var(--muted); font-size:14px; margin-top:6px; }
+  ol.steps { margin:0; padding-left:0; list-style:none; }
+  ol.steps li { display:grid; grid-template-columns:64px 1fr; gap:8px; padding:8px 0; border-top:1px solid var(--line); }
+  ol.steps li:first-child { border-top:0; }
+  .t { color:var(--muted); font-variant-numeric:tabular-nums; }
+  .muted { color:var(--muted); font-size:15px; }
+  details summary { cursor:pointer; color:var(--muted); }
+  .log { font:13px/1.5 Consolas, monospace; white-space:pre-wrap; overflow-wrap:anywhere; margin-top:10px; }
+</style>
+</head>
+<body>
+<main>
+  <section class="banner">
+    <h1 id="title">Tripwire stopped a likely scam</h1>
+    <div id="message"></div>
+    <div class="muted" id="when"></div>
+  </section>
+  <section class="card" id="next-card" hidden><h2>What to do now</h2><ul id="next"></ul></section>
+  <section class="card"><h2>What was on the screen</h2><div id="shots" class="muted">Preparing screenshots…</div>
+    <p class="muted">Account and card numbers were blacked out on the computer before anything was sent.</p></section>
+  <section class="card"><h2>What happened</h2><ol class="steps" id="steps"><li class="muted">Writing the summary…</li></ol></section>
+  <section class="card"><details><summary>Full record</summary><div class="log" id="log"></div></details></section>
+</main>
+<script>
+const key = new URLSearchParams(location.search).get("k") || "";
+const id = location.pathname.split("/").pop();
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const img = name => `/api/incidents/${id}/image/${name}?k=${encodeURIComponent(key)}`;
+const hhmm = ts => new Date(ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+async function load() {
+  const r = await fetch(`/api/incidents/${id}?k=${encodeURIComponent(key)}`);
+  if (!r.ok) { document.getElementById("title").textContent = "This link is not valid."; return; }
+  const i = await r.json();
+  const n = i.narration;
+  if (n && n.title) document.getElementById("title").textContent = n.title;
+  document.getElementById("message").textContent = i.verdict.family_message || "";
+  document.getElementById("when").textContent = `${new Date(i.created * 1000).toLocaleString()} · furthest stage: ${i.stage_name.toLowerCase()}`;
+
+  const shots = i.frames.map(f => {
+    const h = i.highlights.find(x => x.frame === f);
+    return h
+      ? `<figure><img src="${img(h.image)}" alt="Screenshot with the threat outlined"><figcaption>Outlined: ${esc(h.labels.join(", "))}</figcaption></figure>`
+      : `<figure><img src="${img(f)}" alt="Redacted screenshot"></figure>`;
+  });
+  if (shots.length) document.getElementById("shots").innerHTML = shots.join("");
+
+  if (n && n.steps && n.steps.length) {
+    document.getElementById("steps").innerHTML = n.steps.map(s => `<li><span class="t">${esc(s.time)}</span><span>${esc(s.text)}</span></li>`).join("");
+  } else if (n) {
+    document.getElementById("steps").innerHTML = (i.verdict.reasons || []).map(x => `<li><span class="t">•</span><span>${esc(x.reason)}</span></li>`).join("");
+  }
+  if (n && n.next && n.next.length) {
+    document.getElementById("next-card").hidden = false;
+    document.getElementById("next").innerHTML = n.next.map(x => `<li>${esc(x)}</li>`).join("");
+  }
+  document.getElementById("log").textContent = i.timeline.map(t => `${hhmm(t.ts)} [${t.source}] ${t.text}`).join("\n");
+  if (!n) setTimeout(load, 3000); // narration and highlights are still being prepared
+}
+load();
+</script>
+</body>
+</html>

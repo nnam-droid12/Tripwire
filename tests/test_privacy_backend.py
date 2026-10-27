@@ -1,0 +1,85 @@
+"""Stage F tests: what gets redacted, and the backend's auth, incident flow and dry-run SMS."""
+
+from __future__ import annotations
+
+import base64
+import importlib
+import io
+import json
+
+import pytest
+from PIL import Image
+
+from agent.redact import Word, redact_text, sensitive_runs
+
+
+def _line(*texts: str) -> list[Word]:
+    return [Word(t, i * 50, 0, 40, 10) for i, t in enumerate(texts)]
+
+
+def test_account_card_and_ssn_runs_are_sensitive() -> None:
+    assert [" ".join(w.text for w in r) for r in sensitive_runs(_line("Checking", "—", "Account", "4417", "2280", "9931", "$4,310.55"))] == ["4417 2280 9931"]
+    assert sensitive_runs(_line("SSN", "123-45-6789"))
+    assert sensitive_runs(_line("Card", "4111", "1111", "1111", "1111"))
+
+
+def test_evidence_is_not_redacted() -> None:
+    for line in [("Call", "+1", "(555)", "013-4477"), ("Total:", "$15,000.00"), ("Date", "2026-10-27"), ("Ref", "#4417")]:
+        assert sensitive_runs(_line(*line)) == [], line
+
+
+def test_redact_text_masks_long_numbers_only() -> None:
+    out = redact_text("card 4111 1111 1111 1111, code 482 113 907, call +1 (555) 013-4477, refund $15,000.00")
+    assert "4111" not in out and "*111" in out
+    assert "482 113" not in out and out.count("907") == 1
+    assert "(555) 013-4477" in out and "$15,000.00" in out
+
+
+@pytest.fixture()
+def backend(tmp_path, monkeypatch):
+    monkeypatch.setenv("TRIPWIRE_RUNTIME_DIR", str(tmp_path))
+    monkeypatch.setenv("TRIPWIRE_AGENT_TOKEN", "agent-secret")
+    monkeypatch.setenv("TRIPWIRE_DASHBOARD_KEY", "family-key")
+    for var in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"):
+        monkeypatch.delenv(var, raising=False)
+    import core.config, backend.sms, backend.main
+    importlib.reload(core.config)
+    importlib.reload(backend.sms)
+    main = importlib.reload(backend.main)
+    monkeypatch.setattr(main, "highlight", lambda png, prompts=None: (png, []))
+    monkeypatch.setattr(main, "narrate", lambda incident: {"title": "Test", "steps": [], "next": []})
+    monkeypatch.setattr(main, "redact_image", lambda img: (img.convert("RGB"), 0))  # OCR covered separately
+    from fastapi.testclient import TestClient
+    return main, TestClient(main.app)
+
+
+def test_agent_endpoints_require_token(backend) -> None:
+    _, client = backend
+    assert client.post("/api/agent/status", json={"state": "watching"}).status_code == 401
+    assert client.post("/api/agent/status", json={"state": "watching"}, headers={"X-Tripwire-Token": "agent-secret"}).status_code == 200
+    assert client.get("/api/status?k=wrong").status_code == 403
+    assert client.get("/api/status?k=family-key").json()["state"] == "watching"
+
+
+def test_incident_flow_sends_dry_run_sms_with_private_link(backend) -> None:
+    main, client = backend
+    buf = io.BytesIO()
+    Image.new("RGB", (64, 36), "red").save(buf, format="PNG")
+    body = {
+        "verdict": {"is_scam": True, "family_message": "Call her now. Card 4111 1111 1111 1111 was mentioned.", "reasons": []},
+        "snapshot": {"stage": 5, "stage_name": "EXTRACTION", "timeline": [{"ts": 1.0, "source": "call", "text": "my code is 482113907", "risk": "high"}], "signals": []},
+        "frames": [base64.b64encode(buf.getvalue()).decode()],
+        "protected_name": "Margaret",
+    }
+    reply = client.post("/api/agent/incidents", json=body, headers={"X-Tripwire-Token": "agent-secret"}).json()
+    incident_id, token = reply["id"], reply["link"].split("k=")[1]
+    assert client.get(f"/api/incidents/{incident_id}?k=nope").status_code == 403
+    data = client.get(f"/api/incidents/{incident_id}?k={token}").json()
+    assert "token" not in data
+    assert "4111 1111" not in data["verdict"]["family_message"] and "482113907" not in data["timeline"][0]["text"]
+    assert data["sms"]["sent"] is False and "dry run" in data["sms"]["detail"]
+    assert "TRIPWIRE ALERT for Margaret" in data["sms"]["body"] and token not in data["sms"]["body"]
+    assert client.get(f"/api/incidents/{incident_id}/image/frame_0.png?k={token}").status_code == 200
+    assert client.get(f"/api/incidents/{incident_id}/image/..%2Fincident.json?k={token}").status_code == 404
+    outbox = (main.BACKEND_DIR / "sms_outbox.log").read_text(encoding="utf-8")
+    assert token in json.loads(outbox.splitlines()[-1])["body"]

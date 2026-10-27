@@ -23,6 +23,7 @@ import threading
 from pathlib import Path
 from typing import Callable
 
+from agent.redact import redact_text
 from analysts.call_analyst import CallAnalyst
 from analysts.case_judge import CaseJudge
 from analysts.screen_analyst import ScreenAnalyst
@@ -147,7 +148,7 @@ class Orchestrator:
         self.case.add_signals("screen", finding.signals, ts=event.ts)
 
     def _analyze_turn(self, event: Event) -> None:
-        speaker, text = event.data.get("speaker"), event.data["text"]
+        speaker, text = event.data.get("speaker"), redact_text(event.data["text"])  # spoken card numbers, access codes
         finding = self.call.analyze(speaker, text)
         role = finding.roles.get(speaker or "", "unknown")
         self.case.note("call", f"{speaker or '?'} ({role}): {text}", finding.risk, ts=event.ts)

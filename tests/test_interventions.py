@@ -65,3 +65,23 @@ def test_terminate_only_named_stand_in() -> None:
     finally:
         if proc.poll() is None:
             proc.kill()
+
+
+def test_family_is_alerted_once_per_session() -> None:
+    from analysts.interventionist import Interventionist
+    from agent.tts import Speaker
+    from core.casefile import CaseFile
+    from core.events import Event, EventBus
+
+    class _Orch:
+        def reset_action(self) -> None: ...
+
+    bus, case = EventBus(), CaseFile()
+    seen: list[str] = []
+    bus.subscribe(lambda e: seen.append(e.kind))
+    iv = Interventionist(bus, case, _Orch(), Settings(), speaker=Speaker(enabled=False), show_overlay=False, kill_mode="off")
+    bus.subscribe(iv.handle)
+    for _ in range(3):  # hard stop, dismissed, re-escalated...
+        bus.publish(Event("decision", "hard_stop", {"verdict": {"family_message": "m", "reasons": []}}))
+        iv._on_dismiss("cooldown")
+    assert seen.count("warning_shown") == 3 and seen.count("family_alert_requested") == 1
