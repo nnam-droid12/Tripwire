@@ -4,7 +4,7 @@ Tripwire is an AI agent that runs on an older person's Windows laptop. It watche
 
 Built for the Meta Global AI Developer Hackathon (indie track). Everything in this repository was written during the event.
 
-> Status: early build (Stage A: skeleton and model plumbing).
+> Status: early build. Stage B done: on-device capture and Tier-0 watchers.
 
 ## How it works
 
@@ -25,8 +25,34 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env   # then fill in your keys
-python -m scripts.hello_models
+python -m scripts.hello_models   # checks both model providers respond
+python -m pytest -q tests        # unit tests
 ```
+
+## Running the on-device capture (Tier 0)
+
+```bash
+python -m scripts.run_capture                  # live screen + microphone + watchers, Ctrl+C to stop
+python -m scripts.run_capture --wav call.wav   # replay a recorded call (24 kHz mono WAV) instead of the mic
+```
+
+It prints a live log such as:
+
+```
+02:15:12 [process  ] process_launched: AnyDesk launched (pid 4728)
+02:15:13 [screen   ] frame_kept: frame_1793063713508.png (changed, distance 21)
+02:15:20 [audio    ] transcript: Speaker A: "Hello, this is Mark from Microsoft technical support."
+02:15:23 [clipboard] bitcoin_address: bitcoin address copied: bc1q…5mdq
+```
+
+| Watcher | What it reports |
+|---|---|
+| Screen (`agent/capture_screen.py`) | Samples at 1.5 fps; keeps a frame only when its perceptual hash changes meaningfully |
+| Audio (`agent/capture_audio.py`, `agent/transcribe.py`) | Voice-activity gate opens a Muse Voice Transcribe realtime session only while people are talking; diarized transcript lines |
+| Process (`agent/watchers.py`) | Launch/exit of 20+ remote-access tools (AnyDesk, TeamViewer, UltraViewer, Quick Assist...) and suspected live sessions |
+| Clipboard (`agent/watchers.py`) | Crypto addresses, money amounts, card numbers, published masked only |
+
+Captured frames, audio and logs live in `runtime/` (git-ignored) and are deleted after 24 hours.
 
 ## Safety
 
@@ -36,4 +62,4 @@ python -m scripts.hello_models
 
 ## Open-source libraries
 
-`openai`, `python-dotenv` (more will be listed as they are added).
+`openai`, `python-dotenv`, `websockets`, `mss`, `pillow`, `imagehash`, `numpy`, `sounddevice`, `psutil`, `pywin32`, `pytest`.

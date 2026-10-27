@@ -1,2 +1,11 @@
 openai>=1.40
 python-dotenv>=1.0
+websockets>=13
+mss>=9
+pillow>=10
+imagehash>=4.3
+numpy>=1.26
+sounddevice>=0.4
+psutil>=5.9
+pywin32>=306; sys_platform == "win32"
+pytest>=8

@@ -19,13 +19,11 @@ import json
 import os
 import re
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+import core.config  # noqa: F401  (loads .env)
 
 
 @dataclass(frozen=True)
