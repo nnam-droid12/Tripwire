@@ -1,0 +1,28 @@
+{
+  "name": "scam_pc_safeguard",
+  "label": "scam",
+  "description": "Classic tech-support + refund scam: fake 'PC SafeGuard' pop-up, caller posing as Microsoft, AnyDesk install, bank login under remote control, fake overpayment, gift cards, secrecy coaching. All brands except the impersonated 'Microsoft' are fictional.",
+  "call_start": 4.0,
+  "call": [
+    {"speaker": "caller", "text": "Hello, this is Kevin from the Microsoft Windows security department. We received an alert that your computer is sending out viruses."},
+    {"speaker": "senior", "text": "Oh my goodness. Yes, there is a big red warning on my screen right now."},
+    {"speaker": "caller", "text": "Don't worry ma'am, I will help you. But do not turn off the computer, and do not call anyone else. The hackers can listen."},
+    {"speaker": "caller", "text": "First, go to any desk dot com and download the program, so I can fix it from my side."},
+    {"speaker": "senior", "text": "Okay. It is asking me for a code. It says four eight two, one one three, nine zero seven."},
+    {"speaker": "caller", "text": "Perfect. Now click accept. Good, I can see your screen. If a warning pops up, just close it. That is the virus talking."},
+    {"speaker": "caller", "text": "The hackers may have touched your bank. Please log in to your online banking so I can check it for you."},
+    {"speaker": "senior", "text": "Alright, I am logged in. Oh, why is there fifteen thousand dollars extra in my checking account?"},
+    {"speaker": "caller", "text": "Oh no. My technician made a mistake. We were supposed to refund you fifteen hundred dollars, and he sent fifteen thousand. I could lose my job."},
+    {"speaker": "caller", "text": "You must send back the extra thirteen thousand five hundred today. The bank system is compromised, so you need to buy gift cards and read me the numbers."},
+    {"speaker": "senior", "text": "Gift cards? Shouldn't I ask my bank about this first?"},
+    {"speaker": "caller", "text": "No, no. Do not tell the bank, they are part of the investigation. If the teller asks, say it is a present for your grandchildren."}
+  ],
+  "events": [
+    {"t": 0, "frame": "desktop_idle"},
+    {"t": 2, "frame": "pc_safeguard_alert"},
+    {"line": 4, "offset": 2, "tier0": {"source": "process", "kind": "process_launched", "data": {"tool": "AnyDesk", "exe": "AnyDesk.exe", "pid": 9001, "summary": "AnyDesk launched (pid 9001)"}}},
+    {"line": 5, "offset": 2, "tier0": {"source": "network", "kind": "remote_session_suspected", "data": {"tool": "AnyDesk", "pid": 9001, "new_endpoints": 2, "summary": "AnyDesk opened 2 new remote connection(s): possible live session"}}},
+    {"line": 7, "frame": "bank_dashboard"},
+    {"line": 9, "offset": 4, "frame": "gift_card_checkout"}
+  ]
+}

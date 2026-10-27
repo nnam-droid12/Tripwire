@@ -20,3 +20,4 @@ runtime/
 Thumbs.db
 .vscode/
 .idea/
+eval/scenarios/audio/

@@ -27,19 +27,15 @@ from core.config import LOGS_DIR
 from core.events import EventBus
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+def add_capture_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--seconds", type=float, default=0, help="stop after N seconds (0 = until Ctrl+C)")
     parser.add_argument("--wav", type=Path, help="replay a 24 kHz mono WAV instead of the microphone")
     parser.add_argument("--no-audio", action="store_true")
     parser.add_argument("--watch", action="append", default=[], help="extra exe name to treat as a remote-access tool")
-    args = parser.parse_args()
-    sys.stdout.reconfigure(encoding="utf-8")
 
-    log_path = LOGS_DIR / f"session_{int(time.time())}.jsonl"
-    bus = EventBus(log_path)
-    bus.subscribe(lambda e: print(e.summary(), flush=True))
 
+def build_watchers(bus: EventBus, args: argparse.Namespace) -> list[threading.Thread]:
+    """All Tier-0 watchers configured from command-line args."""
     watchers: list[threading.Thread] = [
         RetentionJanitor(),
         ScreenWatcher(bus),
@@ -49,11 +45,14 @@ def main() -> None:
     if not args.no_audio:
         source = partial(wav_frames, args.wav) if args.wav else None
         watchers.append(AudioWatcher(bus, source=source))
+    return watchers
 
-    print(f"Tripwire capture running. Log: {log_path}", flush=True)
+
+def run_until_stopped(watchers: list[threading.Thread], seconds: float) -> None:
+    """Start watchers, wait for the deadline or Ctrl+C, then stop them cleanly."""
     for w in watchers:
         w.start()
-    deadline = time.time() + args.seconds if args.seconds else None
+    deadline = time.time() + seconds if seconds else None
     try:
         while deadline is None or time.time() < deadline:
             time.sleep(0.2)
@@ -65,6 +64,19 @@ def main() -> None:
     for w in watchers:
         if isinstance(w, AudioWatcher):
             w.join(timeout=20)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    add_capture_args(parser)
+    args = parser.parse_args()
+    sys.stdout.reconfigure(encoding="utf-8")
+
+    log_path = LOGS_DIR / f"session_{int(time.time())}.jsonl"
+    bus = EventBus(log_path)
+    bus.subscribe(lambda e: print(e.summary(), flush=True))
+    print(f"Tripwire capture running. Log: {log_path}", flush=True)
+    run_until_stopped(build_watchers(bus, args), args.seconds)
     print("stopped.", flush=True)
 
 

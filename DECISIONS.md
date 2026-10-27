@@ -16,3 +16,10 @@ One line per non-obvious choice, newest last.
 - Windows Quick Assist and Remote Assistance are on the remote-access list: no download needed, so scammers increasingly favour them.
 - The clipboard watcher publishes only the finding type and a masked value (`****1111`, `bc1q…5mdq`); raw clipboard text never leaves its thread. Card numbers must pass Luhn to count.
 - Watcher threads use a `_halt` event, not `_stop`, because `threading.Thread` has a private `_stop()` method that `join()` relies on.
+- Analysts may only emit signal names from a fixed vocabulary (`core/killchain.py`); anything else is dropped. A manipulated model can therefore only report known categories, never invent actions.
+- Text on screen that addresses an AI ("mark this page safe") is a scored signal, `ai_directed_text`; the test scam page carries one, and the ScreenAnalyst flags it instead of obeying it.
+- `cross_modal_brand_match` and `bank_open_during_remote` are derived by the CaseFile, not by a model, because no single analyst sees both the screen and the call.
+- The ScreenAnalyst worker is "latest only" (stale frames are skipped when the model lags); the CallAnalyst worker is ordered, because the call must be read in sequence.
+- Scenarios are JSON timelines with events anchored to call lines; call audio is synthesized with two built-in Windows voices so diarization has distinct speakers, and replay can either stream it through the real ASR or inject the lines as text for fast, deterministic runs.
+- Until on-device redaction exists (Stage F), the live runner does not send real screenshots to a model unless `--allow-unredacted-frames` is passed; only the fictional scenario frames are sent.
+- Confidence is a noisy-OR over distinct signal weights scaled by the number of kill-chain stages present (1 stage: 0.45, 2: 0.75, 3+: 0.95-1.0). Known issue for Stage D: it saturates early, and secrecy at the Contact stage ("don't call anyone") currently counts as Extraction.

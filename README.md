@@ -4,7 +4,7 @@ Tripwire is an AI agent that runs on an older person's Windows laptop. It watche
 
 Built for the Meta Global AI Developer Hackathon (indie track). Everything in this repository was written during the event.
 
-> Status: early build. Stage B done: on-device capture and Tier-0 watchers.
+> Status: early build. Stage C done: Tier-1 analysts fill a live CaseFile with kill-chain signals.
 
 ## How it works
 
@@ -53,6 +53,30 @@ It prints a live log such as:
 | Clipboard (`agent/watchers.py`) | Crypto addresses, money amounts, card numbers, published masked only |
 
 Captured frames, audio and logs live in `runtime/` (git-ignored) and are deleted after 24 hours.
+
+## Replaying a scripted scam
+
+Scenarios in `eval/scenarios/` are timelines of screen frames, system events and call lines, using fictional brands only.
+
+```bash
+python -m scripts.render_pages                                           # HTML test pages -> PNG frames
+python -m scripts.make_call_audio eval/scenarios/scam_pc_safeguard.json  # two-voice call audio (Windows TTS)
+python -m eval.replay eval/scenarios/scam_pc_safeguard.json --mode text --speed 3   # fast, deterministic
+python -m eval.replay eval/scenarios/scam_pc_safeguard.json --mode audio            # end to end through the real ASR
+```
+
+Excerpt from an `--mode audio` run (real Muse Voice Transcribe output):
+
+```
+  >> CASE +[fake_virus_alert<screen>, scareware_phone_number<screen>, ai_directed_text<screen>]  stage=HOOK
+[audio] transcript: Speaker A: "Hello this is Kevin from the Microsoft Windows Security Department ..."
+  >> CASE +[cross_modal_brand_match<casefile>]  stage=CONTACT
+  >> CASE +[remote_tool_launched<process>]  stage=CONTROL
+  >> CASE +[bank_site_open<screen>, bank_open_during_remote<casefile>]
+  >> CASE +[overpayment_refund_story<call>, gift_card_request<call>, urgency_pressure<call>]  stage=EXTRACTION
+```
+
+Run live with `python -m scripts.run_tripwire`.
 
 ## Safety
 
