@@ -279,6 +279,6 @@ def get_image(incident_id: str, name: str, k: str = Query("")) -> Response:
     return Response(data, media_type="image/png", headers={"Cache-Control": "no-store"})
 
 
-@app.get("/healthz")
-def healthz() -> dict[str, str]:
+@app.get("/health")  # not /healthz: Cloud Run reserves paths ending in "z"
+def health() -> dict[str, str]:
     return {"ok": "true"}

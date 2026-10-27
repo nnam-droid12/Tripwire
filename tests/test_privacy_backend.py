@@ -42,8 +42,12 @@ def backend(tmp_path, monkeypatch):
     monkeypatch.setenv("TRIPWIRE_DASHBOARD_KEY", "family-key")
     for var in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"):
         monkeypatch.delenv(var, raising=False)
-    import core.config, backend.sms, backend.storage, backend.main
+    import core.config
+
+    # Point RUNTIME_DIR at tmp *before* backend.main is first imported, so the test
+    # can never write its placeholder keys into the real runtime/backend/keys.json.
     importlib.reload(core.config)
+    import backend.sms, backend.storage, backend.main
     importlib.reload(backend.sms)
     importlib.reload(backend.storage)
     main = importlib.reload(backend.main)

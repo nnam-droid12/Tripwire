@@ -10,7 +10,7 @@
 set -euo pipefail
 
 PROJECT="${PROJECT:-nixora-project}"
-REGION="${REGION:-us-central1}"
+REGION="${REGION:-us-east1}"  # same region as the other services in the project
 SERVICE="tripwire"
 BUCKET="${PROJECT}-tripwire-incidents"
 SA="tripwire-backend@${PROJECT}.iam.gserviceaccount.com"
@@ -66,7 +66,7 @@ done
 echo "== Deploy"
 URL="$($G run services describe "$SERVICE" --region="$REGION" --format='value(status.url)' 2>/dev/null || true)"
 $G run deploy "$SERVICE" --source=. --region="$REGION" --service-account="$SA" \
-  --allow-unauthenticated --max-instances=1 --memory=512Mi \
+  --allow-unauthenticated --max-instances=1 --memory=512Mi --no-cpu-throttling \
   --set-env-vars="TRIPWIRE_GCS_BUCKET=${BUCKET},META_BASE_URL=https://api.meta.ai/v1,META_MODEL=muse-spark-1.3,META_REASONING_EFFORT=,TRIPWIRE_PUBLIC_URL=${URL:-https://pending}" \
   --set-secrets="$SECRETS"
 URL="$($G run services describe "$SERVICE" --region="$REGION" --format='value(status.url)')"

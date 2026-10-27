@@ -180,6 +180,24 @@ Set `TWILIO_*` and `FAMILY_PHONE_NUMBER` in `.env` to send real texts; otherwise
 
 Run live with `python -m scripts.run_tripwire` (tray icon, interventions on).
 
+## Deployment
+
+The backend and the family dashboard (the web frontend: live status page and incident pages) are one FastAPI service, deployed to **Google Cloud Run**:
+
+```bash
+bash deploy/deploy.sh   # project nixora-project, region us-east1
+```
+
+The script is idempotent. It:
+
+- enables the APIs;
+- creates a least-privilege service account;
+- creates a private Cloud Storage bucket for incidents, with objects deleted after 30 days;
+- loads the secrets from `.env` into Secret Manager (they are never printed or baked into the image);
+- builds the container from `Dockerfile` and deploys it.
+
+The service is public so a family member's phone can open the alert link, but every page and API needs a private key: the dashboard key, or an unguessable per-incident token in the texted link. The laptop agent reports to it when `TRIPWIRE_BACKEND_URL` is set in `.env`.
+
 ## Safety
 
 - On-screen text and call audio are treated as data and never as instructions. Text addressed to an AI is itself a scam signal.

@@ -3,7 +3,7 @@
 Speech matters more than the screen during a hard stop: if a scammer is
 controlling the screen remotely, the senior can still *hear* Tripwire.
 
-Voice: Google Cloud Text-to-Speech, Chirp 3 HD "Kore", a natural female
+Voice: Google Cloud Text-to-Speech, Chirp 3 HD "Vindemiatrix", a gentle, natural female
 US-English voice (set ``TRIPWIRE_VOICE`` to change it), spoken slightly
 slower than normal for older listeners. Meta's API offers speech-to-text but
 not text-to-speech, hence Google for this one piece.
@@ -31,7 +31,7 @@ from pathlib import Path
 
 from core.config import RUNTIME_DIR
 
-VOICE = os.environ.get("TRIPWIRE_VOICE", "en-US-Chirp3-HD-Kore")
+VOICE = os.environ.get("TRIPWIRE_VOICE", "en-US-Chirp3-HD-Vindemiatrix")
 SPEAKING_RATE = float(os.environ.get("TRIPWIRE_SPEAKING_RATE", "0.92"))
 GCP_PROJECT = os.environ.get("TRIPWIRE_GCP_PROJECT", "nixora-project")
 CACHE_DIR = RUNTIME_DIR / "tts_cache"  # not purged with the 24h buffer: contains no personal data

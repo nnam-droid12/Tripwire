@@ -2,7 +2,8 @@
 # Only the modules the backend imports are copied: no .env, no captured data.
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+# /tmp is the only writable place on Cloud Run (dry-run SMS outbox, scratch files)
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 TRIPWIRE_RUNTIME_DIR=/tmp/tripwire
 RUN apt-get update && apt-get install -y --no-install-recommends fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
