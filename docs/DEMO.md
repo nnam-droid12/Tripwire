@@ -1,5 +1,7 @@
 # Recording the 3-minute demo
 
+> **Recommended video:** record the web arena, [/arena](https://tripwire-4j2p5vomta-ue.a.run.app/arena), in a browser window. You play the scammer live; Margaret answers; Tripwire stops you; the recovery agent acts. The shot list below for the desktop demo still applies for the on-device part (0:20-0:35 and 2:15-3:00).
+
 ## Before you record
 
 1. **Screen recorder.** Use OBS Studio (free) with a *Display Capture* source, so the full-screen warning is recorded. Windows' Game Bar (Win+Alt+R) records only one app window and will miss it. Record system audio too: the call and Tripwire's voice both come out of the speakers.

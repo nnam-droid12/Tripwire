@@ -11,12 +11,34 @@ Built for the Meta Global AI Developer Hackathon (indie track). Everything in th
 | Tool | Job in Tripwire |
 |---|---|
 | **Muse Spark Open** (Baseten) | Always-on Tier-1 narrator: reads every changed screenshot and every call line, and tags kill-chain signals |
-| **Muse Spark** (`muse-spark-1.3`, Meta Model API) | The CaseJudge: reasons over the whole session and is the only component that can authorize a hard stop. It also writes the family's plain-language incident story |
-| **Muse Voice Transcribe** | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode) |
+| **Muse Spark** (`muse-spark-1.3`, Meta Model API) | The CaseJudge: reasons over the whole session and is the only component that can authorize a hard stop. Also plays Margaret in the arena, runs the tool-calling recovery agent, and writes the family's plain-language incident story |
+| **Muse Voice Transcribe** | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode), and push-to-talk transcription of the scammer in the arena |
 | **SAM 3.1** | Outlines the threat (the fake warning, the scammer's number) on already-redacted screenshots for the family |
 | **Muse Image** | Generated the synthetic scam and look-alike screens used to evaluate the screen analyst |
 
-**Try it:** `python -m scripts.demo` stages a scam on your screen and lets Tripwire stop it ([docs/DEMO.md](docs/DEMO.md)).
+## Try it now: "Can you scam Margaret?"
+
+**[tripwire-4j2p5vomta-ue.a.run.app/arena](https://tripwire-4j2p5vomta-ue.a.run.app/arena)**: no login, works in Chrome or Edge.
+
+You play the scammer. Hold the button and speak, or type. Margaret, 78, answers out loud and does what you tell her on her laptop: she installs a remote-access app, logs in to her bank, opens a gift-card page. The real Tripwire pipeline watches her screen and the call the whole time:
+
+- the kill-chain meter lights up as you move through the scam;
+- the CaseJudge explains its reasoning;
+- a calm spoken nudge comes first, then the red warning over her laptop, in a natural voice;
+- if you say "just close that box", Tripwire notices.
+
+When it stops you, a **recovery agent** takes over. Muse Spark uses tools to end the remote session, freeze her card on the bank's security page, draft an FTC fraud report and alert her family. Your score is how far you got.
+
+Try being her grandson Tom instead: Tripwire should stay quiet.
+
+| Who | Played by |
+|---|---|
+| The scammer | You (voice via Muse Voice Transcribe, or text) |
+| Margaret | Muse Spark, with her own Chirp 3 HD voice and actions on her simulated laptop |
+| Tripwire | The real pipeline: Muse Spark Open analysts, the kill-chain CaseFile, the Muse Spark CaseJudge |
+| Recovery agent | Muse Spark with tool calling |
+
+Everything in the arena is fictional. The on-device agent below is the real product; the arena runs the same detection pipeline in the cloud so anyone can test it. A desktop demo is also available: `python -m scripts.demo` stages a scam in a window ([docs/DEMO.md](docs/DEMO.md)).
 
 ## How it works
 
