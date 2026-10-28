@@ -1,14 +1,13 @@
-"""Publish the build dashboard (/progress) from this machine.
+"""Publish the status and roadmap page (/progress) from this machine.
 
 Usage::
 
     python -m scripts.progress "Running the final test-split evaluation"
     python -m scripts.progress --done EXT --doing SITE "Building the landing page"
 
-Reads the milestones from ``docs/progress.json``, applies any status changes
-given here (and saves them back), adds the latest commits from git, and posts
-everything with the agent token to ``TRIPWIRE_BACKEND_URL``. Nothing here is
-secret: the dashboard is public by design.
+Reads the roadmap from ``docs/progress.json``, applies any status changes
+given here (and saves them back), and posts it with the agent token to
+``TRIPWIRE_BACKEND_URL``. Nothing here is secret: the page is public by design.
 """
 
 from __future__ import annotations
@@ -16,18 +15,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import urllib.request
 
 from agent.reporter import agent_token
 from core.config import REPO_ROOT
 
 SPEC = REPO_ROOT / "docs" / "progress.json"
-
-
-def recent_commits(n: int = 12) -> list[dict[str, str]]:
-    out = subprocess.run(["git", "log", f"-{n}", "--pretty=format:%h\t%cI\t%s"], capture_output=True, text=True, cwd=REPO_ROOT).stdout
-    return [dict(zip(("sha", "date", "subject"), line.split("\t", 2))) for line in out.splitlines() if line]
 
 
 def main() -> None:
@@ -45,7 +38,7 @@ def main() -> None:
             m["status"] = "in_progress"
     SPEC.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
 
-    body = {**spec, "now": args.now, "commits": recent_commits()}
+    body = {**spec, "now": args.now}
     url = os.environ.get("TRIPWIRE_BACKEND_URL", "http://127.0.0.1:8765").rstrip("/") + "/api/progress"
     req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "X-Tripwire-Token": agent_token()})
     with urllib.request.urlopen(req, timeout=30) as resp:

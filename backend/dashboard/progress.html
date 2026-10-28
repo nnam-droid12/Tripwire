@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tripwire Build Progress</title>
-<meta name="description" content="Live build log: what is being worked on now, milestones, latest results and commits.">
+<title>Tripwire Status</title>
+<meta name="description" content="What the Tripwire team is working on, what has shipped, and how Tripwire performs.">
 <style>
   :root { --bg:#f7f6f2; --panel:#fff; --ink:#15191e; --muted:#5b6570; --line:#e3dfd5; --chip:#f1efe8;
     --done:#1f7a4d; --doing:#2c56d6; --next:#8a8f96; --brand:#b3261e; }
@@ -18,7 +18,7 @@
   .top h1 { font-size:24px; margin:0; }
   .top .back { margin-left:auto; color:var(--muted); font-size:14px; }
   .goal { color:var(--muted); margin:4px 0 20px; }
-  .row { display:grid; grid-template-columns:2fr 1fr 1fr; gap:16px; }
+  .row { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
   @media (max-width: 900px) { .row { grid-template-columns:1fr; } }
   .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; }
   .label { font-size:12px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:var(--muted); }
@@ -42,42 +42,33 @@
   .metric { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px solid var(--line); font-size:15px; }
   .metric:first-of-type { border-top:0; }
   .metric b { white-space:nowrap; }
-  .commit { padding:9px 0; border-top:1px solid var(--line); font-size:14px; }
-  .commit:first-of-type { border-top:0; }
-  .commit code { font-size:12.5px; color:var(--muted); margin-right:6px; }
-  .commit .when { color:var(--muted); font-size:12.5px; display:block; }
   h2 { font-size:17px; margin:0 0 6px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <h1>Tripwire · build progress</h1>
+    <h1>Tripwire · status and roadmap</h1>
     <span class="muted" id="updated"></span>
     <a class="back" href="/">Tripwire home →</a>
   </div>
-  <p class="goal" id="goal"></p>
+  <p class="goal">What we're working on, what has shipped, and how Tripwire performs today.</p>
 
   <div class="row">
     <div class="card"><div class="label">Working on now</div><div class="now"><span class="now-dot"></span><span id="now">…</span></div></div>
-    <div class="card"><div class="label">Time to deadline</div><div class="big" id="countdown">…</div><div class="muted" id="deadline"></div></div>
-    <div class="card"><div class="label">Milestones done</div><div class="big" id="done">…</div><div class="bar"><i id="donebar" style="width:0"></i></div></div>
+    <div class="card"><div class="label">Shipped</div><div class="big" id="done">…</div><div class="bar"><i id="donebar" style="width:0"></i></div></div>
   </div>
 
   <div class="grid2">
     <div class="card">
-      <h2>Milestones</h2>
+      <h2>Roadmap</h2>
       <div id="milestones"></div>
     </div>
     <div>
       <div class="card">
-        <h2>Latest results</h2>
-        <div class="muted" style="margin-bottom:6px">Read live from the evaluation result files in the repository.</div>
+        <h2>How Tripwire performs</h2>
+        <div class="muted" style="margin-bottom:6px">From our latest test runs.</div>
         <div id="metrics"></div>
-      </div>
-      <div class="card" style="margin-top:16px">
-        <h2>Latest commits</h2>
-        <div id="commits"></div>
       </div>
     </div>
   </div>
@@ -86,8 +77,7 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const pct = x => x == null ? "n/a" : `${Math.round(x * 100)}%`;
-const STATUS = { done: "Done", in_progress: "In progress", next: "Next" };
-let deadline = null;
+const STATUS = { done: "Shipped", in_progress: "In progress", next: "Up next" };
 
 function ago(ts) {
   const s = Math.round(Date.now() / 1000 - ts);
@@ -95,32 +85,17 @@ function ago(ts) {
   if (s < 5400) return `${Math.round(s / 60)} min ago`;
   return `${Math.round(s / 3600)} h ago`;
 }
-function tick() {
-  if (!deadline) return;
-  const ms = deadline - Date.now();
-  if (ms <= 0) { $("countdown").textContent = "Deadline passed"; return; }
-  const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
-  $("countdown").textContent = `${d}d ${h}h ${m}m`;
-}
 async function load() {
   try {
     const p = await (await fetch("/api/progress")).json();
     $("now").textContent = p.now || "Nothing published yet";
-    $("goal").textContent = p.goal || "";
     $("updated").textContent = p.updated ? `updated ${ago(p.updated)}` : "";
-    if (p.deadline) {
-      deadline = new Date(p.deadline);
-      $("deadline").textContent = deadline.toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) + " (your time)";
-    }
     const ms = p.milestones || [], done = ms.filter(m => m.status === "done").length;
     $("done").textContent = ms.length ? `${done} / ${ms.length}` : "…";
     $("donebar").style.width = ms.length ? `${100 * done / ms.length}%` : 0;
     const order = { in_progress: 0, next: 1, done: 2 };
     $("milestones").innerHTML = [...ms].sort((a, b) => order[a.status] - order[b.status]).map(m =>
       `<div class="ms"><span class="chip ${m.status}">${STATUS[m.status] || m.status}</span><div><b>${esc(m.title)}</b><span>${esc(m.detail)}</span></div></div>`).join("");
-    $("commits").innerHTML = (p.commits || []).map(c =>
-      `<div class="commit"><code>${esc(c.sha)}</code>${esc(c.subject)}<span class="when">${new Date(c.date).toLocaleString()}</span></div>`).join("") || "<span class='muted'>None yet.</span>";
-    tick();
   } catch (e) { $("now").textContent = "Could not load progress."; }
   try {
     const R = await (await fetch("/api/results")).json();
@@ -136,7 +111,7 @@ async function load() {
     $("metrics").innerHTML = rows.map(([k, v]) => `<div class="metric"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("");
   } catch (e) {}
 }
-load(); setInterval(load, 20000); setInterval(tick, 30000);
+load(); setInterval(load, 20000);
 </script>
 </body>
 </html>

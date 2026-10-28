@@ -9,7 +9,7 @@ or deploy to Cloud Run (``deploy/deploy.sh``).
 * ``/arena``: "Can you scam Margaret?", the public, no-login web app. The
   visitor plays a scammer; Margaret (AI) answers; the real Tripwire pipeline
   stops the scam live and a recovery agent secures her accounts.
-* ``/``: landing page; ``/progress``: the public build dashboard.
+* ``/``: landing page; ``/progress``: the public status and roadmap page.
 * ``/family``: the family dashboard (live status, alerts); ``/i/<id>``: one incident.
 * ``/api/agent/*``: where the on-device agent reports, with its agent token.
 
@@ -168,12 +168,12 @@ def results() -> dict[str, Any]:
 @app.get("/api/progress")
 def get_progress() -> dict[str, Any]:
     raw = STORE.backend.get_bytes(PROGRESS_KEY)
-    return json.loads(raw) if raw else {"now": "", "milestones": [], "commits": [], "updated": 0}
+    return json.loads(raw) if raw else {"now": "", "milestones": [], "updated": 0}
 
 
 @app.post("/api/progress")
 def post_progress(body: dict[str, Any], x_tripwire_token: str | None = Header(None)) -> dict[str, str]:
-    """The build dashboard's data; written by the developer's machine with the agent token."""
+    """The status page's data; written by the team's machine with the agent token."""
     _require_agent(x_tripwire_token)
     STORE.backend.put_bytes(PROGRESS_KEY, json.dumps({**body, "updated": time.time()}).encode(), "application/json")
     return {"ok": "true"}
