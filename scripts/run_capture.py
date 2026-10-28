@@ -22,6 +22,7 @@ from pathlib import Path
 from agent.buffer import RetentionJanitor
 from agent.capture_audio import AudioWatcher, wav_frames
 from agent.capture_screen import ScreenWatcher
+from agent.control import ControlWatcher
 from agent.watchers import ClipboardWatcher, ProcessWatcher
 from core.config import LOGS_DIR
 from core.events import EventBus
@@ -41,6 +42,7 @@ def build_watchers(bus: EventBus, args: argparse.Namespace) -> list[threading.Th
         ScreenWatcher(bus),
         ProcessWatcher(bus, extra_tools={exe: f"{exe} (test)" for exe in args.watch}),
         ClipboardWatcher(bus),
+        ControlWatcher(bus, extra_tools={exe: f"{exe} (test)" for exe in args.watch}),  # who is driving the mouse
     ]
     if not args.no_audio:
         source = partial(wav_frames, args.wav) if args.wav else None

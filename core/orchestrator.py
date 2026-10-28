@@ -35,6 +35,7 @@ from core.policy import Action, EscalationPolicy, Verdict
 TIER0_RULES: dict[tuple[str, str], str] = {
     ("process", "process_launched"): "remote_tool_launched",
     ("network", "remote_session_suspected"): "remote_session_active",
+    ("control", "remote_input"): "remote_control_input",
     ("clipboard", "bitcoin_address"): "crypto_address_copied",
     ("clipboard", "ethereum_address"): "crypto_address_copied",
     ("clipboard", "money_amount"): "money_amount_copied",
@@ -124,7 +125,7 @@ class Orchestrator:
                 self._screen_worker.submit(event)
         elif event.source == "audio" and event.kind == "transcript":
             self._call_worker.submit(event)
-        elif event.source in ("process", "network", "clipboard"):
+        elif event.source in ("process", "network", "clipboard", "control"):
             self._apply_tier0(event)
         elif event.source == "intervention":
             self.case.note("intervention", event.data.get("summary", event.kind), ts=event.ts)

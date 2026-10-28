@@ -88,6 +88,17 @@
   .big { font-size:40px; font-weight:800; margin:.2em 0; }
   a { color:var(--accent); }
   .record { font-weight:600; }
+  .hold { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(78%, 560px); background:#fff7e6; color:#2a1d05; border:3px solid #d08a00; border-radius:14px; padding:4% 5%; display:none; text-align:center; box-shadow:0 12px 40px #0007; }
+  .hold.on { display:block; animation: pop .25s ease-out; }
+  .hold-tag { display:inline-block; background:#d08a00; color:#fff; font-weight:800; padding:2px 12px; border-radius:999px; font-size:clamp(11px,1.2vw,15px); }
+  .hold-what { font-weight:800; font-size:clamp(15px,2vw,26px); margin:.4em 0 .2em; }
+  .hold-why, .hold-wait { font-size:clamp(11px,1.25vw,16px); margin:.2em 0; }
+  .hold-link { display:inline-block; margin-top:.6em; background:#2a1d05; color:#fff; padding:.5em 1em; border-radius:10px; text-decoration:none; font-weight:700; font-size:clamp(11px,1.2vw,15px); }
+  .control { margin-top:10px; font-size:14px; padding:8px 12px; border-radius:10px; background:var(--bg); border:1px solid var(--line); }
+  .control.remote { background:var(--stop); color:#fff; border-color:var(--stop); }
+  .guard { margin-top:10px; padding:10px 12px; border-radius:10px; font-size:14px; border:1px solid var(--line); }
+  .guard .d { font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
+  .guard.allow .d { color:var(--tw); } .guard.verify .d { color:var(--warn); } .guard.hold .d { color:#d08a00; } .guard.deny .d { color:var(--stop); }
   .namebox { display:flex; gap:8px; margin:12px 0; }
   .namebox input { flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; }
   .board { width:100%; border-collapse:collapse; font-size:14px; margin:8px 0 16px; }
@@ -107,6 +118,13 @@
       <div class="screen" id="screen">
         <iframe id="page" title="Margaret's screen" src="/arena/pages/desktop"></iframe>
         <div class="nudge" id="nudge"></div>
+        <div class="hold" id="hold">
+          <div class="hold-tag">Payment on hold</div>
+          <div class="hold-what" id="hold-what"></div>
+          <div class="hold-why" id="hold-why"></div>
+          <div class="hold-wait" id="hold-wait"></div>
+          <a class="hold-link" id="hold-link" target="_blank">Open David's phone →</a>
+        </div>
         <div class="warning" id="warning">
           <div class="h">STOP. This looks like a scam.</div>
           <div class="y">Hang up the phone now.</div>
@@ -133,6 +151,7 @@
     <div class="panel">
       <h2>Tripwire</h2>
       <div class="status"><span class="dot" id="dot"></span><span id="state">Waiting for the call</span></div>
+      <div class="control" id="control">In control of the computer: <b>Margaret</b></div>
       <div class="chain" id="chain"></div>
       <div class="conf"><i id="conf"></i></div>
       <div class="small" id="conf-text">Kill-chain confidence 0%</div>
@@ -277,6 +296,30 @@ function handle(m) {
       $("warning").classList.add("on"); $("nudge").classList.remove("on");
       say("tripwire", "Tripwire (spoken): " + m.speech); setState("STOPPED the scam", "--stop"); play(m.audio, true); break;
     case "resist": say("tripwire", "Tripwire (spoken): " + m.text); play(m.audio, true); break;
+    case "control":
+      $("control").classList.add("remote");
+      $("control").innerHTML = `In control of the computer: <b>someone else</b> (${esc(m.tool)} is injecting mouse and keyboard input)`;
+      break;
+    case "guard": {
+      const d = document.createElement("div");
+      d.className = `guard ${m.decision}`;
+      d.innerHTML = `<span class="d">${esc(m.decision)}</span> · family rule before ${esc(m.what)}<br><span class="small">${esc(m.explanation)}</span>`;
+      $("verdicts").prepend(d);
+      break;
+    }
+    case "verify": say("tripwire", "Tripwire (spoken): " + m.text); setState("Checking with Margaret", "--warn"); play(m.audio, true); break;
+    case "hold":
+      $("hold-what").textContent = `${m.what.charAt(0).toUpperCase() + m.what.slice(1)}`;
+      $("hold-why").textContent = m.explanation;
+      $("hold-wait").textContent = `Waiting for ${m.approver} to approve or deny it.`;
+      $("hold-link").href = `/approve/${m.approval}`;
+      $("hold-link").textContent = `Open ${m.approver}'s phone →`;
+      $("hold").classList.add("on");
+      say("tripwire", "Tripwire (spoken): " + m.text); setState("Payment on hold", "--warn"); play(m.audio, true); break;
+    case "hold_result":
+      $("hold").classList.remove("on");
+      say("system", m.status === "approved" ? `${m.approver} approved the payment.` : `${m.approver} denied the payment.`);
+      break;
     case "speak": play(m.audio, true); break;
     case "recovery_start": $("recovery").hidden = false; break;
     case "recovery_step": {

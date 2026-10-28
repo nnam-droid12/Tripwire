@@ -117,3 +117,36 @@ def test_speaker_falls_back_to_windows_voice_when_synthesis_fails() -> None:
     sp.stop()
     sp.join(timeout=5)
     assert spoken == ["Hang up the phone now."]
+
+
+def test_family_rules_decide_before_payments() -> None:
+    from core.rules import Decision, Facts, FamilyRules, combine
+
+    rules = FamilyRules()
+    unknown_call = dict(on_call=True, caller_known=False)
+    assert rules.evaluate(Facts(sensitive_action=None, **unknown_call)).decision == Decision.ALLOW
+    assert rules.evaluate(Facts(sensitive_action="wire_transfer", amount=120, **unknown_call)).decision == Decision.VERIFY
+    assert rules.evaluate(Facts(sensitive_action="wire_transfer", amount=18500, **unknown_call)).decision == Decision.HOLD
+    assert rules.evaluate(Facts(sensitive_action="gift_cards", amount=50, **unknown_call)).decision == Decision.HOLD
+    assert rules.evaluate(Facts(sensitive_action="gift_cards", amount=50, on_call=True, caller_known=True)).decision == Decision.ALLOW
+    deny = rules.evaluate(Facts(sensitive_action="wire_transfer", amount=50, remote_control=True, **unknown_call))
+    assert deny.decision == Decision.DENY and deny.rule == "no_payments_under_remote_control"
+    assert rules.evaluate(Facts(sensitive_action="bitcoin", judge_suspects_scam=True)).decision == Decision.DENY
+    assert combine(Decision.HOLD, Decision.ALLOW) == Decision.HOLD and combine(Decision.ALLOW, Decision.DENY) == Decision.DENY
+
+
+def test_held_payment_needs_an_answer_and_expires_as_no(tmp_path, monkeypatch) -> None:
+    import importlib, time as _time
+    monkeypatch.setenv("TRIPWIRE_RUNTIME_DIR", str(tmp_path))
+    monkeypatch.delenv("TRIPWIRE_GCS_BUCKET", raising=False)
+    import core.config, backend.storage, backend.approvals as approvals
+    importlib.reload(core.config); importlib.reload(backend.storage)
+    approvals = importlib.reload(approvals)
+    a = approvals.create("Margaret", "a wire transfer", "During a call with someone who isn't family.", "David")
+    assert approvals.get(a["id"])["status"] == "pending"
+    assert approvals.decide(a["id"], approve=False)["status"] == "denied"
+    assert approvals.decide(a["id"], approve=True)["status"] == "denied"  # a decision can't be flipped afterwards
+    b = approvals.create("Margaret", "gift cards", "x", "David")
+    monkeypatch.setattr(approvals, "EXPIRES_S", -1)
+    assert approvals.get(b["id"])["status"] == "expired"  # silence is never a yes
+    assert approvals.get("../../etc") is None

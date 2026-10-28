@@ -36,6 +36,7 @@ from fastapi import FastAPI, Header, HTTPException, Query, WebSocket, WebSocketD
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
+from backend import approvals
 from backend.arena import laptop, scores
 from backend.arena.session import VOICE_DIR, ArenaSession, prewarm_voices
 from backend.incidents import STORE, create_incident, decode_frames
@@ -177,6 +178,34 @@ def post_progress(body: dict[str, Any], x_tripwire_token: str | None = Header(No
     _require_agent(x_tripwire_token)
     STORE.backend.put_bytes(PROGRESS_KEY, json.dumps({**body, "updated": time.time()}).encode(), "application/json")
     return {"ok": "true"}
+
+
+class DecisionIn(BaseModel):
+    approve: bool
+
+
+@app.get("/approve/{approval_id}", response_class=HTMLResponse)
+def approve_page(approval_id: str) -> HTMLResponse:
+    if not approvals.get(approval_id):
+        raise HTTPException(404)
+    return HTMLResponse((DASHBOARD_DIR / "approve.html").read_text(encoding="utf-8"))
+
+
+@app.get("/api/approvals/{approval_id}")
+def get_approval(approval_id: str) -> dict[str, Any]:
+    approval = approvals.get(approval_id)
+    if not approval:
+        raise HTTPException(404)
+    return approval
+
+
+@app.post("/api/approvals/{approval_id}")
+def post_approval(approval_id: str, body: DecisionIn) -> dict[str, Any]:
+    """The family member's answer to a held payment. The link itself is the credential (unguessable id)."""
+    approval = approvals.decide(approval_id, body.approve)
+    if not approval:
+        raise HTTPException(404)
+    return approval
 
 
 @app.get("/family", response_class=HTMLResponse)

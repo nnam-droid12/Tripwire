@@ -51,6 +51,7 @@ SIGNALS: dict[str, SignalSpec] = {
     "remote_access_code_shared": SignalSpec(Stage.CONTROL, 0.40, "User reads out or is asked for a remote-access ID/code"),
     "remote_tool_launched": SignalSpec(Stage.CONTROL, 0.30, "A remote-access program started on this computer"),
     "remote_session_active": SignalSpec(Stage.CONTROL, 0.45, "A remote-access session appears to be live"),
+    "remote_control_input": SignalSpec(Stage.CONTROL, 0.55, "Someone other than the person is moving the mouse or typing (input injected by a remote-access tool)"),
     "disable_protection": SignalSpec(Stage.CONTROL, 0.50, "Instruction to close a warning, ignore security software, or turn off/uninstall protection"),
     # 4. Access
     "bank_site_open": SignalSpec(Stage.ACCESS, 0.15, "An online banking or payment site is on screen"),

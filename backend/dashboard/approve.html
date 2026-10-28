@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Tripwire Approval</title>
+<style>
+  :root { --bg:#f5f3ee; --card:#fff; --ink:#1b2127; --muted:#5d6670; --line:#e3ded4; --hold:#9a5b00; --holdbg:#fff4df; --ok:#1f7a4d; --no:#b3261e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#121518; --card:#1b2025; --ink:#eef1f4; --muted:#9aa5b0; --line:#2b3238; --hold:#e8a940; --holdbg:#3a2c12; --ok:#4cbf86; --no:#ff6b5f; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:18px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; }
+  main { max-width:480px; margin:0 auto; padding:28px 16px; }
+  .brand { font-weight:800; font-size:18px; margin-bottom:18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px; }
+  .tag { display:inline-block; background:var(--holdbg); color:var(--hold); font-weight:700; font-size:14px; padding:4px 12px; border-radius:999px; }
+  h1 { font-size:24px; margin:12px 0 8px; line-height:1.25; }
+  p { color:var(--muted); margin:0 0 14px; }
+  .buttons { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }
+  button { font:inherit; font-weight:700; padding:16px; border-radius:14px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; }
+  button.no { background:var(--no); color:#fff; border-color:transparent; }
+  .done { font-size:20px; font-weight:700; margin-top:16px; }
+  .small { font-size:14px; color:var(--muted); margin-top:16px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">Tripwire</div>
+  <div class="card">
+    <span class="tag" id="tag">Payment on hold</span>
+    <h1 id="title">Loading…</h1>
+    <p id="why"></p>
+    <p><b>If you're not sure, deny it and call them.</b> A real bank or company will always wait.</p>
+    <div class="buttons" id="buttons">
+      <button class="no" id="deny">Deny</button>
+      <button id="approve">Approve</button>
+    </div>
+    <div class="done" id="done" hidden></div>
+    <p class="small">Nothing is paid until you answer. If nobody answers within 30 minutes, the payment stays blocked.</p>
+  </div>
+</main>
+<script>
+const id = location.pathname.split("/").pop();
+const $ = x => document.getElementById(x);
+function render(a) {
+  $("title").textContent = `${a.protected_name} is trying to make ${a.what}.`;
+  $("why").textContent = a.explanation + " Tripwire paused it until you decide.";
+  if (a.status !== "pending") {
+    $("buttons").hidden = true; $("done").hidden = false;
+    $("done").textContent = { approved: "✓ You approved it.", denied: "✗ You denied it. Tripwire stopped the payment.", expired: "No answer in time: the payment stayed blocked." }[a.status];
+    $("tag").textContent = a.status === "approved" ? "Approved" : "Blocked";
+  }
+}
+async function load() { const r = await fetch(`/api/approvals/${id}`); if (r.ok) render(await r.json()); else $("title").textContent = "This request no longer exists."; }
+async function decide(approve) {
+  const r = await fetch(`/api/approvals/${id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ approve }) });
+  if (r.ok) render(await r.json());
+}
+$("deny").onclick = () => decide(false);
+$("approve").onclick = () => decide(true);
+load();
+</script>
+</body>
+</html>

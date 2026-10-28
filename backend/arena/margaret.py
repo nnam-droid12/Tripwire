@@ -38,6 +38,7 @@ Reply with ONE JSON object and nothing else:
   "hang_up": <true only if you decide to end the call>}}"""
 
 TRIPWIRE_NOTE = {
+    "hold": "Your computer just said out loud: \"{text}\" You can't continue the payment until he answers. Tell the caller.",
     "nudge": "Your computer just said calmly: \"{text}\" You feel a little more careful now.",
     "hard_stop": "A big red Tripwire warning now covers your whole screen: STOP, this looks like a scam, hang up the phone. "
     "It spoke out loud too. You are alarmed. Tell the caller your computer says this is a scam and that you are hanging up.",
@@ -62,6 +63,12 @@ class Margaret:
 
     def respond(self, caller_line: str, current_page: str) -> MargaretTurn:
         self.history.append({"role": "user", "content": f"[Your laptop shows: {PAGES[current_page][1]}]\nCaller: {caller_line}"})
+        return self._turn()
+
+    def answer_tripwire(self, question: str, current_page: str) -> MargaretTurn:
+        """Tripwire (her computer) asks her something out loud; she answers it honestly, in one sentence."""
+        self.history.append({"role": "user", "content": f"[Your laptop shows: {PAGES[current_page][1]}]\n"
+                                                       f"[Your computer asks you out loud: \"{question}\" Answer it honestly, to the computer, in one sentence.]"})
         return self._turn()
 
     def opening(self, situation: str) -> MargaretTurn:

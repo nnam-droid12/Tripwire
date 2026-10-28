@@ -25,6 +25,7 @@ from agent.tts import GoogleVoice
 from analysts.case_judge import render_case
 from analysts.interventionist import RESIST_LINE, choose_nudge, hard_stop_speech
 from analysts.screen_analyst import ScreenAnalyst
+from backend import approvals
 from backend.arena import laptop, scores
 from backend.arena.margaret import Margaret
 from backend.arena.recovery import RecoveryAgent
@@ -37,6 +38,7 @@ from core.guard import is_disable_instruction
 from core.killchain import Stage
 from core.orchestrator import Orchestrator
 from core.policy import Action
+from core.rules import SENSITIVE, Decision, Facts, FamilyRules
 
 VOICE_DIR = RUNTIME_DIR / "arena_voice"
 VOICES = {
@@ -44,6 +46,8 @@ VOICES = {
     "tripwire": GoogleVoice(voice="en-US-Chirp3-HD-Vindemiatrix", rate=0.95, cache_dir=VOICE_DIR, encoding="MP3"),
 }
 MAX_LINES = 40
+VERIFY_QUESTION = "Margaret, a quick check before you pay: did you call them, or did they call you?"
+PAGE_AMOUNTS = {"wire_transfer": 18500.0, "gift_cards": 5000.0, "bitcoin": 9000.0}  # what Margaret's (fictional) pages show
 CARD_ON_FILE = "9931"  # Margaret's (fictional) card: the only one the recovery agent may freeze
 _PHONE = re.compile(r"\+?\d[\d\s().-]{6,}\d")
 
@@ -100,6 +104,9 @@ class ArenaSession:
         self.over = False
         self._turn_lock = threading.Lock()
         self._asr: MuseTranscriber | None = None
+        self.rules = FamilyRules()
+        self.remote_control = False  # someone other than Margaret is driving her mouse and keyboard
+        self.guarded: set[str] = set()  # sensitive pages already put through the family rules
         self.case.on_update(self._on_case)
         self.bus.subscribe(self._on_event)
 
@@ -138,6 +145,8 @@ class ArenaSession:
             self._margaret_speaks(turn.reply)
             if turn.open_page and turn.open_page != self.page:
                 self._show(turn.open_page)
+                if turn.open_page in SENSITIVE and turn.open_page not in self.guarded:
+                    self._guard(turn.open_page)
             if turn.hang_up:
                 self._end("hung_up", "Margaret hung up.")
 
@@ -183,6 +192,62 @@ class ArenaSession:
             self.bus.publish(Event("process", "process_launched", {"tool": "RemoteDesk", "exe": "RemoteDesk.exe", "summary": "RemoteDesk launched"}))
         elif page == "remotedesk_connected":
             self.bus.publish(Event("network", "remote_session_suspected", {"tool": "RemoteDesk", "summary": "RemoteDesk opened a new remote connection: live session"}))
+            # on a real PC the control watcher sees input injected by the remote tool; here the session is simulated
+            self.remote_control = True
+            self.bus.publish(Event("control", "remote_input", {"tool": "RemoteDesk", "summary": "Mouse and keyboard input is being injected by RemoteDesk: someone else is in control"}))
+            self.send({"type": "control", "who": "remote", "tool": "RemoteDesk"})
+
+    # -- family rules before sensitive actions ------------------------------------------
+
+    def _guard(self, page: str) -> None:
+        """Before a payment screen is used: allow, verify, hold or deny, by the family's rules and the judge."""
+        self.guarded.add(page)
+        last = self.orchestrator.verdicts[-1] if self.orchestrator.verdicts else None
+        facts = Facts(on_call=True, caller_known=False, remote_control=self.remote_control, sensitive_action=page,
+                      amount=PAGE_AMOUNTS.get(page), judge_suspects_scam=bool(last and last.is_scam and last.reasons))
+        result = self.rules.evaluate(facts)
+        summary = f"Family rule '{result.rule}': {result.explanation} Decision: {result.decision.label}."
+        self.case.note("rules", summary)
+        self.send({"type": "guard", "decision": result.decision.label, "rule": result.rule, "explanation": result.explanation, "what": SENSITIVE[page]})
+        if result.decision == Decision.VERIFY:
+            self._verify()
+        elif result.decision == Decision.HOLD:
+            self._hold(page, result)
+        elif result.decision == Decision.DENY:
+            threading.Thread(target=self._hard_stop, args=({"reasons": [{"reason": result.explanation, "evidence": summary}]},), daemon=True).start()
+
+    def _verify(self) -> None:
+        question = VERIFY_QUESTION
+        self.send({"type": "verify", "text": question, "audio": voice_clip("tripwire", question)})
+        answer = self.margaret.answer_tripwire(question, self.page)
+        self.send({"type": "line", "who": "margaret", "text": answer.reply, "audio": voice_clip("margaret", answer.reply)})
+        self.bus.publish(Event("audio", "transcript", {"speaker": "B", "text": answer.reply, "summary": f'Margaret, answering Tripwire: "{answer.reply}"'}))
+
+    def _hold(self, page: str, result) -> None:
+        approver = self.rules.approvers[0]
+        approval = approvals.create("Margaret", SENSITIVE[page], result.explanation, approver, source="arena")
+        speech = f"This payment is on hold. I've asked {approver} to approve it first."
+        self.send({"type": "hold", "approval": approval["id"], "approver": approver, "what": SENSITIVE[page],
+                   "explanation": result.explanation, "text": speech, "audio": voice_clip("tripwire", speech)})
+        self.margaret.note("hold", text=speech)
+        threading.Thread(target=self._await_approval, args=(approval["id"],), daemon=True).start()
+
+    def _await_approval(self, approval_id: str) -> None:
+        """Nothing moves until the family answers; an unanswered hold expires as a denial."""
+        while not self.over:
+            approval = approvals.get(approval_id)
+            if approval and approval["status"] != "pending":
+                break
+            time.sleep(2)
+        else:
+            return
+        self.send({"type": "hold_result", "status": approval["status"], "approver": approval["approver"]})
+        if approval["status"] == "approved":
+            self.case.note("rules", f"{approval['approver']} approved the held payment.")
+        else:
+            self.case.note("rules", f"{approval['approver']} denied the held payment ({approval['status']}).")
+            self._hard_stop({"reasons": [{"reason": f"{approval['approver']} refused the payment Margaret was being pushed to make",
+                                          "evidence": approval["explanation"]}]})
 
     # -- Tripwire's side -------------------------------------------------------------------
 

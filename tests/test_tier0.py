@@ -74,3 +74,19 @@ def test_clipboard_scan_finds_and_masks() -> None:
 
 def test_clipboard_ignores_non_luhn_digit_runs() -> None:
     assert not [f for f in scan_clipboard_text("order 1234567890123") if f.kind == "card_number"]
+
+
+def test_injected_input_counter_needs_sustained_injection() -> None:
+    from agent.control import InjectionCounter
+
+    now = [0.0]
+    c = InjectionCounter(window_s=5, threshold=12, clock=lambda: now[0])
+    for _ in range(50):  # the person using their own mouse: never "someone else"
+        assert not c.add(False)
+    for _ in range(11):
+        now[0] += 0.1
+        assert not c.add(True)  # a few stray injected events (e.g. an accessibility tool) are not enough
+    now[0] += 0.1
+    assert c.add(True)  # sustained injection: someone else is driving
+    now[0] += 10
+    assert not c.add(False)  # old injected events age out of the window
