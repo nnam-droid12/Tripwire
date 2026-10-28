@@ -32,8 +32,8 @@
   @media (max-width: 760px) { nav .links a:not(.btn) { display:none; } }
 
   header.hero { padding:72px 0 40px; }
-  .hero .wrap { display:grid; grid-template-columns:1.1fr .9fr; gap:48px; align-items:center; }
-  @media (max-width: 900px) { .hero .wrap { grid-template-columns:1fr; } }
+  .hero .split { display:grid; grid-template-columns:1.1fr .9fr; gap:48px; align-items:center; }
+  @media (max-width: 900px) { .hero .split { grid-template-columns:1fr; } }
   .eyebrow { display:inline-block; font-size:13px; font-weight:650; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); background:var(--chip); border:1px solid var(--line); padding:4px 12px; border-radius:999px; }
   h1 { font-size:clamp(36px, 5.2vw, 60px); line-height:1.05; margin:18px 0 16px; letter-spacing:-1px; }
   h1 em { font-style:normal; color:var(--brand); }
@@ -109,7 +109,7 @@
 </nav>
 
 <header class="hero">
-  <div class="wrap">
+  <div class="wrap split">
     <div>
       <span class="eyebrow">Scam protection for older adults, on Windows</span>
       <h1>Stops the scam while it's <em>still a phone call</em>.</h1>
@@ -257,8 +257,8 @@ fetch("/api/results").then(r => r.json()).then(R => {
   } else { document.getElementById("st-unsup").textContent = "0"; }
   const rows = [];
   if (L) rows.push(`<tr><td>Scripted scenarios (${L.scam_runs + L.benign_runs} runs, with look-alikes)</td><td><b>${pct(L.detection_rate)}</b></td><td><b>${pct(L.false_alarm_rate)}</b></td><td>Median ${L.median_time_to_detection_s} s to stop; ${pct(L.stopped_before_money_ask)} before money was asked for</td></tr>`);
-  if (E?.dialogue) rows.push(`<tr><td>Third-party phone dialogues (${E.dialogue.scam} scams, ${E.dialogue.benign} legitimate calls)</td><td><b>${pct(E.dialogue.detection_rate)}</b></td><td><b>${pct(E.dialogue.false_alarm_rate)}</b></td><td>${B?.dialogue ? `Up from ${pct(B.dialogue.detection_rate)} before adding prize, fee and personal-data signals. ` : ""}Median stop ${pct(E.dialogue.median_stop_fraction)} of the way into the call</td></tr>`);
-  if (E?.youtube_real) rows.push(`<tr><td>Real scam calls from scam-baiting videos (${E.youtube_real.scam})</td><td><b>${pct(E.youtube_real.detection_rate)}</b></td><td>(all scams)</td><td>${B?.youtube_real ? `Was ${pct(B.youtube_real.detection_rate)}. ` : ""}Real scammers, long rambling calls</td></tr>`);
+  if (E?.dialogue) rows.push(`<tr><td>Third-party phone dialogues (${E.dialogue.scam} scams, ${E.dialogue.benign} legitimate calls)</td><td><b>${pct(E.dialogue.detection_rate)}</b></td><td><b>${pct(E.dialogue.false_alarm_rate)}</b></td><td>${B?.dialogue && B.dialogue.detection_rate !== E.dialogue.detection_rate ? `Up from ${pct(B.dialogue.detection_rate)} before adding prize, fee and personal-data signals. ` : ""}Median stop ${pct(E.dialogue.median_stop_fraction)} of the way into the call</td></tr>`);
+  if (E?.youtube_real) rows.push(`<tr><td>Real scam calls from scam-baiting videos (${E.youtube_real.scam})</td><td><b>${pct(E.youtube_real.detection_rate)}</b></td><td>(all scams)</td><td>${B?.youtube_real && B.youtube_real.detection_rate !== E.youtube_real.detection_rate ? `Was ${pct(B.youtube_real.detection_rate)}. ` : ""}Real scammers, long rambling calls</td></tr>`);
   if (F) rows.push(`<tr><td>Single screens (${F.screens}; 16 made with Muse Image)</td><td><b>${pct(F.recall)}</b></td><td><b>${pct(F.false_positive_rate)}</b></td><td>Fake alerts, wire forms, gift-card codes vs banking, updates, antivirus notices</td></tr>`);
   document.getElementById("results-body").innerHTML = rows.join("") || "<tr><td colspan='4'>No results yet.</td></tr>";
 }).catch(() => {});

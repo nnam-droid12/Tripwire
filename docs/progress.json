@@ -1,21 +1,106 @@
 {
   "milestones": [
-    {"id": "A", "title": "Core AI platform", "status": "done", "detail": "Muse Spark Open for always-on analysis and Muse Spark for decisions, behind one provider-agnostic client."},
-    {"id": "B", "title": "Screen and call awareness", "status": "done", "detail": "Notices meaningful screen changes, listens to speakerphone calls with speaker separation, and spots remote-access tools and copied payment details."},
-    {"id": "C", "title": "Scam-story tracking", "status": "done", "detail": "Follows each scam through its five stages, from the first pop-up to the money request."},
-    {"id": "D", "title": "Decision engine", "status": "done", "detail": "A dedicated judge weighs the whole session; safety limits in code decide what it may trigger."},
-    {"id": "E", "title": "Protective interventions", "status": "done", "detail": "Calm spoken nudges, a full-screen stop that can't be talked past, remote sessions ended, family PIN, trusted-helper allowlist."},
-    {"id": "F", "title": "Privacy and family alerts", "status": "done", "detail": "Account and card numbers hidden on the device, 24-hour retention, one clear alert for the family with a private incident page."},
-    {"id": "G", "title": "Quality testing", "status": "done", "detail": "Scam and look-alike scenarios, a generated screen library, and side-by-side comparisons on every release."},
-    {"id": "G2", "title": "Faster stops", "status": "done", "detail": "Median time to stop cut from 46.5 s to 27.0 s; half of scams now stopped before money is even asked for."},
-    {"id": "CLOUD", "title": "Cloud service", "status": "done", "detail": "Hosted family dashboard and alerts on Google Cloud, with private storage and managed secrets."},
-    {"id": "ARENA", "title": "Live demo: Can you scam Margaret?", "status": "done", "detail": "Anyone can play the scammer against Margaret, 78, and watch Tripwire stop them in real time."},
-    {"id": "RECOVERY", "title": "Automatic recovery", "status": "done", "detail": "After a stop, Tripwire ends remote access, freezes the card, drafts the fraud report and tells the family."},
-    {"id": "GROUND", "title": "No claim without evidence", "status": "done", "detail": "Every reason behind an action must quote what was actually said or done; unverified claims are discarded automatically."},
-    {"id": "EXT", "title": "Independent testing on real-world calls", "status": "in_progress", "detail": "Measuring Tripwire on hundreds of scam and legitimate calls written by others, including real scam recordings."},
-    {"id": "SITE", "title": "Website and status page", "status": "in_progress", "detail": "Product site, live demo and this status page."},
-    {"id": "MODAL", "title": "Second-opinion safety check", "status": "next", "detail": "An independent open-weight model must agree before any full-screen stop."},
-    {"id": "SHIELD", "title": "Community Shield", "status": "next", "detail": "Scam numbers and fake brands stopped in one home protect every other family."},
-    {"id": "VIDEO", "title": "Product walkthrough video", "status": "next", "detail": "A short film showing Tripwire stopping a scam from start to finish."}
+    {
+      "id": "A",
+      "title": "Core AI platform",
+      "status": "done",
+      "detail": "Muse Spark Open for always-on analysis and Muse Spark for decisions, behind one provider-agnostic client."
+    },
+    {
+      "id": "B",
+      "title": "Screen and call awareness",
+      "status": "done",
+      "detail": "Notices meaningful screen changes, listens to speakerphone calls with speaker separation, and spots remote-access tools and copied payment details."
+    },
+    {
+      "id": "C",
+      "title": "Scam-story tracking",
+      "status": "done",
+      "detail": "Follows each scam through its five stages, from the first pop-up to the money request."
+    },
+    {
+      "id": "D",
+      "title": "Decision engine",
+      "status": "done",
+      "detail": "A dedicated judge weighs the whole session; safety limits in code decide what it may trigger."
+    },
+    {
+      "id": "E",
+      "title": "Protective interventions",
+      "status": "done",
+      "detail": "Calm spoken nudges, a full-screen stop that can't be talked past, remote sessions ended, family PIN, trusted-helper allowlist."
+    },
+    {
+      "id": "F",
+      "title": "Privacy and family alerts",
+      "status": "done",
+      "detail": "Account and card numbers hidden on the device, 24-hour retention, one clear alert for the family with a private incident page."
+    },
+    {
+      "id": "G",
+      "title": "Quality testing",
+      "status": "done",
+      "detail": "Scam and look-alike scenarios, a generated screen library, and side-by-side comparisons on every release."
+    },
+    {
+      "id": "G2",
+      "title": "Faster stops",
+      "status": "done",
+      "detail": "Median time to stop cut from 46.5 s to 27.0 s; half of scams now stopped before money is even asked for."
+    },
+    {
+      "id": "CLOUD",
+      "title": "Cloud service",
+      "status": "done",
+      "detail": "Hosted family dashboard and alerts on Google Cloud, with private storage and managed secrets."
+    },
+    {
+      "id": "ARENA",
+      "title": "Live demo: Can you scam Margaret?",
+      "status": "done",
+      "detail": "Anyone can play the scammer against Margaret, 78, and watch Tripwire stop them in real time."
+    },
+    {
+      "id": "RECOVERY",
+      "title": "Automatic recovery",
+      "status": "done",
+      "detail": "After a stop, Tripwire ends remote access, freezes the card, drafts the fraud report and tells the family."
+    },
+    {
+      "id": "GROUND",
+      "title": "No claim without evidence",
+      "status": "done",
+      "detail": "Every reason behind an action must quote what was actually said or done; unverified claims are discarded automatically."
+    },
+    {
+      "id": "EXT",
+      "title": "Independent testing on real-world calls",
+      "status": "in_progress",
+      "detail": "Measuring Tripwire on hundreds of scam and legitimate calls written by others, including real scam recordings."
+    },
+    {
+      "id": "SITE",
+      "title": "Website and status page",
+      "status": "in_progress",
+      "detail": "Product site, live demo and this status page."
+    },
+    {
+      "id": "MODAL",
+      "title": "Second-opinion safety check",
+      "status": "next",
+      "detail": "An independent open-weight model must agree before any full-screen stop."
+    },
+    {
+      "id": "SHIELD",
+      "title": "Community Shield",
+      "status": "next",
+      "detail": "Scam numbers and fake brands stopped in one home protect every other family."
+    },
+    {
+      "id": "VIDEO",
+      "title": "Product walkthrough video",
+      "status": "next",
+      "detail": "A short film showing Tripwire stopping a scam from start to finish."
+    }
   ]
 }

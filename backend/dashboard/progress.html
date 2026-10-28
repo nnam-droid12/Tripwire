@@ -104,8 +104,8 @@ async function load() {
     if (L) rows.push(["Scripted scams stopped / false alarms", `${pct(L.detection_rate)} / ${pct(L.false_alarm_rate)}`],
                      ["Median time to stop (scripted)", `${L.median_time_to_detection_s} s`],
                      ["Stopped before money was asked for", pct(L.stopped_before_money_ask)]);
-    if (E?.dialogue) rows.push(["External dialogues: stopped / false alarms", `${pct(E.dialogue.detection_rate)} / ${pct(E.dialogue.false_alarm_rate)}` + (B?.dialogue ? ` (was ${pct(B.dialogue.detection_rate)})` : "")]);
-    if (E?.youtube_real) rows.push(["Real scam calls stopped", pct(E.youtube_real.detection_rate) + (B?.youtube_real ? ` (was ${pct(B.youtube_real.detection_rate)})` : "")]);
+    if (E?.dialogue) rows.push(["External dialogues: stopped / false alarms", `${pct(E.dialogue.detection_rate)} / ${pct(E.dialogue.false_alarm_rate)}` + (B?.dialogue && B.dialogue.detection_rate !== E.dialogue.detection_rate ? ` (was ${pct(B.dialogue.detection_rate)})` : "")]);
+    if (E?.youtube_real) rows.push(["Real scam calls stopped", pct(E.youtube_real.detection_rate) + (B?.youtube_real && B.youtube_real.detection_rate !== E.youtube_real.detection_rate ? ` (was ${pct(B.youtube_real.detection_rate)})` : "")]);
     if (E && E.claims != null) rows.push(["Judge claims verified / unsupported", `${E.claims} / ${E.unsupported_claims}`]);
     if (F) rows.push(["Single screens correct", `${pct(F.recall)} recall, ${pct(F.false_positive_rate)} false positives`]);
     $("metrics").innerHTML = rows.map(([k, v]) => `<div class="metric"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("");
