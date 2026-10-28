@@ -46,6 +46,7 @@ RESULTS = REPO_ROOT / "eval" / "results"
 SOURCES = {
     "youtube": ("BothBosu/youtube-scam-conversations", "youtube_scam_conversations.csv"),
     "dialogue": ("BothBosu/scam-dialogue", "scam-dialogue_test.csv"),
+    "dialogue_train": ("BothBosu/scam-dialogue", "scam-dialogue_train.csv"),
 }
 _TURN = re.compile(r"(?:^|\s)(Suspect|Innocent|caller|receiver)\s*:\s*", re.I)
 CALLER = {"suspect", "caller"}
@@ -80,11 +81,14 @@ def parse_turns(dialogue: str) -> list[tuple[str, str]]:
     return turns
 
 
-def load(limit: int | None = None) -> list[Conversation]:
+def load(limit: int | None = None, split: str = "test") -> list[Conversation]:
+    """``split="test"`` is what we report; ``"train"`` is for developing changes without touching the test set."""
     convs: list[Conversation] = []
-    for row in csv.DictReader(io.StringIO(_fetch("youtube"))):
-        convs.append(Conversation("youtube", row["type"], True, parse_turns(row["dialogue"])))
-    dialogue = [Conversation("dialogue", r["type"], r["label"] == "1", parse_turns(r["dialogue"])) for r in csv.DictReader(io.StringIO(_fetch("dialogue")))]
+    if split == "test":
+        for row in csv.DictReader(io.StringIO(_fetch("youtube"))):
+            convs.append(Conversation("youtube", row["type"], True, parse_turns(row["dialogue"])))
+    source = "dialogue" if split == "test" else "dialogue_train"
+    dialogue = [Conversation("dialogue", r["type"], r["label"] == "1", parse_turns(r["dialogue"])) for r in csv.DictReader(io.StringIO(_fetch(source)))]
     if limit:  # stratified: the same number of each call type
         by_type: dict[str, list[Conversation]] = defaultdict(list)
         for c in dialogue:
@@ -175,9 +179,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--limit", type=int, help="stratified sample size of the dialogue set")
     parser.add_argument("--parallel", type=int, default=6)
+    parser.add_argument("--split", choices=("test", "train"), default="test", help="train: for development only; results are reported on test")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
-    convs = load(args.limit)
+    convs = load(args.limit, args.split)
     print(f"{len(convs)} conversations, {args.parallel} in parallel", flush=True)
     done = [0]
 
@@ -198,9 +203,11 @@ def main() -> None:
     summary = summarize(rows)
     meta = {"date": time.strftime("%Y-%m-%d"), "conversations": len(rows), "minutes": round((time.time() - started) / 60, 1)}
     RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "external.json").write_text(json.dumps({"meta": meta, "summary": summary, "runs": rows}, indent=2), encoding="utf-8")
+    meta["split"] = args.split
+    stem = "external" if args.split == "test" else "external_train"
+    (RESULTS / f"{stem}.json").write_text(json.dumps({"meta": meta, "summary": summary, "runs": rows}, indent=2), encoding="utf-8")
     md = to_markdown(summary, meta)
-    (RESULTS / "external.md").write_text(md, encoding="utf-8")
+    (RESULTS / f"{stem}.md").write_text(md, encoding="utf-8")
     print("\n" + md + f"\nerrors: {summary['errors']} | {meta['minutes']} min")
 
 
