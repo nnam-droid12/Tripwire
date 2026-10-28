@@ -340,7 +340,9 @@ function handle(m) {
       $("recovery-summary").innerHTML = esc(m.summary) + (m.incident ? ` · <a href="${esc(m.incident)}" target="_blank">Family alert page</a>` : "");
       break;
     case "game_over": setTimeout(() => gameOver(m), m.caught ? 2500 : 500); break;
-    case "error": say("system", m.text); break;
+    case "error":
+      say("system", /ASR|transcri/i.test(m.text) ? "Sorry, I didn't catch that. Hold the button while you speak, then let go (or type instead)." : m.text);
+      break;
   }
 }
 
@@ -415,6 +417,9 @@ async function micReady() {
       }
     };
     ctx.createMediaStreamSource(stream).connect(node);
+    // Chrome only keeps running audio nodes that lead to the speakers: connect through a silent gain
+    const mute = ctx.createGain(); mute.gain.value = 0;
+    node.connect(mute).connect(ctx.destination);
     return true;
   } catch (err) { say("system", "Microphone not available. You can type instead."); return false; }
 }

@@ -154,7 +154,8 @@ class ArenaSession:
 
     def ptt_start(self) -> None:
         if self._asr is None and not self.over:
-            self._asr = MuseTranscriber(self._on_ptt_turn, mode="PUSH_TO_TALK", on_error=lambda m: self.send({"type": "error", "text": m}))
+            self._asr = MuseTranscriber(self._on_ptt_turn, mode="PUSH_TO_TALK", paced=True,
+                                        on_error=lambda m: self.send({"type": "error", "text": m}))
             self._asr.start()
 
     def ptt_audio(self, pcm: bytes) -> None:

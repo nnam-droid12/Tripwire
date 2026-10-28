@@ -30,6 +30,8 @@ import core.config  # noqa: F401  (loads .env)
 ASR_URL = "wss://api.meta.ai/v1/asr/realtime"
 ASR_MODEL = "muse-voice-transcribe-1.0"
 SAMPLE_RATE = 24_000
+FRAME_S = 0.08
+FRAME_BYTES = int(SAMPLE_RATE * FRAME_S) * 2  # 80 ms of PCM16 mono
 
 # Spelling hints for words that matter to scam detection and that ASR tends
 # to mangle ("any desk").
@@ -61,8 +63,10 @@ class MuseTranscriber:
         mode: str = "DIARIZATION",
         keywords: list[str] | None = None,
         on_error: Callable[[str], None] | None = None,
+        paced: bool = False,
     ) -> None:
         self.on_turn = on_turn
+        self.paced = paced  # audio arriving over a network: release it at a steady real-time pace
         self.on_error = on_error or (lambda msg: None)
         self.api_key = api_key or os.environ["META_API_KEY"]
         self.mode = mode
@@ -118,12 +122,41 @@ class MuseTranscriber:
             self.on_error(f"ASR session failed: {exc!r}")
 
     async def _send_audio(self, ws: websockets.ClientConnection) -> None:
+        if self.paced:
+            await self._send_paced(ws)
+            return
         while True:
             chunk = await self._audio.get()
             if chunk is None:
                 await ws.send(json.dumps({"type": "endStream"}))
                 return
             await ws.send(chunk)
+
+    async def _send_paced(self, ws: websockets.ClientConnection) -> None:
+        """Send exactly one 80 ms frame every 80 ms, whatever the arrival timing.
+
+        Audio that comes over a network (the web arena) arrives in bursts and
+        gaps, but the realtime ASR closes the stream if ingress falls below
+        real time. So incoming audio is buffered and released at a steady pace,
+        with silence filling any gap until the next chunk arrives.
+        """
+        loop = asyncio.get_running_loop()
+        pending, closing, next_at = bytearray(), False, loop.time()
+        while True:
+            while not self._audio.empty():
+                chunk = self._audio.get_nowait()
+                if chunk is None:
+                    closing = True
+                else:
+                    pending += chunk
+            if closing and not pending:
+                await ws.send(json.dumps({"type": "endStream"}))
+                return
+            frame = bytes(pending[:FRAME_BYTES]).ljust(FRAME_BYTES, b"\x00")  # silence pads a gap
+            del pending[:FRAME_BYTES]
+            await ws.send(frame)
+            next_at += FRAME_S
+            await asyncio.sleep(max(0.0, next_at - loop.time()))
 
     async def _receive(self, ws: websockets.ClientConnection) -> None:
         speaker: str | None = None
