@@ -35,7 +35,7 @@ from fastapi import FastAPI, Header, HTTPException, Query, WebSocket, WebSocketD
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from backend.arena import laptop
+from backend.arena import laptop, scores
 from backend.arena.session import VOICE_DIR, ArenaSession, prewarm_voices
 from backend.incidents import STORE, create_incident, decode_frames
 from core.config import RUNTIME_DIR
@@ -202,6 +202,22 @@ def arena_voice(clip: str) -> FileResponse:
     if not _CLIP.match(clip) or not path.exists():
         raise HTTPException(404)
     return FileResponse(path, media_type="audio/mpeg", headers={"Cache-Control": "public, max-age=86400"})
+
+
+class NameIn(BaseModel):
+    session: str
+    name: str
+
+
+@app.get("/api/arena/board")
+def arena_board() -> dict[str, Any]:
+    return scores.board()
+
+
+@app.post("/api/arena/name")
+def arena_name(body: NameIn) -> dict[str, bool]:
+    """Attach a nickname to a finished game. The score itself was recorded by the server."""
+    return {"ok": scores.set_name(body.session, body.name)}
 
 
 @app.websocket("/ws/arena")

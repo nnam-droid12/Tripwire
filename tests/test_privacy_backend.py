@@ -97,3 +97,24 @@ def test_incident_flow_sends_dry_run_sms_with_private_link(backend) -> None:
     assert client.get(f"/api/incidents/{incident_id}/image/..%2Fincident.json?k={token}").status_code == 404
     outbox = (main.BACKEND_DIR / "sms_outbox.log").read_text(encoding="utf-8")
     assert token in json.loads(outbox.splitlines()[-1])["body"]
+
+
+def test_arena_scoreboard(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("TRIPWIRE_RUNTIME_DIR", str(tmp_path))
+    monkeypatch.delenv("TRIPWIRE_GCS_BUCKET", raising=False)
+    import core.config, backend.storage
+    importlib.reload(core.config)
+    importlib.reload(backend.storage)
+    import backend.arena.scores as scores
+    scores = importlib.reload(scores)
+
+    scores.record_game("g1", "popup", True, 3, "Control", 2, 14)
+    scores.record_game("g2", "call", True, 5, "Extraction", 4, 40)
+    scores.record_game("g3", "call", False, 4, "Access", 6, 80)  # got far without a stop
+    scores.record_game("g4", "call", False, 1, "Hook", 1, 5)     # a short benign call: not "beating" anything
+    scores.record_game("g0", "popup", True, 2, "Contact", 0, 3)  # nobody spoke: not recorded
+    assert scores.set_name("g2", "  <b>Kevin</b>; drop table ") and not scores.set_name("g2", "Other")  # first name sticks
+    b = scores.board()
+    assert (b["games"], b["stopped"], b["escaped"]) == (4, 2, 1)
+    assert b["best"][0]["stage_name"] == "Extraction" and b["best"][0]["name"] == "bKevinb drop table"
+    assert [g["stage_name"] for g in b["beat_tripwire"]] == ["Access"]

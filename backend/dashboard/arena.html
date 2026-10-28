@@ -86,6 +86,12 @@
   .small { font-size:13px; color:var(--muted); }
   .big { font-size:40px; font-weight:800; margin:.2em 0; }
   a { color:var(--accent); }
+  .record { font-weight:600; }
+  .namebox { display:flex; gap:8px; margin:12px 0; }
+  .namebox input { flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; }
+  .board { width:100%; border-collapse:collapse; font-size:14px; margin:8px 0 16px; }
+  .board td, .board th { text-align:left; padding:5px 6px; border-top:1px solid var(--line); }
+  .board th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
 </style>
 </head>
 <body>
@@ -151,6 +157,7 @@
     <button class="choice sel" data-situation="popup"><b>Fake tech support</b><span class="small">A fake "PC SafeGuard" virus pop-up is on her screen. She has just called the number on it, and you answer.</span></button>
     <button class="choice" data-situation="call"><b>Cold call</b><span class="small">You phone her. Be her bank's fraud team, the IRS, Amazon refunds… Or be her grandson Tom and see whether Tripwire stays calm.</span></button>
     <p class="small">Hold the blue button (or Space) and speak, or type. Margaret answers out loud, so turn your sound on. A game lasts up to 8 minutes.</p>
+    <p class="record" id="record"></p>
     <button class="primary" id="go">Start the call</button>
   </div>
 </div>
@@ -161,6 +168,11 @@
     <div class="big" id="score-big"></div>
     <p id="score-text"></p>
     <p class="small" id="score-incident"></p>
+    <div class="namebox" id="namebox">
+      <input id="nick" maxlength="24" placeholder="Your scammer name for the board">
+      <button id="save-nick">Add me</button>
+    </div>
+    <div id="board"></div>
     <button class="primary" onclick="location.reload()">Play again</button>
   </div>
 </div>
@@ -300,8 +312,29 @@ function gameOver(m) {
       : "Tripwire stayed calm. If you were being a real grandson, that's exactly right.";
   }
   $("score-incident").innerHTML = $("recovery-summary").innerHTML;
+  showBoard(m.board);
+  $("save-nick").onclick = async () => {
+    const name = $("nick").value.trim(); if (!name) return;
+    await fetch("/api/arena/name", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session: m.session, name }) });
+    $("namebox").innerHTML = `<span class="small">Saved as <b>${esc(name)}</b>.</span>`;
+    showBoard(await (await fetch("/api/arena/board")).json());
+  };
   $("score").hidden = false;
 }
+
+function showBoard(b) {
+  if (!b) return;
+  const rows = b.best.map((g, i) => `<tr><td>${i + 1}</td><td>${esc(g.name || "anonymous")}</td><td>${esc(g.stage_name)}</td><td>${g.lines}</td></tr>`).join("");
+  const beat = b.beat_tripwire.length
+    ? `<p class="small"><b>Beat Tripwire</b> (reached the ${esc(b.beat_tripwire[0].stage_name)} stage or further without a stop): ${b.beat_tripwire.map(g => esc(g.name || "anonymous")).join(", ")}</p>`
+    : "";
+  $("board").innerHTML = `<p class="small">Tripwire has stopped <b>${b.stopped}</b> of ${b.games} scam attempts by visitors so far.</p>`
+    + (rows ? `<table class="board"><tr><th>#</th><th>Scammer</th><th>Got as far as</th><th>Lines</th></tr>${rows}</table>` : "") + beat;
+}
+
+fetch("/api/arena/board").then(r => r.json()).then(b => {
+  if (b.games) $("record").textContent = `Tripwire's record so far: stopped ${b.stopped} of ${b.games} scam attempts by visitors.`;
+}).catch(() => {});
 
 // ---- typing --------------------------------------------------------------------------
 function sendText() {

@@ -24,7 +24,7 @@ from agent.tts import GoogleVoice
 from analysts.case_judge import render_case
 from analysts.interventionist import RESIST_LINE, choose_nudge, hard_stop_speech
 from analysts.screen_analyst import ScreenAnalyst
-from backend.arena import laptop
+from backend.arena import laptop, scores
 from backend.arena.margaret import Margaret
 from backend.arena.recovery import RecoveryAgent
 from backend.incidents import create_incident
@@ -265,5 +265,8 @@ class ArenaSession:
         self.over = True
         stage, _, _ = self.case.assess()
         caught = self.orchestrator.action == Action.HARD_STOP or self.warning_active
-        self.send({"type": "game_over", "reason": reason, "text": text, "caught": caught,
-                   "stage": int(stage), "stage_name": Stage(int(stage)).name.title(), "lines": self.lines})
+        stage_name = Stage(int(stage)).name.title()
+        elapsed = time.time() - (self.first_line_at or self.started)
+        scores.record_game(self.id, self.situation, caught, int(stage), stage_name, self.lines, elapsed)
+        self.send({"type": "game_over", "reason": reason, "text": text, "caught": caught, "session": self.id,
+                   "stage": int(stage), "stage_name": stage_name, "lines": self.lines, "board": scores.board()})

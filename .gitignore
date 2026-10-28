@@ -22,3 +22,4 @@ Thumbs.db
 .idea/
 eval/scenarios/audio/
 config/tripwire.json
+data/external/

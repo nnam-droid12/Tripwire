@@ -55,7 +55,9 @@ class ModelClient:
 
     def __init__(self, config: ProviderConfig, timeout: float = 60.0) -> None:
         self.config = config
-        self._client = OpenAI(api_key=config.api_key, base_url=config.base_url, timeout=timeout)
+        # max_retries: rate limits (HTTP 429) happen when several games or eval runs share a provider;
+        # the SDK retries them with exponential backoff instead of dropping that turn's analysis
+        self._client = OpenAI(api_key=config.api_key, base_url=config.base_url, timeout=timeout, max_retries=6)
 
     @classmethod
     def for_provider(cls, name: str) -> "ModelClient":

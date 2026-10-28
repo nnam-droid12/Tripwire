@@ -1,0 +1,528 @@
+{
+  "meta": {
+    "date": "2026-10-28",
+    "conversations": 28,
+    "minutes": 3.9
+  },
+  "summary": {
+    "youtube_real": {
+      "scam": 20,
+      "benign": 0,
+      "detection_rate": 0.5,
+      "false_alarm_rate": null,
+      "benign_nudge_rate": null,
+      "median_stop_turn": 20.0,
+      "median_stop_fraction": 0.6950000000000001
+    },
+    "dialogue": {
+      "scam": 4,
+      "benign": 4,
+      "detection_rate": 0.5,
+      "false_alarm_rate": 0.0,
+      "benign_nudge_rate": 0.0,
+      "median_stop_turn": 10.0,
+      "median_stop_fraction": 0.61
+    },
+    "by_kind": {
+      "delivery": {
+        "n": 1,
+        "is_scam": false,
+        "hard_stop_rate": 0.0,
+        "nudge_rate": 0.0
+      },
+      "insurance": {
+        "n": 1,
+        "is_scam": false,
+        "hard_stop_rate": 0.0,
+        "nudge_rate": 0.0
+      },
+      "refund": {
+        "n": 1,
+        "is_scam": true,
+        "hard_stop_rate": 0.0,
+        "nudge_rate": 1.0
+      },
+      "reward": {
+        "n": 1,
+        "is_scam": true,
+        "hard_stop_rate": 0.0,
+        "nudge_rate": 1.0
+      },
+      "ssn": {
+        "n": 1,
+        "is_scam": true,
+        "hard_stop_rate": 1.0,
+        "nudge_rate": 0.0
+      },
+      "support": {
+        "n": 1,
+        "is_scam": true,
+        "hard_stop_rate": 1.0,
+        "nudge_rate": 0.0
+      },
+      "telemarketing": {
+        "n": 1,
+        "is_scam": false,
+        "hard_stop_rate": 0.0,
+        "nudge_rate": 0.0
+      },
+      "wrong": {
+        "n": 1,
+        "is_scam": false,
+        "hard_stop_rate": 0.0,
+        "nudge_rate": 0.0
+      }
+    },
+    "errors": 202
+  },
+  "runs": [
+    {
+      "source": "youtube",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 71,
+      "action": "hard_stop",
+      "stop_turn": 21,
+      "nudge_turn": 21,
+      "stop_fraction": 0.3,
+      "judge_calls": 1,
+      "errors": 6,
+      "error_samples": [
+        "  call   [none] B (unknown): Single greeting with no scam indicators.",
+        "  call   [none] A (caller): Call greeting with no scam indicators yet."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 19,
+      "action": "nudge",
+      "stop_turn": null,
+      "nudge_turn": 1,
+      "stop_fraction": null,
+      "judge_calls": 2,
+      "errors": 3,
+      "error_samples": [
+        "  call   [med] A (caller): Caller claims Geek Squad premium upgrade charge, classic refund-scam pretext.",
+        "  call   [med] B (protected_person): Caller claims Geek Squad premium charge and protected person asks to cancel/downgrade, indicating refund pretext."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 19,
+      "action": "hard_stop",
+      "stop_turn": 19,
+      "nudge_turn": 19,
+      "stop_fraction": 1.0,
+      "judge_calls": 1,
+      "errors": 5,
+      "error_samples": [
+        "  call   [med] A (caller): Caller claims computer service expired and $400 charged, offering cancellation or renewal.",
+        "  call   [none] B (protected_person): Protected person asks to cancel after caller claimed a $400 computer service charge."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 37,
+      "action": "hard_stop",
+      "stop_turn": 13,
+      "nudge_turn": 13,
+      "stop_fraction": 0.35,
+      "judge_calls": 1,
+      "errors": 0,
+      "error_samples": [
+        "  call   [none] A (caller): Generic support greeting with no scam indicators yet.",
+        "  call   [none] B (protected_person): Protected person reports seeing a pop-up to support agent; no scam indicators yet."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 20,
+      "action": "hard_stop",
+      "stop_turn": 19,
+      "nudge_turn": 19,
+      "stop_fraction": 0.95,
+      "judge_calls": 2,
+      "errors": 8,
+      "error_samples": [
+        "  call   [med] A (caller): Caller answers as PayPal support, initiating potential impersonation scam.",
+        "  call   [low] B (protected_person): Protected person called about a $629 Bitcoin email they don't recognize; no scam instruction yet."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 22,
+      "action": "nudge",
+      "stop_turn": null,
+      "nudge_turn": 1,
+      "stop_fraction": null,
+      "judge_calls": 2,
+      "errors": 8,
+      "error_samples": [
+        "  call   [med] A (caller): Caller claims to be Norton cancellation department about auto-renewal charge and offers to cancel.",
+        "  call   [low] B (protected_person): Protected person asks to cancel after caller claimed Norton subscription auto-renewal charge."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 60,
+      "action": "hard_stop",
+      "stop_turn": 36,
+      "nudge_turn": 17,
+      "stop_fraction": 0.6,
+      "judge_calls": 2,
+      "errors": 15,
+      "error_samples": [
+        "  call   [none] B (protected_person): Protected person states they do not want to renew a subscription.",
+        "  call   [none] A (caller): Caller asks for order ID after protected person says they don't want to renew."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 43,
+      "action": "hard_stop",
+      "stop_turn": 33,
+      "nudge_turn": 7,
+      "stop_fraction": 0.77,
+      "judge_calls": 3,
+      "errors": 15,
+      "error_samples": [
+        "  call   [low] A (caller): Caller answers identifying as Amazon support.",
+        "  call   [low] B (protected_person): Protected person is responding to an Amazon caller about an iPhone order, no new scam instruction in this line."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 31,
+      "action": "nudge",
+      "stop_turn": null,
+      "nudge_turn": 27,
+      "stop_fraction": null,
+      "judge_calls": 1,
+      "errors": 7,
+      "error_samples": [
+        "  call   [none] A (unknown): Call just started with a greeting, no scam indicators yet.",
+        "  call   [none] B (unknown): Brief greeting exchange with no scam indicators."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 21,
+      "action": "hard_stop",
+      "stop_turn": 21,
+      "nudge_turn": 21,
+      "stop_fraction": 1.0,
+      "judge_calls": 2,
+      "errors": 4,
+      "error_samples": [
+        "  call   [low] A (caller): Caller introduces himself as representing Publisher Clearing House sweepstakes.",
+        "  call   [none] B (protected_person): Protected person is returning a call to someone claiming to be Publisher Clearing House; no scam instruction yet in newest line."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 20,
+      "action": "hard_stop",
+      "stop_turn": 11,
+      "nudge_turn": 7,
+      "stop_fraction": 0.55,
+      "judge_calls": 3,
+      "errors": 2,
+      "error_samples": [
+        "  call   [none] A (unknown): Single check-in line with no scam indicators present.",
+        "  call   [none] B (protected_person): Protected person asks caller to identify themselves with no scam indicators in this exchange."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 20,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 5,
+      "error_samples": [
+        "  call   [none] A (caller): Call just opened with generic greeting, no scam indicators yet.",
+        "  call   [none] B (protected_person): Protected person reports transfer about Walmart gift card win; no scam instruction yet."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 24,
+      "action": "nudge",
+      "stop_turn": null,
+      "nudge_turn": 20,
+      "stop_fraction": null,
+      "judge_calls": 2,
+      "errors": 14,
+      "error_samples": [
+        "  ! call-analyst: RateLimitError: Error code: 429",
+        "  call   [none] A (caller): Routine call opening with greeting and self-identification, no scam indicators present."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 24,
+      "action": "hard_stop",
+      "stop_turn": 15,
+      "nudge_turn": 15,
+      "stop_fraction": 0.62,
+      "judge_calls": 1,
+      "errors": 3,
+      "error_samples": [
+        "  call   [none] A (caller): Call just opened with generic greeting, no scam indicators yet.",
+        "  ! call-analyst: RateLimitError: Error code: 429"
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 26,
+      "action": "hard_stop",
+      "stop_turn": 24,
+      "nudge_turn": 12,
+      "stop_fraction": 0.92,
+      "judge_calls": 6,
+      "errors": 10,
+      "error_samples": [
+        "  call   [med] A (caller): Caller answers claiming to be Social Security Administration.",
+        "  ! call-analyst: RateLimitError: Error code: 429"
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 16,
+      "action": "nudge",
+      "stop_turn": null,
+      "nudge_turn": 7,
+      "stop_fraction": null,
+      "judge_calls": 3,
+      "errors": 12,
+      "error_samples": [
+        "  call   [med] A (caller): Caller is impersonating the Social Security Administration at call opening.",
+        "  ! call-analyst: RateLimitError: Error code: 429"
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 39,
+      "action": "nudge",
+      "stop_turn": null,
+      "nudge_turn": 27,
+      "stop_fraction": null,
+      "judge_calls": 6,
+      "errors": 12,
+      "error_samples": [
+        "  ! call-analyst: RateLimitError: Error code: 429",
+        "  call   [none] B (protected_person): Protected person asks caller to repeat due to poor connection after caller introduced as Publishers Clearing House."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 24,
+      "action": "nudge",
+      "stop_turn": null,
+      "nudge_turn": 7,
+      "stop_fraction": null,
+      "judge_calls": 3,
+      "errors": 5,
+      "error_samples": [
+        "  call   [none] A (unknown): Single greeting with no scam indicators.",
+        "  call   [none] B (protected_person): Call audio check completed, protected person asking for caller identity."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 13,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 7,
+      "error_samples": [
+        "  ! call-analyst: RateLimitError: Error code: 429",
+        "  call   [none] B (protected_person): Protected person describes Prime device registration issue, no scam indicators in newest line."
+      ]
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 27,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 13,
+      "error_samples": [
+        "  ! call-analyst: RateLimitError: Error code: 429",
+        "  ! call-analyst: RateLimitError: Error code: 429"
+      ]
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 16,
+      "action": "hard_stop",
+      "stop_turn": 11,
+      "nudge_turn": 1,
+      "stop_fraction": 0.69,
+      "judge_calls": 4,
+      "errors": 5,
+      "error_samples": [
+        "  call   [med] A (caller): Caller impersonates SSA officer claiming suspicious activity on SSN to solicit verification.",
+        "  ! call-analyst: RateLimitError: Error code: 429"
+      ]
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 21,
+      "action": "nudge",
+      "stop_turn": null,
+      "nudge_turn": 21,
+      "stop_fraction": null,
+      "judge_calls": 1,
+      "errors": 11,
+      "error_samples": [
+        "  ! call-analyst: RateLimitError: Error code: 429",
+        "  ! call-analyst: RateLimitError: Error code: 429"
+      ]
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 17,
+      "action": "hard_stop",
+      "stop_turn": 9,
+      "nudge_turn": 3,
+      "stop_fraction": 0.53,
+      "judge_calls": 2,
+      "errors": 3,
+      "error_samples": [
+        "  ! call-analyst: RateLimitError: Error code: 429",
+        "  ! call-analyst: RateLimitError: Error code: 429"
+      ]
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 21,
+      "action": "nudge",
+      "stop_turn": null,
+      "nudge_turn": 13,
+      "stop_fraction": null,
+      "judge_calls": 5,
+      "errors": 5,
+      "error_samples": [
+        "  call   [none] A (unknown): Initial greeting with no scam indicators.",
+        "  ! call-analyst: RateLimitError: Error code: 429"
+      ]
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 8,
+      "error_samples": [
+        "  call   [none] A (caller): Caller confirms a scheduled package delivery with no scam indicators.",
+        "  call   [none] B (protected_person): Benign delivery confirmation call with no scam indicators in newest line."
+      ]
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 5,
+      "error_samples": [
+        "  ! call-analyst: RateLimitError: Error code: 429",
+        "  ! call-analyst: RateLimitError: Error code: 429"
+      ]
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 13,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 7,
+      "error_samples": [
+        "  call   [none] A (caller): Telemarketing call offering home security deal with no scam indicators.",
+        "  call   [none] B (protected_person): Protected person responding to telemarketing pitch about home security systems."
+      ]
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 4,
+      "error_samples": [
+        "  ! call-analyst: RateLimitError: Error code: 429",
+        "  call   [none] B (unknown): Caller misdialed number and recipient corrected it, no scam indicators present."
+      ]
+    }
+  ]
+}
