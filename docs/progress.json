@@ -87,7 +87,7 @@
     {
       "id": "EXT",
       "title": "Independent testing on real-world calls",
-      "status": "in_progress",
+      "status": "done",
       "detail": "Measuring Tripwire on hundreds of scam and legitimate calls written by others, including real scam recordings."
     },
     {
@@ -98,15 +98,15 @@
     },
     {
       "id": "MODAL",
-      "title": "Second-opinion safety check",
-      "status": "next",
-      "detail": "An independent open-weight model must agree before any full-screen stop."
+      "title": "Tripwire Sentinel: on-device AI",
+      "status": "in_progress",
+      "detail": "A small open-weight Meta model (Llama 3.2 1B), fine-tuned on Modal, screens calls on the computer itself: works offline, costs nothing per call, and calls in the cloud judge only when something looks wrong."
     },
     {
       "id": "SHIELD",
       "title": "Community Shield",
-      "status": "next",
-      "detail": "Scam numbers and fake brands stopped in one home protect every other family."
+      "status": "done",
+      "detail": "Scammer numbers, remote-access IDs and crypto addresses from every stopped scam protect all other homes, instantly. Never the protected person's own data."
     },
     {
       "id": "VIDEO",

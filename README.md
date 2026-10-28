@@ -132,6 +132,23 @@ The two remaining late stops (a fake bank "safe account" call and a fake FTC off
 
 **Caveats.** These scenarios were written by us, replayed as text (the speech path is tested separately), with 2 runs each. They are a regression suite and a sanity check, not a field study.
 
+### Calls we did not write (independent test)
+
+Scoring well on your own scripts proves little, so Tripwire is also measured on **340 third-party conversations** (Apache-2.0): [BothBosu/scam-dialogue](https://huggingface.co/datasets/BothBosu/scam-dialogue) (160 scams, 160 legitimate calls, including pushy telemarketing and insurance calls) and [youtube-scam-conversations](https://huggingface.co/datasets/BothBosu/youtube-scam-conversations) (20 real scam calls from scam-baiting channels). These are calls only, with no screen evidence. Each one is replayed turn by turn through the real pipeline.
+
+| | First version | **Now** |
+|---|---|---|
+| Scam calls stopped (160) | 61% | **92%** |
+| False alarms on legitimate calls (160) | 0% | **0%** (not even a nudge) |
+| Point in the call where it stopped (median) | 56% | **45%** |
+| Refund scams / prize scams stopped | 42% / 32% | **92% / 80%** |
+| Real scam-baiting calls stopped (20) | 55% | 55% |
+| Judge claims checked against the record | n/a | **1,624: 0 unsupported** |
+
+**How the improvement was made without tuning to the test.** The first version recognised refund and prize scams but only nudged, because it had no signals for prizes, advance fees or requests for Social Security or bank details. Those signals and the matching judge rules were developed on the dataset's **training split only**: 98% stopped, 0% false alarms there. The test split was then scored once.
+
+**What didn't improve.** The 20 real scam-baiting calls are long and rambling (up to 71 turns), and there is no separate training split for them, so they were not tuned on. That number is reported as is.
+
 ### Screen analyst on single screens
 
 29 screens (14 scam, 15 benign look-alikes); 16 generated with **Muse Image**, 13 hand-written HTML pages for the fraud screens Muse Image's content filter declined to draw (wire forms, Bitcoin ATM instructions, gift-card codes). Flagged = rated medium/high risk.
