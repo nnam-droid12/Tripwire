@@ -112,12 +112,12 @@ class ArenaSession:
             self.lines += 1
             self.first_line_at = self.first_line_at or time.time()
             self.send({"type": "line", "who": "scammer", "text": text})
-            self.bus.publish(Event("audio", "transcript", {"speaker": "A", "text": text, "summary": f'Caller: "{text}"'}))
             if self.warning_active and is_disable_instruction(text):
                 self._resist(text)
             if self.call_ended:
                 self.send({"type": "line", "who": "system", "text": "Margaret has hung up. She can't hear you any more."})
                 return
+            self.bus.publish(Event("audio", "transcript", {"speaker": "A", "text": text, "summary": f'Caller: "{text}"'}))
             turn = self.margaret.respond(text, self.page)
             self._margaret_speaks(turn.reply)
             if turn.open_page and turn.open_page != self.page:
@@ -251,7 +251,9 @@ class ArenaSession:
             return detail
 
         try:
-            steps, summary = self.recovery.run(render_case(self.case.snapshot()), execute)
+            seen = ", ".join(laptop.PAGES[p][1] for p in dict.fromkeys(self.pages_seen))
+            facts = f"<laptop_pages_open_during_the_call>\n{seen}\n</laptop_pages_open_during_the_call>\n"
+            steps, summary = self.recovery.run(facts + render_case(self.case.snapshot()), execute)
         except Exception as exc:  # the warning already protected her; recovery is a bonus
             steps, summary = [], f"Recovery agent unavailable ({type(exc).__name__})."
         self.send({"type": "recovery_done", "summary": summary, "incident": incident.get("link", "").split("?")[0]})
