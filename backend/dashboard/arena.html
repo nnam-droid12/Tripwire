@@ -210,6 +210,8 @@ const LABELS = {
   crypto_request: "Crypto", wire_transfer_request: "Wire transfer", cash_withdrawal_request: "Cash withdrawal",
   secrecy_instruction: "Hide it from the bank or family", crypto_address_copied: "Crypto address copied",
   money_amount_copied: "Money amount copied", urgency_pressure: "Urgency pressure",
+  known_scam_indicator: "Community Shield match: reported in other homes", remote_control_input: "Someone else is controlling the computer",
+  prize_or_reward_claim: "Prize or reward claim", personal_info_request: "Asked for SSN, bank or card details", advance_fee_request: "Fee to receive money",
 };
 const TOOLS = { end_remote_session: "Ended the remote session", freeze_card: "Froze the card", draft_fraud_report: "Drafted the fraud report", notify_family: "Alerted the family" };
 const $ = id => document.getElementById(id);
@@ -376,8 +378,11 @@ function showBoard(b) {
     + (rows ? `<table class="board"><tr><th>#</th><th>Scammer</th><th>Got as far as</th><th>Lines</th></tr>${rows}</table>` : "") + beat;
 }
 
-fetch("/api/arena/board").then(r => r.json()).then(b => {
-  if (b.games) $("record").textContent = `Tripwire's record so far: stopped ${b.stopped} of ${b.games} scam attempts by visitors.`;
+Promise.all([fetch("/api/arena/board").then(r => r.json()), fetch("/api/shield").then(r => r.json())]).then(([b, s]) => {
+  const parts = [];
+  if (b.games) parts.push(`Tripwire has stopped ${b.stopped} of ${b.games} scam attempts by visitors.`);
+  if (s.indicators) parts.push(`Community Shield has learned ${s.indicators} scammer number${s.indicators === 1 ? "" : "s"} and IDs from them, so reusing one gets you caught faster.`);
+  $("record").textContent = parts.join(" ");
 }).catch(() => {});
 
 // ---- typing --------------------------------------------------------------------------

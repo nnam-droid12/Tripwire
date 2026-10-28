@@ -25,7 +25,7 @@ from agent.tts import GoogleVoice
 from analysts.case_judge import render_case
 from analysts.interventionist import RESIST_LINE, choose_nudge, hard_stop_speech
 from analysts.screen_analyst import ScreenAnalyst
-from backend import approvals
+from backend import approvals, shield
 from backend.arena import laptop, scores
 from backend.arena.margaret import Margaret
 from backend.arena.recovery import RecoveryAgent
@@ -48,6 +48,7 @@ VOICES = {
 MAX_LINES = 40
 VERIFY_QUESTION = "Margaret, a quick check before you pay: did you call them, or did they call you?"
 PAGE_AMOUNTS = {"wire_transfer": 18500.0, "gift_cards": 5000.0, "bitcoin": 9000.0}  # what Margaret's (fictional) pages show
+MARGARET_IDS = {"482113907", "9931"}  # Margaret's own RemoteDesk address and card: never shared by Community Shield
 CARD_ON_FILE = "9931"  # Margaret's (fictional) card: the only one the recovery agent may freeze
 _PHONE = re.compile(r"\+?\d[\d\s().-]{6,}\d")
 
@@ -90,7 +91,8 @@ class ArenaSession:
         self.situation = situation if situation in ("popup", "call") else "popup"
         self.bus = EventBus(LOGS_DIR / f"arena_{self.id}.jsonl")
         self.case = CaseFile()
-        self.orchestrator = Orchestrator(self.bus, self.case, screen=ScreenAnalyst(redact=lambda png: png), log=lambda _: None)
+        self.orchestrator = Orchestrator(self.bus, self.case, screen=ScreenAnalyst(redact=lambda png: png), log=lambda _: None,
+                                         shield=shield.lookup)
         self.margaret = Margaret()
         self.recovery = RecoveryAgent()
         self._warning_lock = threading.Lock()
@@ -329,7 +331,8 @@ class ArenaSession:
                 snap = self.case.snapshot()
                 frames = [laptop.png_path(p).read_bytes() for p in dict.fromkeys(self.pages_seen) if p != "bank_freeze"][-3:]
                 verdict_with_msg = {**verdict, "family_message": str(args.get("message", ""))[:400] or verdict.get("family_message", "")}
-                incident["id"], incident["link"] = create_incident(verdict_with_msg, snap, frames, "Margaret", redact_frames=False, source="arena")
+                incident["id"], incident["link"] = create_incident(verdict_with_msg, snap, frames, "Margaret", redact_frames=False,
+                                                                   source="arena", protected_ids=MARGARET_IDS)
                 detail = "Family alerted with a link to the incident."
             else:
                 detail = "Unknown tool."

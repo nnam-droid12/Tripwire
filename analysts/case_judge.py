@@ -46,7 +46,9 @@ Stop EARLY. Do not wait for the money request: by then the person is already con
 - a caller claiming to be a government agency or police threatens arrest, legal action or penalties, or demands payment;
 - a caller claiming to be the bank tells the person to move money to a "safe", "secure" or "holding" account, or directs them to log in
   while also telling them not to hang up or not to tell anyone;
-- a fake security warning with a phone number is on screen and the person is now on the phone with that "support" line.
+- a fake security warning with a phone number is on screen and the person is now on the phone with that "support" line;
+- a [shield] line shows that a phone number, remote-access ID or crypto address in this session was already reported in
+  scams stopped in other homes (Community Shield), and the person is being asked to call, connect or pay.
 - an unsolicited caller (claiming to be a bank, a government agency, a company, or offering a prize or refund) asks for a Social
   Security number, bank account or routing number, a password, PIN or one-time code, or card details "to verify", "to refund"
   or "to release" something;

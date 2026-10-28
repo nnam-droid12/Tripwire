@@ -36,7 +36,7 @@ from fastapi import FastAPI, Header, HTTPException, Query, WebSocket, WebSocketD
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from backend import approvals
+from backend import approvals, shield
 from backend.arena import laptop, scores
 from backend.arena.session import VOICE_DIR, ArenaSession, prewarm_voices
 from backend.incidents import STORE, create_incident, decode_frames
@@ -275,6 +275,22 @@ def arena_voice(clip: str) -> FileResponse:
 class NameIn(BaseModel):
     session: str
     name: str
+
+
+class ShieldCheckIn(BaseModel):
+    text: str
+
+
+@app.get("/api/shield")
+def shield_stats() -> dict[str, Any]:
+    """How many scammer identifiers the community has learned (scammer-side data only)."""
+    return shield.stats()
+
+
+@app.post("/api/shield/check")
+def shield_check(body: ShieldCheckIn) -> dict[str, Any]:
+    """Used by the desktop agent: known scammer identifiers in a line of text."""
+    return {"hits": shield.lookup(body.text[:2000])}
 
 
 @app.get("/api/arena/board")

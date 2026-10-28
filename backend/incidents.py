@@ -20,10 +20,12 @@ from PIL import Image
 
 from agent.redact import RedactionError, redact_image, redact_text
 from analysts.common import SAFETY_RULES
+from backend import shield
 from backend.highlight import highlight
 from backend.sms import send_sms
 from backend.storage import IncidentStore
 from core.model_client import ModelClient
+from core.shield import from_incident
 
 PUBLIC_BASE_URL = os.environ.get("TRIPWIRE_PUBLIC_URL", "http://127.0.0.1:8765").rstrip("/")
 STORE = IncidentStore()
@@ -47,6 +49,7 @@ def create_incident(
     *,
     redact_frames: bool = True,
     source: str = "agent",
+    protected_ids: set[str] = frozenset(),
 ) -> tuple[str, str]:
     """Store a new incident, start the family alert and enrichment; return ``(id, private link)``."""
     incident_id = secrets.token_hex(8)
@@ -83,6 +86,8 @@ def create_incident(
         "sms": None,
     }
     STORE.save(incident)
+    # Community Shield: the scammer's identifiers from this stopped scam now protect every other home
+    shield.report(from_incident(incident["timeline"], protected_ids=protected_ids), incident_id)
     link = f"{PUBLIC_BASE_URL}/i/{incident_id}?k={token}"
     threading.Thread(target=_alert_family, args=(incident_id, link), daemon=True).start()
     threading.Thread(target=_enrich, args=(incident_id,), daemon=True).start()

@@ -85,6 +85,7 @@ class Orchestrator:
         policy: EscalationPolicy | None = None,
         log: Callable[[str], None] = print,
         analyze_screen: bool = True,
+        shield: Callable[[str], list[dict]] | None = None,
     ) -> None:
         self.bus = bus
         self.case = case or CaseFile()
@@ -94,6 +95,8 @@ class Orchestrator:
         self.policy = policy or EscalationPolicy()
         self.log = log
         self.analyze_screen = analyze_screen
+        self.shield = shield  # Community Shield lookup: known scammer identifiers in a line of text
+        self._shield_seen: set[str] = set()
         self.action = Action.LOG
         self.paused = False  # set from the tray; capture keeps running but nothing is analysed
         self.verdicts: list[Verdict] = []
@@ -141,9 +144,27 @@ class Orchestrator:
         if signal:
             self.case.add_signals(event.source, [(signal, summary)], ts=event.ts)
 
+    def _check_shield(self, *texts: str) -> None:
+        """Exact matches against identifiers reported in other homes' stopped scams: ground truth, not a model."""
+        if not self.shield:
+            return
+        for text in texts:
+            try:
+                hits = self.shield(text)
+            except Exception:  # the shield is a bonus; never let it break analysis
+                continue
+            for hit in hits:
+                if hit["display"] in self._shield_seen:
+                    continue
+                self._shield_seen.add(hit["display"])
+                line = f"Community Shield: {hit['display']} was reported in {hit['reports']} scam(s) stopped in other homes"
+                self.case.note("shield", line)
+                self.case.add_signals("shield", [("known_scam_indicator", line)])
+
     def _analyze_frame(self, event: Event) -> None:
         finding = self.screen.analyze(Path(event.data["path"]))
         self.case.note("screen", finding.description, finding.risk, ts=event.ts)
+        self._check_shield(finding.description, *(evidence for _, evidence in finding.signals))
         self.log(f"  screen [{finding.risk}] {finding.description}")
         self.case.add_brands("screen", finding.brands, ts=event.ts)
         self.case.add_signals("screen", finding.signals, ts=event.ts)
@@ -153,6 +174,7 @@ class Orchestrator:
         finding = self.call.analyze(speaker, text)
         role = finding.roles.get(speaker or "", "unknown")
         self.case.note("call", f"{speaker or '?'} ({role}): {text}", finding.risk, ts=event.ts)
+        self._check_shield(text)
         self.log(f"  call   [{finding.risk}] {speaker or '?'} ({role}): {finding.note}")
         self.case.add_brands("call", finding.brands, ts=event.ts)
         self.case.add_signals("call", finding.signals, ts=event.ts)

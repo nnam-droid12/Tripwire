@@ -56,7 +56,7 @@ def ground_truth(snapshot: dict) -> list[str]:
     """The lines a claim may cite: what was said, and what the computer actually did."""
     lines = []
     for t in snapshot.get("timeline", []):
-        if t["source"] in ("call", "process", "network", "clipboard", "control", "intervention", "rules"):
+        if t["source"] in ("call", "process", "network", "clipboard", "control", "intervention", "rules", "shield"):
             lines.append(t["text"])
         elif t["source"] == "screen":
             lines.append(t["text"])  # screen description: allowed, but reasons citing it are tagged "screen"

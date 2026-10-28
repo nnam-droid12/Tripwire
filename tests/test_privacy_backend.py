@@ -118,3 +118,30 @@ def test_arena_scoreboard(tmp_path, monkeypatch) -> None:
     assert (b["games"], b["stopped"], b["escaped"]) == (4, 2, 1)
     assert b["best"][0]["stage_name"] == "Extraction" and b["best"][0]["name"] == "bKevinb drop table"
     assert [g["stage_name"] for g in b["beat_tripwire"]] == ["Access"]
+
+
+def test_community_shield_learns_only_scammer_identifiers(tmp_path, monkeypatch) -> None:
+    from core.shield import extract, from_incident
+
+    timeline = [
+        {"source": "screen", "text": "Pop-up says call PC SafeGuard at +1 (555) 013-4477 now"},
+        {"source": "call", "text": "A (caller): or call me back directly on 555.019.2231"},
+        {"source": "call", "text": "B (protected_person): my number is 937-555-0100 and my desk address is 482 113 907"},
+        {"source": "screen", "text": "RemoteDesk bar: Support Agent (desk 731 448 902) is controlling this computer"},
+        {"source": "screen", "text": "RemoteDesk shows this desk's address 482 113 907"},
+    ]
+    learned = {i.display for i in from_incident(timeline, protected_ids={"482113907"})}
+    assert learned == {"+1 (555) 013-4477", "+1 (555) 019-2231", "731 448 902"}  # never her own number or desk address
+    assert {i.kind for i in extract("send it to bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq")} == {"crypto"}
+
+    monkeypatch.setenv("TRIPWIRE_RUNTIME_DIR", str(tmp_path))
+    monkeypatch.delenv("TRIPWIRE_GCS_BUCKET", raising=False)
+    import core.config, backend.storage, backend.shield as shield
+    importlib.reload(core.config); importlib.reload(backend.storage)
+    shield = importlib.reload(shield)
+    assert shield.report(from_incident(timeline, protected_ids={"482113907"}), "inc1") == 3
+    assert shield.report(from_incident(timeline[:1], protected_ids=set()), "inc2") == 0  # seen again: a second report
+    hits = shield.lookup("they told me to ring 555 013 4477 for my refund")  # different formatting, same number
+    assert hits == [{"kind": "phone", "display": "+1 (555) 013-4477", "reports": 2}]
+    assert shield.lookup("my grandson's number is 555 123 9876") == []
+    assert shield.stats()["indicators"] == 3

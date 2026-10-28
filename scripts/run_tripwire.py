@@ -20,6 +20,7 @@ import time
 from functools import partial
 
 from agent.consent import ensure_consent
+from agent import shield_client
 from agent.reporter import BackendReporter
 from agent.tray import TrayIcon
 from analysts.interventionist import Interventionist
@@ -60,7 +61,8 @@ def main() -> None:
     bus.subscribe(lambda e: log(e.summary()))
     case = CaseFile()
     case.on_update(lambda u: log(format_update(u)))
-    orchestrator = Orchestrator(bus, case, log=log, analyze_screen=not args.no_screen_analysis)
+    orchestrator = Orchestrator(bus, case, log=log, analyze_screen=not args.no_screen_analysis,
+                                shield=None if args.no_backend else shield_client.lookup)
     orchestrator.start()
     interventionist = Interventionist(
         bus, case, orchestrator, settings, kill_mode=args.kill, extra_tools={exe: f"{exe} (test)" for exe in args.watch}

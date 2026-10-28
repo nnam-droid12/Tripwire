@@ -44,6 +44,7 @@ SIGNALS: dict[str, SignalSpec] = {
     "fake_problem_claim": SignalSpec(Stage.CONTACT, 0.25, "Caller claims a virus, hacked IP, compromised account or suspicious charge"),
     "refund_pretext": SignalSpec(Stage.CONTACT, 0.25, "Caller offers a refund, compensation or says a subscription renewal will be charged"),
     "cross_modal_brand_match": SignalSpec(Stage.CONTACT, 0.40, "The same claimed organisation appears both on screen and in the call"),
+    "known_scam_indicator": SignalSpec(Stage.CONTACT, 0.60, "A phone number, remote-access ID or crypto address that Community Shield has seen in scams stopped in other homes"),
     "isolation_instruction": SignalSpec(Stage.CONTACT, 0.30, "Told not to hang up, not to call or tell anyone, or that others are listening"),
     "prize_or_reward_claim": SignalSpec(Stage.CONTACT, 0.30, "Caller says the person won a prize, lottery, sweepstakes, grant or gift card they did not enter for"),
     # 3. Control

@@ -86,6 +86,7 @@
   th { color:var(--muted); font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:.5px; }
   td b { font-size:17px; }
   .note { color:var(--muted); font-size:14px; margin-top:10px; }
+  .big-num { font-size:30px; font-weight:800; margin-right:6px; }
   .tools { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
   @media (max-width: 900px) { .tools { grid-template-columns:1fr 1fr; } }
   .tool { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; }
@@ -174,6 +175,21 @@
   </div>
 </section>
 
+<section id="shield">
+  <div class="wrap evidence">
+    <div>
+      <h2>One stopped scam protects every home.</h2>
+      <p class="sub">When Tripwire stops a scam, the scammer's own identifiers (the number to call back, the remote-access ID they connect from, the crypto address they want paid) join Community Shield. The next time any Tripwire home sees one of them, it is flagged instantly.</p>
+      <p class="sub">Only the scammer's side is ever shared: never names, never account or card numbers, never what was said. And because it is an exact match against real reports, it is evidence, not a guess.</p>
+    </div>
+    <div class="card verdict">
+      <b>Community Shield</b>
+      <div class="r"><span class="big-num" id="shield-count">…</span> scammer numbers and IDs learned so far</div>
+      <div id="shield-recent"></div>
+    </div>
+  </div>
+</section>
+
 <section class="alt" id="evidence">
   <div class="wrap evidence">
     <div>
@@ -249,6 +265,11 @@
 
 <script>
 const pct = x => x == null ? "n/a" : `${Math.round(x * 100)}%`;
+fetch("/api/shield").then(r => r.json()).then(s => {
+  document.getElementById("shield-count").textContent = s.indicators;
+  document.getElementById("shield-recent").innerHTML = s.recent.map(i =>
+    `<div class="r"><code>${i.display}</code> · ${i.kind === "phone" ? "callback number" : i.kind === "remote_id" ? "remote-access ID" : "crypto address"} · reported ${i.reports}×</div>`).join("");
+}).catch(() => {});
 fetch("/api/results").then(r => r.json()).then(R => {
   const L = R.latest?.summary, E = R.external?.summary, B = R.external_baseline?.summary, F = R.frames?.summary;
   if (L) { document.getElementById("st-detect").textContent = pct(L.detection_rate); document.getElementById("st-fa").textContent = pct(L.false_alarm_rate); }
