@@ -208,6 +208,21 @@ python -m eval.replay eval/scenarios/scam_pc_safeguard.json --speed 2 --interven
 
 The second command replays the scam with real interventions, using Notepad as a stand-in for AnyDesk. Start Notepad first.
 
+## Who's in control, and family rules before payments
+
+**Who's in control.** When someone drives the computer through AnyDesk, TeamViewer or Quick Assist, their clicks and keystrokes reach Windows as *injected* input, which the operating system marks as such. Physical input never carries that mark. Tripwire watches for it (`agent/control.py`), so "someone else is controlling this computer" is an observed fact, not a model's guess. Only counts are kept, never keystrokes. It is reported only while a remote-access tool is running, so accessibility software is not mistaken for a scammer.
+
+**Family rules.** Before a sensitive action (a wire or transfer, a gift-card purchase, a crypto deposit), plain rules chosen by the family decide:
+
+| Decision | Example |
+|---|---|
+| Allow | Nothing applies, or the caller is a trusted family member |
+| Verify | A payment during a call with someone who isn't family: Tripwire asks out loud, "did you call them, or did they call you?" |
+| Hold | Gift cards during such a call, or a large transfer: the payment waits until a family member taps Approve or Deny. No answer within 30 minutes counts as a no |
+| Deny | Any payment while someone else controls the computer |
+
+The rules (`core/rules.py`) cannot hallucinate, and they work alongside the CaseJudge: the stricter of the two always wins, and neither can relax the other.
+
 ## Privacy and family alerts
 
 - **Redacted on the device.** Before any screenshot leaves the laptop, Windows' built-in OCR finds account, card and SSN numbers and covers them with solid boxes. Money amounts and the scammer's phone number stay visible, because they are evidence. If redaction fails, the frame is not sent.

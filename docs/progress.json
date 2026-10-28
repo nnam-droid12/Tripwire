@@ -73,6 +73,18 @@
       "detail": "Every reason behind an action must quote what was actually said or done; unverified claims are discarded automatically."
     },
     {
+      "id": "CONTROL",
+      "title": "Knows who is really in control",
+      "status": "done",
+      "detail": "Detects when mouse and keyboard input comes from a remote-access tool instead of the person at the computer: an observed fact, not a guess."
+    },
+    {
+      "id": "RULES",
+      "title": "Family rules and payment holds",
+      "status": "done",
+      "detail": "Before a payment: allow, check with the person, hold for family approval, or stop. Plain rules the family chooses, alongside the AI; the stricter one wins."
+    },
+    {
       "id": "EXT",
       "title": "Independent testing on real-world calls",
       "status": "in_progress",
