@@ -56,7 +56,7 @@ def extract(text: str) -> set[Indicator]:
     return found
 
 
-def from_incident(timeline: list[dict], protected_ids: set[str] = frozenset()) -> set[Indicator]:
+def from_incident(timeline: list[dict], protected_ids: set[str] = frozenset(), signals: list[dict] | None = None) -> set[Indicator]:
     """Indicators to learn from a stopped scam: the scammer's side only.
 
     The protected person's own words are skipped (they may read out their own
@@ -73,4 +73,7 @@ def from_incident(timeline: list[dict], protected_ids: set[str] = frozenset()) -
             found |= {i for i in extract(text) if i.kind != "remote_id"}
         elif source in ("screen", "network", "process", "clipboard"):
             found |= extract(text)
+    for s in signals or []:  # evidence quoted from the screen or the system (never from the protected person's words)
+        if s.get("source") in ("screen", "network", "process", "clipboard"):
+            found |= extract(s.get("evidence", ""))
     return {i for i in found if i.value not in protected_ids}

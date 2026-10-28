@@ -87,7 +87,7 @@ def create_incident(
     }
     STORE.save(incident)
     # Community Shield: the scammer's identifiers from this stopped scam now protect every other home
-    shield.report(from_incident(incident["timeline"], protected_ids=protected_ids), incident_id)
+    shield.report(from_incident(incident["timeline"], protected_ids=protected_ids, signals=incident["signals"]), incident_id)
     link = f"{PUBLIC_BASE_URL}/i/{incident_id}?k={token}"
     threading.Thread(target=_alert_family, args=(incident_id, link), daemon=True).start()
     threading.Thread(target=_enrich, args=(incident_id,), daemon=True).start()
