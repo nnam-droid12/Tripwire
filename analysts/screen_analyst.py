@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 from agent.redact import redact_for_upload
 from analysts.common import SAFETY_RULES, clean_brands, clean_risk, clean_signals, signal_menu
@@ -38,11 +39,14 @@ class ScreenFinding:
 
 
 class ScreenAnalyst:
-    def __init__(self, client: ModelClient | None = None) -> None:
+    def __init__(self, client: ModelClient | None = None, redact: Callable[[bytes], bytes] = redact_for_upload) -> None:
+        """``redact`` must make a frame safe to upload. Live capture uses on-device OCR redaction;
+        the web arena passes frames of its own fictional pages, which contain nothing to hide."""
         self.client = client or ModelClient.for_provider("baseten")
+        self.redact = redact
 
     def analyze(self, frame_path: Path) -> ScreenFinding:
-        png = redact_for_upload(frame_path.read_bytes())
+        png = self.redact(frame_path.read_bytes())
         reply = self.client.describe_image(png, PROMPT)
         data = parse_json_object(reply)
         return ScreenFinding(

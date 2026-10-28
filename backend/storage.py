@@ -13,7 +13,7 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from core.config import RUNTIME_DIR
 
@@ -29,7 +29,9 @@ class LocalStore:
     def put_bytes(self, key: str, data: bytes, content_type: str = "application/octet-stream") -> None:
         path = self.root / key
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_bytes(data)
+        tmp.replace(path)  # atomic: a concurrent reader never sees a half-written file
 
 
 class GcsStore:
@@ -52,7 +54,7 @@ class IncidentStore:
     def __init__(self) -> None:
         bucket = os.environ.get("TRIPWIRE_GCS_BUCKET")
         self.backend = GcsStore(bucket) if bucket else LocalStore(RUNTIME_DIR / "backend")
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def load(self, incident_id: str) -> dict[str, Any] | None:
         raw = self.backend.get_bytes(f"incidents/{incident_id}/incident.json")
@@ -68,6 +70,14 @@ class IncidentStore:
             }
             index = sorted(index + [entry], key=lambda i: i["created"], reverse=True)[:200]
             self.backend.put_bytes("incidents/index.json", json.dumps(index).encode(), "application/json")
+
+    def update(self, incident_id: str, mutate: Callable[[dict[str, Any]], None]) -> None:
+        """Load, change and save one incident as a single step (background threads update it concurrently)."""
+        with self._lock:
+            incident = self.load(incident_id)
+            if incident is not None:
+                mutate(incident)
+                self.save(incident)
 
     def index(self) -> list[dict[str, Any]]:
         raw = self.backend.get_bytes("incidents/index.json")

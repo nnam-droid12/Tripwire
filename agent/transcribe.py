@@ -140,6 +140,11 @@ class MuseTranscriber:
                     if text:
                         self.on_turn(TranscriptTurn(self.session_id, msg.get("turnId", -1), speaker, text, msg.get("audioProcessedMs", 0)))
                     speaker = None
+                elif kind == "transcript" and msg.get("final") and self.mode == "PUSH_TO_TALK":
+                    # push-to-talk (the web arena): one final transcript per utterance, no turn events
+                    text = (msg.get("transcript") or "").strip()
+                    if text:
+                        self.on_turn(TranscriptTurn(self.session_id, 0, None, text, msg.get("audioProcessedMs", 0)))
                 elif kind == "error":
                     self.on_error(f"ASR error: {msg.get('message')}")
         except websockets.ConnectionClosed as exc:

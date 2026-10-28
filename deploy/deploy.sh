@@ -29,6 +29,10 @@ echo "== Service account (least privilege)"
 $G iam service-accounts describe "$SA" >/dev/null 2>&1 || \
   $G iam service-accounts create tripwire-backend --display-name="Tripwire backend (Cloud Run)"
 
+# lets the service call Text-to-Speech (Margaret's and Tripwire's voices) billed to this project
+$G projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:${SA}" \
+  --role=roles/serviceusage.serviceUsageConsumer --condition=None >/dev/null
+
 echo "== Private incident bucket, objects deleted after 30 days"
 if ! $G storage buckets describe "gs://${BUCKET}" >/dev/null 2>&1; then
   $G storage buckets create "gs://${BUCKET}" --location="$REGION" --uniform-bucket-level-access --public-access-prevention
@@ -53,12 +57,13 @@ put_secret() {  # name, value (empty value: skip)
 put_secret tripwire-agent-token "$(env_value TRIPWIRE_AGENT_TOKEN)"
 put_secret tripwire-dashboard-key "$(env_value TRIPWIRE_DASHBOARD_KEY)"
 put_secret tripwire-meta-api-key "$(env_value META_API_KEY)"
+put_secret tripwire-baseten-api-key "$(env_value BASETEN_API_KEY)"
 put_secret tripwire-twilio-sid "$(env_value TWILIO_ACCOUNT_SID)"
 put_secret tripwire-twilio-token "$(env_value TWILIO_AUTH_TOKEN)"
 put_secret tripwire-twilio-from "$(env_value TWILIO_FROM_NUMBER)"
 put_secret tripwire-family-phone "$(env_value FAMILY_PHONE_NUMBER)"
 
-SECRETS="TRIPWIRE_AGENT_TOKEN=tripwire-agent-token:latest,TRIPWIRE_DASHBOARD_KEY=tripwire-dashboard-key:latest,META_API_KEY=tripwire-meta-api-key:latest"
+SECRETS="TRIPWIRE_AGENT_TOKEN=tripwire-agent-token:latest,TRIPWIRE_DASHBOARD_KEY=tripwire-dashboard-key:latest,META_API_KEY=tripwire-meta-api-key:latest,BASETEN_API_KEY=tripwire-baseten-api-key:latest"
 for pair in TWILIO_ACCOUNT_SID=tripwire-twilio-sid TWILIO_AUTH_TOKEN=tripwire-twilio-token TWILIO_FROM_NUMBER=tripwire-twilio-from FAMILY_PHONE_NUMBER=tripwire-family-phone; do
   if $G secrets describe "${pair#*=}" >/dev/null 2>&1; then SECRETS="${SECRETS},${pair}:latest"; fi
 done
@@ -66,8 +71,8 @@ done
 echo "== Deploy"
 URL="$($G run services describe "$SERVICE" --region="$REGION" --format='value(status.url)' 2>/dev/null || true)"
 $G run deploy "$SERVICE" --source=. --region="$REGION" --service-account="$SA" \
-  --allow-unauthenticated --max-instances=1 --memory=512Mi --no-cpu-throttling \
-  --set-env-vars="TRIPWIRE_GCS_BUCKET=${BUCKET},META_BASE_URL=https://api.meta.ai/v1,META_MODEL=muse-spark-1.3,META_REASONING_EFFORT=,TRIPWIRE_PUBLIC_URL=${URL:-https://pending}" \
+  --allow-unauthenticated --max-instances=1 --memory=1Gi --cpu=2 --no-cpu-throttling --timeout=3600 \
+  --set-env-vars="TRIPWIRE_GCS_BUCKET=${BUCKET},META_BASE_URL=https://api.meta.ai/v1,META_MODEL=muse-spark-1.3,META_REASONING_EFFORT=low,BASETEN_BASE_URL=https://inference.baseten.co/v1,BASETEN_MODEL=meta-models/muse-spark-open-1026,BASETEN_REASONING_EFFORT=low,TRIPWIRE_PUBLIC_DASHBOARD=${PUBLIC_DASHBOARD:-1},TRIPWIRE_GCP_PROJECT=${PROJECT},TRIPWIRE_PUBLIC_URL=${URL:-https://pending}" \
   --set-secrets="$SECRETS"
 URL="$($G run services describe "$SERVICE" --region="$REGION" --format='value(status.url)')"
 $G run services update "$SERVICE" --region="$REGION" --update-env-vars="TRIPWIRE_PUBLIC_URL=${URL}" >/dev/null

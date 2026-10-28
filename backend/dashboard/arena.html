@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tripwire Arena</title>
+<meta name="description" content="You play the scammer. Margaret, 78, is on the line. Tripwire is watching her screen and the call. Can you get her money before it stops you?">
+<style>
+  :root {
+    --bg:#f5f3ee; --panel:#ffffff; --ink:#1c2228; --muted:#5f6973; --line:#e2ddd2;
+    --you:#e7eefc; --her:#fff4e0; --tw:#1f7a4d; --warn:#b26a00; --stop:#b3261e; --stopbg:#7a0000; --accent:#2d5bd7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#121518; --panel:#1b2025; --ink:#eef1f4; --muted:#9aa5b0; --line:#2b3238;
+      --you:#1f2a44; --her:#3a2f1c; --tw:#4cbf86; --warn:#e3a33c; --stop:#ff6b5f; --accent:#7ea2ff; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; }
+  header { padding:20px 20px 8px; max-width:1360px; margin:0 auto; }
+  h1 { margin:0; font-size:26px; letter-spacing:.2px; }
+  h1 span { color:var(--stop); }
+  .sub { color:var(--muted); margin:4px 0 0; }
+  main { max-width:1360px; margin:0 auto; padding:12px 20px 32px; display:grid; grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr); gap:20px; }
+  @media (max-width: 980px) { main { grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin:0 0 10px; }
+
+  /* Margaret's laptop */
+  .laptop { background:#2a2f35; border-radius:14px 14px 4px 4px; padding:12px 12px 16px; }
+  .screen { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; background:#000; border-radius:4px; }
+  .screen iframe { position:absolute; top:0; left:0; width:1280px; height:720px; border:0; transform-origin:0 0; background:#fff; }
+  .base { height:12px; background:#3a4047; margin:0 -24px; border-radius:0 0 12px 12px; }
+  .warning { position:absolute; inset:0; background:var(--stopbg); color:#fff; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:4% 6%; }
+  .warning.on { display:flex; animation: pop .25s ease-out; }
+  @keyframes pop { from { transform:scale(1.04); opacity:.4; } to { transform:none; opacity:1; } }
+  .warning .h { font-size:clamp(20px, 3.4vw, 44px); font-weight:800; line-height:1.1; }
+  .warning .y { color:#ffd84d; font-size:clamp(16px, 2.4vw, 30px); font-weight:700; margin:.4em 0; }
+  .warning ul { text-align:left; font-size:clamp(12px, 1.4vw, 18px); margin:.3em 0; }
+  .warning .card { font-size:clamp(11px, 1.2vw, 15px); opacity:.9; }
+  .nudge { position:absolute; left:4%; right:4%; bottom:4%; background:#fff; color:#1c2228; border-left:6px solid var(--warn); border-radius:8px; padding:10px 14px; font-size:clamp(12px,1.3vw,16px); display:none; box-shadow:0 6px 24px #0006; }
+  .nudge.on { display:block; }
+
+  /* call */
+  .call { margin-top:16px; }
+  .log { height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px; }
+  .msg { max-width:82%; padding:8px 12px; border-radius:14px; }
+  .msg.scammer { align-self:flex-end; background:var(--you); border-bottom-right-radius:4px; }
+  .msg.margaret { align-self:flex-start; background:var(--her); border-bottom-left-radius:4px; }
+  .msg.tripwire { align-self:center; background:transparent; border:1px solid var(--tw); color:var(--tw); font-weight:600; font-size:14px; }
+  .msg.system { align-self:center; color:var(--muted); font-size:13px; }
+  .msg .who { font-size:12px; color:var(--muted); display:block; }
+  .controls { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .controls input { flex:1; min-width:180px; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; }
+  button { font:inherit; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--ink); padding:12px 16px; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:default; }
+  .talk { background:var(--accent); color:#fff; border-color:transparent; font-weight:600; user-select:none; touch-action:none; }
+  .talk.live { background:var(--stop); }
+  .primary { background:var(--ink); color:var(--panel); font-weight:600; border-color:transparent; }
+
+  /* Tripwire panel */
+  .status { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:700; }
+  .dot { width:14px; height:14px; border-radius:50%; background:var(--tw); }
+  .chain { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin:14px 0 6px; }
+  .chain div { font-size:12px; text-align:center; padding:8px 2px; border-radius:6px; background:var(--bg); color:var(--muted); border:1px solid var(--line); transition:background .3s; }
+  .chain div.on { background:var(--stop); color:#fff; border-color:var(--stop); }
+  .conf { height:6px; background:var(--bg); border-radius:3px; overflow:hidden; }
+  .conf i { display:block; height:100%; width:0; background:var(--stop); transition:width .4s; }
+  .feed { max-height:230px; overflow-y:auto; margin-top:10px; font-size:14px; }
+  .feed div { padding:6px 0; border-top:1px solid var(--line); }
+  .feed b { font-weight:600; }
+  .tag { display:inline-block; font-size:11px; padding:1px 7px; border-radius:999px; border:1px solid var(--line); color:var(--muted); margin-left:4px; }
+  .verdict { margin-top:10px; padding:10px 12px; border-radius:10px; background:var(--bg); font-size:14px; }
+  .verdict ul { margin:4px 0 0; padding-left:18px; }
+  .steps div { padding:8px 0; border-top:1px solid var(--line); font-size:14px; }
+  .steps .t { font-weight:600; }
+  .report { white-space:pre-wrap; font-size:13px; background:var(--bg); border-radius:8px; padding:10px; margin-top:8px; }
+  .side > .panel + .panel { margin-top:16px; }
+
+  /* start + score dialogs */
+  .dialog { position:fixed; inset:0; background:#000a; display:flex; align-items:center; justify-content:center; padding:16px; z-index:10; }
+  .dialog[hidden] { display:none; }
+  .dialog .box { background:var(--panel); color:var(--ink); max-width:620px; width:100%; border-radius:16px; padding:24px; }
+  .choice { display:block; width:100%; text-align:left; margin:8px 0; padding:14px 16px; }
+  .choice.sel { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset; }
+  .choice b { display:block; }
+  .small { font-size:13px; color:var(--muted); }
+  .big { font-size:40px; font-weight:800; margin:.2em 0; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Can you scam <span>Margaret</span>?</h1>
+  <p class="sub">You're the scammer. Margaret, 78, is on the line. <b>Tripwire</b> is watching her screen and listening to the call. Get to her money before it stops you.</p>
+</header>
+
+<main>
+  <section>
+    <div class="laptop">
+      <div class="screen" id="screen">
+        <iframe id="page" title="Margaret's screen" src="/arena/pages/desktop"></iframe>
+        <div class="nudge" id="nudge"></div>
+        <div class="warning" id="warning">
+          <div class="h">STOP. This looks like a scam.</div>
+          <div class="y">Hang up the phone now.</div>
+          <ul id="warn-reasons"></ul>
+          <div class="card">Microsoft, Apple and your bank never call you about viruses or refunds.<br>To check your account, call the number on the back of your card.</div>
+        </div>
+      </div>
+    </div>
+    <div class="base"></div>
+
+    <div class="panel call">
+      <h2>The call</h2>
+      <div class="log" id="log"></div>
+      <div class="controls">
+        <button class="talk" id="talk" disabled title="Hold to talk (or hold Space)">&#127908; Hold to talk</button>
+        <input id="text" placeholder="…or type what you say to Margaret, then Enter" disabled>
+        <button id="send" disabled>Say it</button>
+        <button id="hangup" disabled>Hang up</button>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="panel">
+      <h2>Tripwire</h2>
+      <div class="status"><span class="dot" id="dot"></span><span id="state">Waiting for the call</span></div>
+      <div class="chain" id="chain"></div>
+      <div class="conf"><i id="conf"></i></div>
+      <div class="small" id="conf-text">Kill-chain confidence 0%</div>
+      <div class="feed" id="feed"></div>
+      <div id="verdicts"></div>
+    </div>
+    <div class="panel" id="recovery" hidden>
+      <h2>Recovery agent: acting, not just warning</h2>
+      <div class="steps" id="steps"></div>
+      <div id="report"></div>
+      <p class="small" id="recovery-summary"></p>
+    </div>
+    <div class="panel small">
+      How it works: your words → Muse Voice Transcribe → Tripwire's analysts (Muse Spark Open) and CaseJudge (Muse Spark) → the warning and Margaret's reaction. Margaret is played by Muse Spark. Everything here is fictional.
+      <a href="/" target="_blank">Family dashboard</a> · <a href="https://github.com/nnam-droid12/Tripwire" target="_blank">Code</a>
+    </div>
+  </aside>
+</main>
+
+<div class="dialog" id="start">
+  <div class="box">
+    <h2 style="font-size:22px;text-transform:none;letter-spacing:0;color:var(--ink)">Pick your scam</h2>
+    <button class="choice sel" data-situation="popup"><b>Fake tech support</b><span class="small">A fake "PC SafeGuard" virus pop-up is on her screen. She has just called the number on it, and you answer.</span></button>
+    <button class="choice" data-situation="call"><b>Cold call</b><span class="small">You phone her. Be her bank's fraud team, the IRS, Amazon refunds… Or be her grandson Tom and see whether Tripwire stays calm.</span></button>
+    <p class="small">Hold the blue button (or Space) and speak, or type. Margaret answers out loud, so turn your sound on. A game lasts up to 8 minutes.</p>
+    <button class="primary" id="go">Start the call</button>
+  </div>
+</div>
+
+<div class="dialog" id="score" hidden>
+  <div class="box">
+    <div class="small" id="score-kicker"></div>
+    <div class="big" id="score-big"></div>
+    <p id="score-text"></p>
+    <p class="small" id="score-incident"></p>
+    <button class="primary" onclick="location.reload()">Play again</button>
+  </div>
+</div>
+
+<script>
+const STAGES = ["Hook", "Contact", "Control", "Access", "Extraction"];
+const LABELS = {
+  fake_virus_alert: "Fake virus alert", scareware_phone_number: "Call-this-number scareware", account_locked_notice: "Account-locked notice",
+  ai_directed_text: "Hidden text aimed at AI", impersonation_claim: "Impersonation", fake_problem_claim: "Invented problem",
+  refund_pretext: "Refund pretext", cross_modal_brand_match: "Screen and caller claim the same brand", isolation_instruction: "Isolation (don't tell anyone)",
+  remote_tool_install_request: "Asked to install remote access", remote_access_code_shared: "Remote-access code shared",
+  remote_tool_launched: "Remote tool launched", remote_session_active: "Remote session live", disable_protection: "Told to close or ignore warnings",
+  bank_site_open: "Bank site open", login_instruction: "Told to log in", bank_open_during_remote: "Bank open during remote session",
+  card_number_copied: "Card number copied", overpayment_refund_story: "Overpayment story", gift_card_request: "Gift cards",
+  crypto_request: "Crypto", wire_transfer_request: "Wire transfer", cash_withdrawal_request: "Cash withdrawal",
+  secrecy_instruction: "Hide it from the bank or family", crypto_address_copied: "Crypto address copied",
+  money_amount_copied: "Money amount copied", urgency_pressure: "Urgency pressure",
+};
+const TOOLS = { end_remote_session: "Ended the remote session", freeze_card: "Froze the card", draft_fraud_report: "Drafted the fraud report", notify_family: "Alerted the family" };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let ws, situation = "popup", maxStage = 0, stopped = false, stopScore = null;
+
+// ---- laptop screen scaling --------------------------------------------------
+function fit() { const s = $("screen"); $("page").style.transform = `scale(${s.clientWidth / 1280})`; }
+addEventListener("resize", fit); fit();
+function showPage(page, hash) { $("page").src = `/arena/pages/${page}${hash ? "#" + hash : ""}`; }
+
+// ---- audio: Margaret queued, Tripwire interrupts ---------------------------------
+const queue = []; let playing = null;
+function play(clip, urgent) {
+  if (!clip) return;
+  const a = new Audio(`/arena/voice/${clip}.mp3`);
+  if (urgent) { queue.length = 0; if (playing) playing.pause(); playing = null; }
+  queue.push(a); if (!playing) next();
+}
+function next() { playing = queue.shift() || null; if (playing) { playing.onended = next; playing.play().catch(next); } }
+
+// ---- transcript ---------------------------------------------------------------
+function say(who, text) {
+  const d = document.createElement("div");
+  d.className = `msg ${who}`;
+  const name = { scammer: "You", margaret: "Margaret", tripwire: "Tripwire" }[who];
+  d.innerHTML = (name && who !== "tripwire" ? `<span class="who">${name}</span>` : "") + esc(text);
+  $("log").appendChild(d); $("log").scrollTop = 1e9;
+}
+
+// ---- Tripwire panel -------------------------------------------------------------
+$("chain").innerHTML = STAGES.map(s => `<div>${s}</div>`).join("");
+function setState(text, color) { $("state").textContent = text; $("dot").style.background = `var(${color})`; }
+function onCase(m) {
+  [...$("chain").children].forEach((el, i) => el.classList.toggle("on", m.stages.includes(i + 1)));
+  maxStage = Math.max(maxStage, m.stage);
+  $("conf").style.width = `${Math.round(m.confidence * 100)}%`;
+  $("conf-text").textContent = `Kill-chain confidence ${Math.round(m.confidence * 100)}%`;
+  for (const s of m.new) {
+    const d = document.createElement("div");
+    d.innerHTML = `<b>${esc(LABELS[s.name] || s.name)}</b><span class="tag">${STAGES[s.stage - 1]}</span><span class="tag">${esc(s.source)}</span><br><span class="small">${esc(s.evidence)}</span>`;
+    $("feed").prepend(d);
+  }
+}
+function onVerdict(m) {
+  const d = document.createElement("div");
+  d.className = "verdict";
+  d.innerHTML = `<b>CaseJudge:</b> ${m.is_scam ? "scam" : "not a scam"} (${Math.round(m.confidence * 100)}%) → <b>${esc(m.action.replace("_", " "))}</b><ul>${m.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>`;
+  $("verdicts").prepend(d);
+  if (!stopped && m.action === "log") setState("Watching", "--tw");
+}
+
+// ---- the game ----------------------------------------------------------------------
+document.querySelectorAll(".choice").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".choice").forEach(x => x.classList.remove("sel")); b.classList.add("sel"); situation = b.dataset.situation;
+});
+$("go").onclick = () => {
+  $("start").hidden = true;
+  new Audio().play().catch(() => {}); // unlock audio playback after a user gesture
+  ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/arena`);
+  ws.binaryType = "arraybuffer";
+  ws.onopen = () => ws.send(JSON.stringify({ type: "start", situation }));
+  ws.onmessage = e => handle(JSON.parse(e.data));
+  ws.onclose = () => { ["talk", "text", "send", "hangup"].forEach(id => $(id).disabled = true); };
+  setState("Watching", "--tw");
+};
+function enable() { ["talk", "text", "send", "hangup"].forEach(id => $(id).disabled = false); $("text").focus(); }
+
+function handle(m) {
+  switch (m.type) {
+    case "busy": say("system", m.text); break;
+    case "started": enable(); break;
+    case "laptop": showPage(m.page, m.hash); break;
+    case "line": say(m.who, m.text); if (m.who === "margaret") play(m.audio); break;
+    case "case": onCase(m); break;
+    case "verdict": onVerdict(m); break;
+    case "nudge":
+      $("nudge").textContent = "Tripwire: " + m.text; $("nudge").classList.add("on");
+      setTimeout(() => $("nudge").classList.remove("on"), 9000);
+      say("tripwire", "Tripwire (spoken): " + m.text); setState("Nudged Margaret", "--warn"); play(m.audio, true); break;
+    case "hard_stop":
+      stopped = true; stopScore = m.score;
+      $("warn-reasons").innerHTML = m.reasons.map(r => `<li>${esc(r)}</li>`).join("");
+      $("warning").classList.add("on"); $("nudge").classList.remove("on");
+      say("tripwire", "Tripwire (spoken): " + m.speech); setState("STOPPED the scam", "--stop"); play(m.audio, true); break;
+    case "resist": say("tripwire", "Tripwire (spoken): " + m.text); play(m.audio, true); break;
+    case "speak": play(m.audio, true); break;
+    case "recovery_start": $("recovery").hidden = false; break;
+    case "recovery_step": {
+      const d = document.createElement("div");
+      d.innerHTML = `<span class="t">✓ ${esc(TOOLS[m.tool] || m.tool)}</span><br><span class="small">${esc(m.detail)}</span>`;
+      $("steps").appendChild(d);
+      if (m.tool === "end_remote_session" || m.tool === "freeze_card") $("warning").classList.remove("on"); // show the agent working on her screen
+      break;
+    }
+    case "report": {
+      const r = m.report;
+      $("report").innerHTML = `<div class="report"><b>Draft fraud report</b> (for reportfraud.ftc.gov and the bank)\n\nWhat happened: ${esc(r.summary)}\nScammer claimed to be: ${esc(r.scammer_claimed_to_be)}\nContact used: ${esc(r.contact_methods || "not recorded")}\nMoney lost: ${esc(r.money_lost)}</div>`;
+      break;
+    }
+    case "recovery_done":
+      $("recovery-summary").innerHTML = esc(m.summary) + (m.incident ? ` · <a href="${esc(m.incident)}" target="_blank">Family alert page</a>` : "");
+      break;
+    case "game_over": setTimeout(() => gameOver(m), m.caught ? 2500 : 500); break;
+    case "error": say("system", m.text); break;
+  }
+}
+
+function gameOver(m) {
+  ["talk", "text", "send", "hangup"].forEach(id => $(id).disabled = true);
+  if (m.caught && stopScore) {
+    $("score-kicker").textContent = "Tripwire stopped you";
+    $("score-big").textContent = `${stopScore.lines} line${stopScore.lines === 1 ? "" : "s"}, ${stopScore.seconds} s`;
+    $("score-text").textContent = `You reached the ${stopScore.stage_name} stage of the scam before Tripwire stepped in. Margaret's money is safe. Think you can get further? Try a different story.`;
+  } else {
+    $("score-kicker").textContent = m.text;
+    $("score-big").textContent = m.stage >= 3 ? "Tripwire didn't stop it" : "No alarm";
+    $("score-text").textContent = m.stage >= 3
+      ? `You reached the ${m.stage_name} stage without a hard stop. Tell us how you did it: that's how Tripwire gets better.`
+      : "Tripwire stayed calm. If you were being a real grandson, that's exactly right.";
+  }
+  $("score-incident").innerHTML = $("recovery-summary").innerHTML;
+  $("score").hidden = false;
+}
+
+// ---- typing --------------------------------------------------------------------------
+function sendText() {
+  const t = $("text").value.trim(); if (!t || !ws) return;
+  ws.send(JSON.stringify({ type: "say", text: t })); $("text").value = "";
+}
+$("send").onclick = sendText;
+$("text").addEventListener("keydown", e => { if (e.key === "Enter") sendText(); });
+$("hangup").onclick = () => ws && ws.send(JSON.stringify({ type: "hang_up" }));
+
+// ---- push to talk: mic -> 24 kHz PCM16 -> server -> Muse Voice Transcribe ----------
+let ctx, node, talking = false;
+const WORKLET = `class P extends AudioWorkletProcessor { process(i) { if (i[0][0]) this.port.postMessage(i[0][0]); return true; } } registerProcessor("pcm", P);`;
+async function micReady() {
+  if (ctx) return true;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+    ctx = new AudioContext({ sampleRate: 24000 });
+    await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], { type: "text/javascript" })));
+    node = new AudioWorkletNode(ctx, "pcm");
+    let buf = [];
+    node.port.onmessage = e => {
+      if (!talking) return;
+      buf.push(...e.data);
+      while (buf.length >= 1920) { // 80 ms frames
+        const f = buf.splice(0, 1920), pcm = new Int16Array(1920);
+        for (let i = 0; i < 1920; i++) pcm[i] = Math.max(-1, Math.min(1, f[i])) * 0x7fff;
+        ws.send(pcm.buffer);
+      }
+    };
+    ctx.createMediaStreamSource(stream).connect(node);
+    return true;
+  } catch (err) { say("system", "Microphone not available. You can type instead."); return false; }
+}
+async function talkStart() {
+  if (talking || !ws || $("talk").disabled || !(await micReady())) return;
+  await ctx.resume(); talking = true; $("talk").classList.add("live"); $("talk").textContent = "● Listening… release to send";
+  if (playing) playing.pause();
+  ws.send(JSON.stringify({ type: "ptt_start" }));
+}
+function talkEnd() {
+  if (!talking) return;
+  talking = false; $("talk").classList.remove("live"); $("talk").innerHTML = "&#127908; Hold to talk";
+  ws.send(JSON.stringify({ type: "ptt_end" }));
+}
+$("talk").addEventListener("pointerdown", talkStart);
+addEventListener("pointerup", talkEnd);
+addEventListener("keydown", e => { if (e.code === "Space" && document.activeElement !== $("text") && !e.repeat) { e.preventDefault(); talkStart(); } });
+addEventListener("keyup", e => { if (e.code === "Space" && document.activeElement !== $("text")) talkEnd(); });
+</script>
+</body>
+</html>

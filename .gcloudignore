@@ -6,7 +6,12 @@
 runtime/
 config/tripwire.json
 data/
-eval/
+eval/*
+!eval/__init__.py
+!eval/scenarios/
+eval/scenarios/*
+!eval/scenarios/pages/
+!eval/scenarios/frames/
 tests/
 scripts/
 __pycache__/

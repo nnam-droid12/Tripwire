@@ -41,15 +41,19 @@ SVSF_PURGE_BEFORE_SPEAK = 2
 
 
 class GoogleVoice:
-    """Synthesize text to a cached 24 kHz WAV file with Google Cloud TTS."""
+    """Synthesize text to a cached 24 kHz audio file with Google Cloud TTS.
 
-    def __init__(self, voice: str = VOICE, rate: float = SPEAKING_RATE, cache_dir: Path = CACHE_DIR) -> None:
-        self.voice, self.rate, self.cache_dir = voice, rate, cache_dir
+    WAV (LINEAR16) for the desktop agent, which plays it with ``winsound``;
+    MP3 for the web arena, which streams it to the browser.
+    """
+
+    def __init__(self, voice: str = VOICE, rate: float = SPEAKING_RATE, cache_dir: Path = CACHE_DIR, encoding: str = "LINEAR16") -> None:
+        self.voice, self.rate, self.cache_dir, self.encoding = voice, rate, cache_dir, encoding
         self._creds = None
 
     def path_for(self, text: str) -> Path:
-        digest = hashlib.sha256(f"{self.voice}|{self.rate}|{text}".encode()).hexdigest()[:24]
-        return self.cache_dir / f"{digest}.wav"
+        digest = hashlib.sha256(f"{self.voice}|{self.rate}|{self.encoding}|{text}".encode()).hexdigest()[:24]
+        return self.cache_dir / f"{digest}{'.mp3' if self.encoding == 'MP3' else '.wav'}"
 
     def synthesize(self, text: str) -> Path:
         path = self.path_for(text)
@@ -60,11 +64,11 @@ class GoogleVoice:
         body = {
             "input": {"text": text},
             "voice": {"languageCode": self.voice[:5], "name": self.voice},
-            "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": 24000, "speakingRate": self.rate},
+            "audioConfig": {"audioEncoding": self.encoding, "sampleRateHertz": 24000, "speakingRate": self.rate},
         }
         resp = requests.post(TTS_URL, json=body, headers=self._headers(), timeout=20)
         resp.raise_for_status()
-        audio = base64.b64decode(resp.json()["audioContent"])  # a complete WAV (RIFF header included)
+        audio = base64.b64decode(resp.json()["audioContent"])  # a complete WAV/MP3 file
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
         tmp.write_bytes(audio)

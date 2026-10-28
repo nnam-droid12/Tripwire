@@ -1,0 +1,35 @@
+<!doctype html>
+<!-- FICTIONAL bank security page for the Tripwire arena's recovery agent. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Riverbend Community Bank - Card security</title>
+<link rel="stylesheet" href="_style.css">
+<style>
+  .toggle { display:inline-block; width:64px; height:34px; border-radius:17px; background:#ccc; position:relative; vertical-align:middle; }
+  .toggle::after { content:""; position:absolute; top:4px; left:4px; width:26px; height:26px; border-radius:50%; background:#fff; transition:left .3s; }
+  body.frozen .toggle { background:#145a46; }
+  body.frozen .toggle::after { left:34px; }
+  .done { display:none; color:#145a46; font-weight:700; }
+  body.frozen .done { display:block; }
+</style>
+</head>
+<body style="background:#f3f5f7">
+<div class="bar" style="background:#145a46">Riverbend Community Bank &mdash; Security center</div>
+<div class="page">
+  <div class="card">
+    <h2 style="margin-top:0">Debit card ending 9931</h2>
+    <div class="row"><span>Freeze card (blocks all new purchases and withdrawals)</span><span class="toggle"></span></div>
+    <p class="done">&#10003; Card frozen. No new purchases or withdrawals can be made.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Suspicious activity</h3>
+    <div class="row"><span>Report a scam or unauthorized access</span><span>Call 1-800-555-0142</span></div>
+    <div class="row"><span>Change online banking password</span><span>&rsaquo;</span></div>
+  </div>
+</div>
+<script>
+  // the arena's recovery agent sets #frozen to animate the toggle
+  if (location.hash === "#frozen") document.body.classList.add("frozen");
+</script>
+</body></html>

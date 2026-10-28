@@ -6,6 +6,7 @@ import base64
 import importlib
 import io
 import json
+import time
 
 import pytest
 from PIL import Image
@@ -49,13 +50,15 @@ def backend(tmp_path, monkeypatch):
     # Point RUNTIME_DIR at tmp *before* backend.main is first imported, so the test
     # can never write its placeholder keys into the real runtime/backend/keys.json.
     importlib.reload(core.config)
-    import backend.sms, backend.storage, backend.main
+    monkeypatch.setenv("TRIPWIRE_PUBLIC_DASHBOARD", "0")
+    import backend.sms, backend.storage, backend.incidents, backend.main
     importlib.reload(backend.sms)
     importlib.reload(backend.storage)
+    incidents = importlib.reload(backend.incidents)
+    monkeypatch.setattr(incidents, "highlight", lambda png, prompts=None: (png, []))
+    monkeypatch.setattr(incidents, "narrate", lambda incident: {"title": "Test", "steps": [], "next": []})
+    monkeypatch.setattr(incidents, "redact_image", lambda img: (img.convert("RGB"), 0))  # OCR covered separately
     main = importlib.reload(backend.main)
-    monkeypatch.setattr(main, "highlight", lambda png, prompts=None: (png, []))
-    monkeypatch.setattr(main, "narrate", lambda incident: {"title": "Test", "steps": [], "next": []})
-    monkeypatch.setattr(main, "redact_image", lambda img: (img.convert("RGB"), 0))  # OCR covered separately
     from fastapi.testclient import TestClient
     return main, TestClient(main.app)
 
@@ -81,7 +84,11 @@ def test_incident_flow_sends_dry_run_sms_with_private_link(backend) -> None:
     reply = client.post("/api/agent/incidents", json=body, headers={"X-Tripwire-Token": "agent-secret"}).json()
     incident_id, token = reply["id"], reply["link"].split("k=")[1]
     assert client.get(f"/api/incidents/{incident_id}?k=nope").status_code == 403
-    data = client.get(f"/api/incidents/{incident_id}?k={token}").json()
+    for _ in range(50):  # the family text is sent on a background thread
+        data = client.get(f"/api/incidents/{incident_id}?k={token}").json()
+        if data["sms"]:
+            break
+        time.sleep(0.1)
     assert "token" not in data
     assert "4111 1111" not in data["verdict"]["family_message"] and "482113907" not in data["timeline"][0]["text"]
     assert data["sms"]["sent"] is False and "dry run" in data["sms"]["detail"]

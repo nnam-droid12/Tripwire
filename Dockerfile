@@ -12,8 +12,12 @@ RUN pip install --no-cache-dir -r requirements-backend.txt
 
 COPY core/ core/
 COPY backend/ backend/
-COPY analysts/__init__.py analysts/common.py analysts/
-COPY agent/__init__.py agent/redact.py agent/
+COPY analysts/ analysts/
+COPY agent/ agent/
+# Margaret's laptop in the web arena: fictional pages and their rendered frames
+COPY eval/__init__.py eval/
+COPY eval/scenarios/pages/ eval/scenarios/pages/
+COPY eval/scenarios/frames/ eval/scenarios/frames/
 
 RUN useradd --create-home tripwire
 USER tripwire

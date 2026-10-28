@@ -1,58 +1,53 @@
-"""Tripwire backend: live status, incidents, family SMS and the family dashboard.
+"""Tripwire backend: agent API, family dashboard, and the public web arena.
 
 Run locally with::
 
     uvicorn backend.main:app --port 8765
 
-or deploy to Cloud Run (see ``deploy/README.md``).
+or deploy to Cloud Run (``deploy/deploy.sh``).
 
-* The on-device agent pushes live status (with a heartbeat) and, on a hard
-  stop, an incident (redacted frames, redacted timeline, verdict) using the
-  shared agent token.
-* An incident immediately triggers a text to the family containing a private
-  link. Then, in the background, the threat is outlined with SAM 3.1 and Muse
-  Spark writes a plain-language narration of what happened.
-* The family dashboard (``/?k=<dashboard key>``) shows live status and past
-  incidents; an incident link (``/i/<id>?k=<incident token>``) shows one incident.
+* ``/arena``: "Can you scam Margaret?", the public, no-login web app. The
+  visitor plays a scammer; Margaret (AI) answers; the real Tripwire pipeline
+  stops the scam live and a recovery agent secures her accounts.
+* ``/``: the family dashboard (live status, alerts); ``/i/<id>``: one incident.
+* ``/api/agent/*``: where the on-device agent reports, with its agent token.
 
-Secrets: ``TRIPWIRE_AGENT_TOKEN`` and ``TRIPWIRE_DASHBOARD_KEY`` come from the
-environment (Secret Manager on Cloud Run). Locally, if unset, random ones are
-generated into ``runtime/backend/keys.json`` (git-ignored) and the agent on the
-same machine reads them from there.
+Access: the dashboard and incident pages are public when
+``TRIPWIRE_PUBLIC_DASHBOARD=1`` (the hackathon deployment, where all data is
+fictional); otherwise they need the dashboard key or the incident's private
+token. Agent endpoints always need ``TRIPWIRE_AGENT_TOKEN``. Locally, missing
+keys are generated into ``runtime/backend/keys.json`` (git-ignored).
 """
 
 from __future__ import annotations
 
-import base64
+import asyncio
 import hmac
-import io
 import json
 import os
 import re
 import secrets
-import sys
 import time
 from pathlib import Path
 from typing import Any
 
-from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query
-from fastapi.responses import HTMLResponse, Response
-from PIL import Image
+from fastapi import FastAPI, Header, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from agent.redact import RedactionError, redact_image, redact_text
-from analysts.common import SAFETY_RULES
-from backend.highlight import highlight
-from backend.sms import send_sms
-from backend.storage import IncidentStore
+from backend.arena import laptop
+from backend.arena.session import VOICE_DIR, ArenaSession, prewarm_voices
+from backend.incidents import STORE, create_incident, decode_frames
 from core.config import RUNTIME_DIR
-from core.model_client import ModelClient
 
 BACKEND_DIR = RUNTIME_DIR / "backend"
 KEYS_FILE = BACKEND_DIR / "keys.json"
 DASHBOARD_DIR = Path(__file__).parent / "dashboard"
+PUBLIC_DASHBOARD = os.environ.get("TRIPWIRE_PUBLIC_DASHBOARD") == "1"
+MAX_ARENA_GAMES = int(os.environ.get("TRIPWIRE_MAX_ARENA_GAMES", "4"))
 _ID = re.compile(r"^[a-f0-9]{16}$")
 _IMAGE = re.compile(r"^(frame|highlight)_\d+\.png$")
+_CLIP = re.compile(r"^[a-f0-9]{24}$")
 
 
 def load_keys() -> dict[str, str]:
@@ -74,10 +69,9 @@ def load_keys() -> dict[str, str]:
 
 
 KEYS = load_keys()
-PUBLIC_BASE_URL = os.environ.get("TRIPWIRE_PUBLIC_URL", "http://127.0.0.1:8765").rstrip("/")
-STORE = IncidentStore()
-app = FastAPI(title="Tripwire backend", docs_url=None, redoc_url=None)
+app = FastAPI(title="Tripwire", docs_url=None, redoc_url=None)
 _status: dict[str, Any] = {"state": "offline", "updated": 0}
+_arena_games = asyncio.Semaphore(MAX_ARENA_GAMES)
 
 
 # -- models ------------------------------------------------------------------------------
@@ -99,7 +93,7 @@ class IncidentIn(BaseModel):
     protected_name: str = ""
 
 
-# -- helpers -----------------------------------------------------------------------------
+# -- access ------------------------------------------------------------------------------
 
 
 def _require_agent(token: str | None) -> None:
@@ -107,30 +101,23 @@ def _require_agent(token: str | None) -> None:
         raise HTTPException(401, "bad agent token")
 
 
-def _load_incident(incident_id: str, key: str | None) -> dict[str, Any]:
+def _dashboard_allowed(key: str) -> bool:
+    return PUBLIC_DASHBOARD or hmac.compare_digest(key, KEYS["dashboard_key"])
+
+
+def _load_incident(incident_id: str, key: str) -> dict[str, Any]:
     if not _ID.match(incident_id):
         raise HTTPException(404)
     incident = STORE.load(incident_id)
     if not incident:
         raise HTTPException(404)
-    ok = key and (hmac.compare_digest(key, incident["token"]) or hmac.compare_digest(key, KEYS["dashboard_key"]))
-    if not ok:
+    if not (_dashboard_allowed(key) or (key and hmac.compare_digest(key, incident["token"]))):
         raise HTTPException(403)
     return incident
 
 
 def _public(incident: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in incident.items() if k != "token"}
-
-
-def _recheck_redaction(image: Image.Image) -> Image.Image:
-    """Defence in depth: redact again where OCR exists (Windows). Raises if OCR fails there."""
-    try:
-        return redact_image(image)[0]
-    except RedactionError:
-        if sys.platform != "win32":
-            return image.convert("RGB")  # no Windows OCR on Linux; the device already redacted (fail-closed) before upload
-        raise
 
 
 # -- agent -> backend --------------------------------------------------------------------
@@ -144,99 +131,10 @@ def post_status(status: StatusIn, x_tripwire_token: str | None = Header(None)) -
 
 
 @app.post("/api/agent/incidents")
-def post_incident(body: IncidentIn, background: BackgroundTasks, x_tripwire_token: str | None = Header(None)) -> dict[str, str]:
+def post_incident(body: IncidentIn, x_tripwire_token: str | None = Header(None)) -> dict[str, str]:
     _require_agent(x_tripwire_token)
-    incident_id = secrets.token_hex(8)
-    token = secrets.token_urlsafe(16)
-
-    frames = []
-    for i, b64 in enumerate(body.frames[:4]):
-        try:
-            image = _recheck_redaction(Image.open(io.BytesIO(base64.b64decode(b64))))
-        except (RedactionError, OSError, ValueError):
-            continue
-        name = f"frame_{i}.png"
-        buf = io.BytesIO()
-        image.save(buf, format="PNG", optimize=True)
-        STORE.put_image(incident_id, name, buf.getvalue())
-        frames.append(name)
-
-    snap = body.snapshot
-    verdict = body.verdict
-    incident = {
-        "id": incident_id,
-        "token": token,
-        "created": time.time(),
-        "protected_name": body.protected_name,
-        "verdict": {**verdict, "family_message": redact_text(verdict.get("family_message", ""))},
-        "stage": snap.get("stage", 0),
-        "stage_name": snap.get("stage_name", ""),
-        "confidence": snap.get("confidence", 0.0),
-        "brands": snap.get("brands", {}),
-        "signals": [{**s, "evidence": redact_text(s.get("evidence", ""))} for s in snap.get("signals", [])],
-        "timeline": [{**t, "text": redact_text(t.get("text", ""))} for t in snap.get("timeline", [])],
-        "frames": frames,
-        "highlights": [],
-        "narration": None,
-        "sms": None,
-    }
-    STORE.save(incident)
-    link = f"{PUBLIC_BASE_URL}/i/{incident_id}?k={token}"
-    background.add_task(_alert_family, incident_id, link)
-    background.add_task(_enrich, incident_id)
+    incident_id, link = create_incident(body.verdict, body.snapshot, decode_frames(body.frames), body.protected_name)
     return {"id": incident_id, "link": link}
-
-
-def _alert_family(incident_id: str, link: str) -> None:
-    incident = STORE.load(incident_id)
-    who = incident["protected_name"] or "your relative"
-    message = incident["verdict"].get("family_message") or f"Tripwire stopped a likely scam on {who}'s computer."
-    body = f"TRIPWIRE ALERT for {who}: {message} Details: {link}"
-    result = send_sms(body)
-    incident = STORE.load(incident_id)  # reload: enrichment may have saved in the meantime
-    incident["sms"] = {"sent": result.sent, "detail": result.detail, "body": body.replace(incident["token"], "<token>")}
-    STORE.save(incident)
-
-
-def _enrich(incident_id: str) -> None:
-    incident = STORE.load(incident_id)
-    highlights = []
-    for name in incident["frames"]:
-        png, boxes = highlight(STORE.get_image(incident_id, name))
-        if boxes:
-            out = name.replace("frame_", "highlight_")
-            STORE.put_image(incident_id, out, png)
-            highlights.append({"image": out, "frame": name, "labels": sorted({b.label for b in boxes})})
-    narration = narrate(incident)
-    incident = STORE.load(incident_id)
-    incident["highlights"], incident["narration"] = highlights, narration
-    STORE.save(incident)
-
-
-NARRATE_PROMPT = f"""{SAFETY_RULES}
-
-Write what happened during this incident for a worried family member, in plain words.
-Reply with one JSON object: {{"title": "<short headline>", "steps": [{{"time": "HH:MM", "text": "<one plain sentence>"}}], "next": ["<what the family member should do now, 2-3 short items>"]}}
-Use 4 to 7 steps, oldest first. Do not include account, card or phone numbers, and do not use internal
-signal names written with underscores (say "a hidden message aimed at AI software", not "ai_directed_text")."""
-
-
-def narrate(incident: dict[str, Any]) -> dict[str, Any] | None:
-    lines = "\n".join(
-        f"{time.strftime('%H:%M:%S', time.localtime(t['ts']))} [{t['source']}] {t['text']}" for t in incident["timeline"]
-    )
-    reasons = "\n".join(f"- {r.get('reason')}: {r.get('evidence')}" for r in incident["verdict"].get("reasons", []))
-    messages = [
-        {"role": "system", "content": NARRATE_PROMPT},
-        {"role": "user", "content": f"<session_timeline>\n{lines}\n</session_timeline>\n<judge_reasons>\n{reasons}\n</judge_reasons>"},
-    ]
-    error = ""
-    for _attempt in range(2):  # a reply can come back empty if reasoning uses the whole budget
-        try:
-            return ModelClient.for_provider("meta").chat_json(messages, max_tokens=8000, reasoning_effort="low")
-        except Exception as exc:  # narration is optional; the incident page works without it
-            error = type(exc).__name__
-    return {"title": "Tripwire stopped a likely scam", "steps": [], "next": [], "error": error}
 
 
 # -- family dashboard --------------------------------------------------------------------
@@ -244,7 +142,7 @@ def narrate(incident: dict[str, Any]) -> dict[str, Any] | None:
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard(k: str = Query("")) -> HTMLResponse:
-    if not hmac.compare_digest(k, KEYS["dashboard_key"]):
+    if not _dashboard_allowed(k):
         raise HTTPException(403, "Open the dashboard with its private link.")
     return HTMLResponse((DASHBOARD_DIR / "index.html").read_text(encoding="utf-8"))
 
@@ -257,7 +155,7 @@ def incident_page(incident_id: str, k: str = Query("")) -> HTMLResponse:
 
 @app.get("/api/status")
 def get_status(k: str = Query("")) -> dict[str, Any]:
-    if not hmac.compare_digest(k, KEYS["dashboard_key"]):
+    if not _dashboard_allowed(k):
         raise HTTPException(403)
     online = time.time() - _status.get("updated", 0) < 45
     return {**_status, "state": _status["state"] if online else "offline", "incidents": STORE.index()[:20]}
@@ -277,6 +175,91 @@ def get_image(incident_id: str, name: str, k: str = Query("")) -> Response:
     if data is None:
         raise HTTPException(404)
     return Response(data, media_type="image/png", headers={"Cache-Control": "no-store"})
+
+
+# -- the arena ---------------------------------------------------------------------------
+
+
+@app.get("/arena", response_class=HTMLResponse)
+def arena_page() -> HTMLResponse:
+    return HTMLResponse((DASHBOARD_DIR / "arena.html").read_text(encoding="utf-8"))
+
+
+@app.get("/arena/pages/{name}")
+def arena_laptop_page(name: str) -> FileResponse:
+    """Margaret's laptop pages (fictional HTML) and their shared stylesheet."""
+    if name == "_style.css":
+        return FileResponse(laptop.PAGES_DIR / "_style.css", media_type="text/css")
+    page = name.removesuffix(".html")
+    if page not in laptop.PAGES:
+        raise HTTPException(404)
+    return FileResponse(laptop.html_path(page), media_type="text/html")
+
+
+@app.get("/arena/voice/{clip}.mp3")
+def arena_voice(clip: str) -> FileResponse:
+    path = VOICE_DIR / f"{clip}.mp3"
+    if not _CLIP.match(clip) or not path.exists():
+        raise HTTPException(404)
+    return FileResponse(path, media_type="audio/mpeg", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.websocket("/ws/arena")
+async def arena_socket(ws: WebSocket) -> None:
+    """One game. Client sends {"type": "start"|"say"|"ptt_start"|"ptt_end"|"hang_up"} and binary PCM16 24 kHz audio."""
+    await ws.accept()
+    if _arena_games.locked():
+        await ws.send_json({"type": "busy", "text": "Margaret is on another call. Try again in a minute."})
+        await ws.close()
+        return
+    async with _arena_games:
+        loop = asyncio.get_running_loop()
+        outbox: asyncio.Queue[dict] = asyncio.Queue()
+        session: ArenaSession | None = None
+
+        def send(msg: dict) -> None:  # called from worker threads
+            loop.call_soon_threadsafe(outbox.put_nowait, msg)
+
+        async def pump() -> None:
+            while True:
+                await ws.send_json(await outbox.get())
+
+        pump_task = asyncio.create_task(pump())
+        try:
+            while True:
+                msg = await ws.receive()
+                if msg.get("type") == "websocket.disconnect":
+                    break
+                if msg.get("bytes") is not None:
+                    if session:
+                        session.ptt_audio(msg["bytes"])
+                    continue
+                data = json.loads(msg.get("text") or "{}")
+                kind = data.get("type")
+                if kind == "start" and session is None:
+                    session = ArenaSession(send, data.get("situation", "popup"))
+                    await asyncio.to_thread(session.start)
+                elif session is None:
+                    continue
+                elif kind == "say":
+                    asyncio.get_running_loop().run_in_executor(None, session.scammer_says, str(data.get("text", "")))
+                elif kind == "ptt_start":
+                    await asyncio.to_thread(session.ptt_start)
+                elif kind == "ptt_end":
+                    asyncio.get_running_loop().run_in_executor(None, session.ptt_end)
+                elif kind == "hang_up":
+                    session.hang_up()
+                if session.expired():
+                    session.hang_up()
+        except WebSocketDisconnect:
+            pass
+        finally:
+            pump_task.cancel()
+
+
+@app.on_event("startup")
+async def _warm_arena_voices() -> None:
+    asyncio.get_running_loop().run_in_executor(None, prewarm_voices)  # urgent phrases ready before the first game
 
 
 @app.get("/health")  # not /healthz: Cloud Run reserves paths ending in "z"
