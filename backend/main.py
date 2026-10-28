@@ -9,7 +9,8 @@ or deploy to Cloud Run (``deploy/deploy.sh``).
 * ``/arena``: "Can you scam Margaret?", the public, no-login web app. The
   visitor plays a scammer; Margaret (AI) answers; the real Tripwire pipeline
   stops the scam live and a recovery agent secures her accounts.
-* ``/``: the family dashboard (live status, alerts); ``/i/<id>``: one incident.
+* ``/``: landing page; ``/progress``: the public build dashboard.
+* ``/family``: the family dashboard (live status, alerts); ``/i/<id>``: one incident.
 * ``/api/agent/*``: where the on-device agent reports, with its agent token.
 
 Access: the dashboard and incident pages are public when
@@ -43,6 +44,8 @@ from core.config import RUNTIME_DIR
 BACKEND_DIR = RUNTIME_DIR / "backend"
 KEYS_FILE = BACKEND_DIR / "keys.json"
 DASHBOARD_DIR = Path(__file__).parent / "dashboard"
+RESULTS_DIR = Path(__file__).parent.parent / "eval" / "results"
+PROGRESS_KEY = "site/progress.json"
 PUBLIC_DASHBOARD = os.environ.get("TRIPWIRE_PUBLIC_DASHBOARD") == "1"
 MAX_ARENA_GAMES = int(os.environ.get("TRIPWIRE_MAX_ARENA_GAMES", "4"))
 _ID = re.compile(r"^[a-f0-9]{16}$")
@@ -141,6 +144,42 @@ def post_incident(body: IncidentIn, x_tripwire_token: str | None = Header(None))
 
 
 @app.get("/", response_class=HTMLResponse)
+def landing() -> HTMLResponse:
+    return HTMLResponse((DASHBOARD_DIR / "landing.html").read_text(encoding="utf-8"))
+
+
+@app.get("/progress", response_class=HTMLResponse)
+def progress_page() -> HTMLResponse:
+    return HTMLResponse((DASHBOARD_DIR / "progress.html").read_text(encoding="utf-8"))
+
+
+@app.get("/api/results")
+def results() -> dict[str, Any]:
+    """Evaluation results, read from the committed result files (never typed in by hand)."""
+    out: dict[str, Any] = {}
+    for name in ("latest", "external", "external_baseline", "frames"):
+        path = RESULTS_DIR / f"{name}.json"
+        if path.exists():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            out[name] = {"meta": data.get("meta"), "summary": data.get("summary")}
+    return out
+
+
+@app.get("/api/progress")
+def get_progress() -> dict[str, Any]:
+    raw = STORE.backend.get_bytes(PROGRESS_KEY)
+    return json.loads(raw) if raw else {"now": "", "milestones": [], "commits": [], "updated": 0}
+
+
+@app.post("/api/progress")
+def post_progress(body: dict[str, Any], x_tripwire_token: str | None = Header(None)) -> dict[str, str]:
+    """The build dashboard's data; written by the developer's machine with the agent token."""
+    _require_agent(x_tripwire_token)
+    STORE.backend.put_bytes(PROGRESS_KEY, json.dumps({**body, "updated": time.time()}).encode(), "application/json")
+    return {"ok": "true"}
+
+
+@app.get("/family", response_class=HTMLResponse)
 def dashboard(k: str = Query("")) -> HTMLResponse:
     if not _dashboard_allowed(k):
         raise HTTPException(403, "Open the dashboard with its private link.")

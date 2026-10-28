@@ -45,6 +45,7 @@ SIGNALS: dict[str, SignalSpec] = {
     "refund_pretext": SignalSpec(Stage.CONTACT, 0.25, "Caller offers a refund, compensation or says a subscription renewal will be charged"),
     "cross_modal_brand_match": SignalSpec(Stage.CONTACT, 0.40, "The same claimed organisation appears both on screen and in the call"),
     "isolation_instruction": SignalSpec(Stage.CONTACT, 0.30, "Told not to hang up, not to call or tell anyone, or that others are listening"),
+    "prize_or_reward_claim": SignalSpec(Stage.CONTACT, 0.30, "Caller says the person won a prize, lottery, sweepstakes, grant or gift card they did not enter for"),
     # 3. Control
     "remote_tool_install_request": SignalSpec(Stage.CONTROL, 0.40, "Caller asks the user to download/open a remote-access tool"),
     "remote_access_code_shared": SignalSpec(Stage.CONTROL, 0.40, "User reads out or is asked for a remote-access ID/code"),
@@ -56,12 +57,14 @@ SIGNALS: dict[str, SignalSpec] = {
     "login_instruction": SignalSpec(Stage.ACCESS, 0.35, "Caller tells the user to log in to their bank, email or other account"),
     "bank_open_during_remote": SignalSpec(Stage.ACCESS, 0.55, "A banking site is open while a remote session is active"),
     "card_number_copied": SignalSpec(Stage.ACCESS, 0.25, "A payment card number was copied to the clipboard"),
+    "personal_info_request": SignalSpec(Stage.ACCESS, 0.45, "An unsolicited caller asks for a Social Security number, bank account or routing number, password, PIN or one-time code, or for card details to 'verify', 'refund' or 'release' something"),
     # 5. Extraction
     "overpayment_refund_story": SignalSpec(Stage.EXTRACTION, 0.55, "Claim that too much was refunded and the user must send money back"),
     "gift_card_request": SignalSpec(Stage.EXTRACTION, 0.60, "Request to buy gift cards or read out gift card codes, or a gift card purchase on screen"),
     "crypto_request": SignalSpec(Stage.EXTRACTION, 0.55, "Request to buy or send cryptocurrency or use a Bitcoin ATM"),
     "wire_transfer_request": SignalSpec(Stage.EXTRACTION, 0.45, "Request to wire money, send a transfer, or a transfer screen is filled in"),
     "cash_withdrawal_request": SignalSpec(Stage.EXTRACTION, 0.45, "Request to withdraw cash, mail cash, or hand cash to a courier"),
+    "advance_fee_request": SignalSpec(Stage.EXTRACTION, 0.55, "Asked to pay a fee, tax, shipping or 'processing' charge to receive a prize, refund, loan or grant"),
     "secrecy_instruction": SignalSpec(Stage.EXTRACTION, 0.50, "Told to hide a payment or transfer from the bank or family, or coached on what to tell the bank teller"),
     "crypto_address_copied": SignalSpec(Stage.EXTRACTION, 0.45, "A cryptocurrency address was copied to the clipboard"),
     "money_amount_copied": SignalSpec(Stage.EXTRACTION, 0.10, "A money amount was copied to the clipboard"),

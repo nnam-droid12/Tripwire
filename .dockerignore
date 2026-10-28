@@ -9,6 +9,7 @@ data/
 eval/*
 !eval/__init__.py
 !eval/scenarios/
+!eval/results/
 eval/scenarios/*
 !eval/scenarios/pages/
 !eval/scenarios/frames/

@@ -123,6 +123,8 @@ def run_one(conv: Conversation) -> dict:
         "action": orch.action.label, "stop_turn": stop_turn, "nudge_turn": nudge_turn,
         "stop_fraction": round(stop_turn / len(conv.turns), 2) if stop_turn else None,
         "judge_calls": len(orch.verdicts), "errors": errors, "error_samples": errs[:2],
+        "claims": sum(len(v.reasons) + len(v.unsupported) for v in orch.verdicts),
+        "unsupported_claims": sum(len(v.unsupported) for v in orch.verdicts),
     }
 
 
@@ -153,6 +155,8 @@ def summarize(rows: list[dict]) -> dict:
                              "nudge_rate": _rate([r["action"] == "nudge" for r in rs])}
     out["by_kind"] = by_kind
     out["errors"] = sum(r["errors"] for r in rows)
+    out["claims"] = sum(r.get("claims", 0) for r in rows)
+    out["unsupported_claims"] = sum(r.get("unsupported_claims", 0) for r in rows)  # discarded by the evidence check
     return out
 
 
@@ -172,6 +176,7 @@ def to_markdown(s: dict, meta: dict) -> str:
     ]
     for kind, k in s["by_kind"].items():
         lines.append(f"| {kind} | {'scam' if k['is_scam'] else 'legitimate'} | {pct(k['hard_stop_rate'])} | {pct(k['nudge_rate'])} |")
+    lines += ["", f"Judge claims checked against the record: {s['claims']}. Quotes not found in the record, discarded before any action: {s['unsupported_claims']}."]
     return "\n".join(lines) + "\n"
 
 

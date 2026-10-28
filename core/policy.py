@@ -4,7 +4,8 @@ The Tier-1 score is cheap and always on but easily fooled by a single scary
 moment, so it only decides *whether to ask* the Tier-2 judge. The judge's
 verdict decides the action, inside hard limits enforced here in code:
 
-* ``hard_stop`` needs ``is_scam`` and judge confidence >= ``hard_stop_min``.
+* ``hard_stop`` needs ``is_scam``, judge confidence >= ``hard_stop_min``, and at
+  least one reason whose quoted evidence was found in the record (``core/grounding.py``).
   A judge that recommends a hard stop with less certainty is downgraded to a
   nudge. A model cannot talk its way past these numbers.
 * Actions only escalate within a session (log -> nudge -> hard_stop). Standing
@@ -45,6 +46,7 @@ class Verdict:
     family_message: str
     tier1_confidence: float = 0.0
     ts: float = field(default_factory=time.time)
+    unsupported: list[dict[str, str]] = field(default_factory=list)  # reasons dropped: their quote was not in the record
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -56,6 +58,7 @@ class Verdict:
             "family_message": self.family_message,
             "tier1_confidence": self.tier1_confidence,
             "ts": self.ts,
+            "unsupported": self.unsupported,
         }
 
 
@@ -63,7 +66,7 @@ class Verdict:
 EARLY_SIGNS = {
     "impersonation_claim", "isolation_instruction", "urgency_pressure", "remote_tool_install_request",
     "remote_access_code_shared", "remote_session_active", "disable_protection", "ai_directed_text",
-    "login_instruction", "secrecy_instruction",
+    "login_instruction", "secrecy_instruction", "prize_or_reward_claim", "personal_info_request", "advance_fee_request",
 }
 
 
@@ -92,6 +95,8 @@ class EscalationPolicy:
         action = verdict.recommended_action
         if action == Action.HARD_STOP and not (verdict.is_scam and verdict.confidence >= self.hard_stop_min):
             action = Action.NUDGE
+        if action == Action.HARD_STOP and not verdict.reasons:
+            action = Action.NUDGE  # no reason survived evidence checking: never stop on an unverified claim
         if action == Action.NUDGE and not verdict.is_scam and verdict.confidence < self.nudge_min:
             action = Action.LOG
         return action

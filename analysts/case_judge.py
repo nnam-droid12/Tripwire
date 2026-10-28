@@ -16,6 +16,7 @@ import json
 from datetime import datetime
 
 from analysts.common import SAFETY_RULES
+from core.grounding import verify_reasons
 from core.model_client import ModelClient
 from core.policy import Action, Verdict
 
@@ -46,14 +47,27 @@ Stop EARLY. Do not wait for the money request: by then the person is already con
 - a caller claiming to be the bank tells the person to move money to a "safe", "secure" or "holding" account, or directs them to log in
   while also telling them not to hang up or not to tell anyone;
 - a fake security warning with a phone number is on screen and the person is now on the phone with that "support" line.
+- an unsolicited caller (claiming to be a bank, a government agency, a company, or offering a prize or refund) asks for a Social
+  Security number, bank account or routing number, a password, PIN or one-time code, or card details "to verify", "to refund"
+  or "to release" something;
+- a caller says the person won a prize, lottery, sweepstakes or grant they never entered, or is owed a refund, and asks for a fee,
+  tax, shipping or "processing" payment, gift cards, or bank or card details to receive it.
 Real banks and agencies never do these things, so these patterns alone justify a hard stop. Relatives and known helpers who
 help without impersonating anyone, asking for money, codes for strangers, or secrecy are NOT covered by these rules.
+Ordinary sales calls are NOT covered either: a salesperson describing a product, or taking payment for something the person has
+freely chosen to buy, is not a scam signal on its own. A legitimate caller who verifies identity without asking for full numbers,
+passwords or codes (or who tells the person to call the number on their card) is not a scam.
+
+Evidence rule: every reason must quote, word for word, what was actually said or what actually happened, copied from a line
+of <session_timeline>. Do not paraphrase, do not quote <evidence_signals> or <tier1_summary>, and do not cite anything that is
+not in the record. Each quote is checked automatically; a reason whose quote is not found is discarded, and without at least
+one verified reason no hard stop can happen.
 
 Reply with one JSON object and nothing else:
 {{"is_scam": true|false,
   "confidence": <0.0-1.0, how sure you are of is_scam>,
   "stage": <0-5, furthest kill-chain stage actually reached>,
-  "reasons": [{{"reason": "<short>", "evidence": "<quote or event from the record>"}}],
+  "reasons": [{{"reason": "<short>", "evidence": "<EXACT words copied from one line of <session_timeline>, at least 4 words>"}}],
   "recommended_action": "log|nudge|hard_stop",
   "family_message": "<2 short plain sentences for a family member: what is happening and what to do. Never include account, card or phone numbers.>"}}"""
 
@@ -81,11 +95,12 @@ class CaseJudge:
     def judge(self, snapshot: dict) -> Verdict:
         messages = [{"role": "system", "content": PROMPT}, {"role": "user", "content": render_case(snapshot)}]
         data = self.client.chat_json(messages, max_tokens=4096)
-        reasons = [
+        claimed = [
             {"reason": str(r.get("reason", ""))[:200], "evidence": str(r.get("evidence", ""))[:300]}
             for r in data.get("reasons", [])
             if isinstance(r, dict)
         ][:8]
+        reasons, unsupported = verify_reasons(claimed, snapshot)  # only reasons with evidence in the record survive
         try:
             confidence = min(1.0, max(0.0, float(data.get("confidence", 0))))
         except (TypeError, ValueError):
@@ -102,4 +117,5 @@ class CaseJudge:
             recommended_action=Action.parse(data.get("recommended_action")),
             family_message=str(data.get("family_message", ""))[:400],
             tier1_confidence=snapshot.get("confidence", 0.0),
+            unsupported=unsupported,
         )

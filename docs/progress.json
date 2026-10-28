@@ -1,0 +1,23 @@
+{
+  "deadline": "2026-11-05T02:00:00Z",
+  "goal": "Win 1st or 2nd place, indie track: judged on creativity, technical ambition, and whether it works.",
+  "milestones": [
+    {"id": "A", "title": "Skeleton and model plumbing", "status": "done", "detail": "Baseten (Muse Spark Open) and Meta Model API (Muse Spark) both answering."},
+    {"id": "B", "title": "On-device capture", "status": "done", "detail": "Screen change detection, voice-gated audio, Muse Voice Transcribe with speaker separation, remote-access and clipboard watchers."},
+    {"id": "C", "title": "Tier-1 analysts and the CaseFile", "status": "done", "detail": "Kill-chain signals from the screen and the call; injection-resistant prompts."},
+    {"id": "D", "title": "Tier-2 CaseJudge", "status": "done", "detail": "Hard stop authorised only by the judge, clamped in code."},
+    {"id": "E", "title": "Interventions", "status": "done", "detail": "Spoken nudge, full-screen warning, remote session ended, family PIN, 'close that box' resistance, allowlist."},
+    {"id": "F", "title": "Privacy, family alerts, dashboard", "status": "done", "detail": "On-device redaction, SAM 3.1 outlines, narrated incident page; texts in demo mode (Twilio trial limits)."},
+    {"id": "G", "title": "Evaluation harness", "status": "done", "detail": "12 scripted scenarios, Muse Image screen set, frame-level eval, Tier-1 ablation."},
+    {"id": "G2", "title": "Stop scams earlier", "status": "done", "detail": "Median time to stop 46.5 s to 27.0 s; stops before the money request 25% to 50%."},
+    {"id": "CLOUD", "title": "Cloud Run deployment", "status": "done", "detail": "Public service in nixora-project; private bucket, Secret Manager, keys rotated."},
+    {"id": "ARENA", "title": "Web arena: Can you scam Margaret?", "status": "done", "detail": "Visitor plays the scammer; Margaret (Muse Spark) answers aloud; real pipeline stops the scam live; scoreboard."},
+    {"id": "RECOVERY", "title": "Act, don't just warn", "status": "done", "detail": "Tool-calling recovery agent: ends the remote session, freezes the card, drafts the fraud report, alerts the family."},
+    {"id": "EXT", "title": "Evaluation on data we did not write", "status": "in_progress", "detail": "340 third-party conversations (Apache-2.0). Baseline 61% stopped, 0% false alarms. New signals developed on the train split only; final test-split run in progress."},
+    {"id": "GROUND", "title": "No claim without evidence", "status": "done", "detail": "Every judge reason must quote the record; code verifies it and refuses a hard stop without verified evidence. Train split: 316 claims checked, 0 unsupported."},
+    {"id": "SITE", "title": "Landing page and this dashboard", "status": "in_progress", "detail": "Public product page for judges; live build dashboard."},
+    {"id": "MODAL", "title": "Open-weight second opinion on Modal", "status": "next", "detail": "A Meta open-weight model on Modal confirms each hard stop (two-key rule), and is compared on the external benchmark."},
+    {"id": "SHIELD", "title": "Community Shield", "status": "next", "detail": "Scam numbers and fake brands from stopped scams protect every other family."},
+    {"id": "VIDEO", "title": "3-minute video and submission", "status": "next", "detail": "Built around the arena, the evidence checks and the external results. Repo public before the deadline."}
+  ]
+}

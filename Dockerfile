@@ -18,6 +18,8 @@ COPY agent/ agent/
 COPY eval/__init__.py eval/
 COPY eval/scenarios/pages/ eval/scenarios/pages/
 COPY eval/scenarios/frames/ eval/scenarios/frames/
+# evaluation results shown on the landing page and the build dashboard
+COPY eval/results/ eval/results/
 
 RUN useradd --create-home tripwire
 USER tripwire

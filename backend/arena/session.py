@@ -14,6 +14,7 @@ forwards them over the WebSocket.
 
 from __future__ import annotations
 
+import re
 import threading
 import time
 import uuid
@@ -31,6 +32,7 @@ from backend.incidents import create_incident
 from core.casefile import CaseFile, CaseUpdate
 from core.config import LOGS_DIR, RUNTIME_DIR
 from core.events import Event, EventBus
+from core.grounding import ground_truth
 from core.guard import is_disable_instruction
 from core.killchain import Stage
 from core.orchestrator import Orchestrator
@@ -42,6 +44,20 @@ VOICES = {
     "tripwire": GoogleVoice(voice="en-US-Chirp3-HD-Vindemiatrix", rate=0.95, cache_dir=VOICE_DIR, encoding="MP3"),
 }
 MAX_LINES = 40
+CARD_ON_FILE = "9931"  # Margaret's (fictional) card: the only one the recovery agent may freeze
+_PHONE = re.compile(r"\+?\d[\d\s().-]{6,}\d")
+
+
+def grounded_contacts(text: str, record: list[str]) -> str:
+    """Keep only phone numbers that really appear in the record; an invented number in a fraud report is worse than none."""
+    digits = lambda s: re.sub(r"\D", "", s)
+    seen = "".join(digits(line) for line in record)
+    numbers = [n for n in _PHONE.findall(text) if digits(n) and digits(n) in seen]
+    words = _PHONE.sub("", text).strip(" ,;")
+    kept = ", ".join(dict.fromkeys(numbers + ([words] if words else [])))
+    return kept or "not recorded"
+
+
 MAX_SECONDS = 8 * 60
 
 
@@ -233,11 +249,16 @@ class ArenaSession:
                     self._show("desktop")
                 detail = "RemoteDesk disconnected and closed." if remote else "No remote session was open."
             elif tool == "freeze_card":
-                self._show("bank_freeze")
-                self.send({"type": "laptop", "page": "bank_freeze", "hash": "frozen"})
-                detail = f"Card ending {str(args.get('card_last4', ''))[-4:] or '9931'} frozen on the bank's security page."
+                if str(args.get("card_last4", "")).strip()[-4:] != CARD_ON_FILE:
+                    detail = f"Refused: the only card on file ends {CARD_ON_FILE}."  # grounding: no acting on invented cards
+                else:
+                    self._show("bank_freeze")
+                    self.send({"type": "laptop", "page": "bank_freeze", "hash": "frozen"})
+                    detail = f"Card ending {CARD_ON_FILE} frozen on the bank's security page."
             elif tool == "draft_fraud_report":
-                self.send({"type": "report", "report": {k: str(v)[:600] for k, v in args.items()}})
+                report = {k: str(v)[:600] for k, v in args.items()}
+                report["contact_methods"] = grounded_contacts(report.get("contact_methods", ""), ground_truth(self.case.snapshot()))
+                self.send({"type": "report", "report": report})
                 detail = "Draft fraud report prepared for the family to file at reportfraud.ftc.gov."
             elif tool == "notify_family":
                 snap = self.case.snapshot()

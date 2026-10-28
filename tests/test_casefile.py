@@ -89,8 +89,27 @@ def test_policy_clamps_overconfident_hard_stop() -> None:
 
     policy = EscalationPolicy()
     weak = Verdict(True, 0.6, 3, [], Action.HARD_STOP, "")
-    sure = Verdict(True, 0.9, 4, [], Action.HARD_STOP, "")
+    sure = Verdict(True, 0.9, 4, [{"reason": "r", "evidence": "e"}], Action.HARD_STOP, "")
+    unverified = Verdict(True, 0.95, 4, [], Action.HARD_STOP, "")  # every quote failed the evidence check
     benign = Verdict(False, 0.3, 1, [], Action.NUDGE, "")
     assert policy.decide(weak) == Action.NUDGE
     assert policy.decide(sure) == Action.HARD_STOP
+    assert policy.decide(unverified) == Action.NUDGE
     assert policy.decide(benign) == Action.LOG
+
+
+def test_grounding_accepts_real_quotes_and_rejects_invented_ones() -> None:
+    from core.grounding import supported, verify_reasons
+
+    said = ["A (caller): Do not tell the bank, they are part of the investigation.", "network AnyDesk opened 2 new remote connection(s)"]
+    assert supported("do not tell the bank they are part of the investigation", said)          # case and punctuation
+    assert supported("Don't tell the bank, they are part of the investigation", said)            # one word differs
+    assert supported("AnyDesk opened 2 new remote connection", said)
+    assert not supported("caller asked her to buy Apple gift cards", said)                        # never said
+    assert not supported("the bank", said)                                                        # too short to prove anything
+    assert not supported("they told her to wire money to the investigation", said)               # paraphrase with invented facts
+    snap = {"timeline": [{"source": "call", "text": said[0], "ts": 1, "risk": "high"}]}
+    ok, bad = verify_reasons([{"reason": "secrecy", "evidence": "do not tell the bank"},
+                              {"reason": "gift cards", "evidence": "buy gift cards and read me the numbers"}], snap)
+    assert [r["reason"] for r in ok] == ["secrecy"] and ok[0]["source_kind"] == "call"
+    assert [r["reason"] for r in bad] == ["gift cards"]

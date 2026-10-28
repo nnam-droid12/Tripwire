@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tripwire Build Progress</title>
+<meta name="description" content="Live build log: what is being worked on now, milestones, latest results and commits.">
+<style>
+  :root { --bg:#f7f6f2; --panel:#fff; --ink:#15191e; --muted:#5b6570; --line:#e3dfd5; --chip:#f1efe8;
+    --done:#1f7a4d; --doing:#2c56d6; --next:#8a8f96; --brand:#b3261e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f1215; --panel:#191e23; --ink:#eef1f4; --muted:#9aa4ae; --line:#283037; --chip:#1f252b;
+    --done:#4cbf86; --doing:#86a7ff; --next:#7c858e; --brand:#ff6b5f; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif; overflow-x:hidden; }
+  a { color:inherit; }
+  .wrap { max-width:1160px; margin:0 auto; padding:24px 20px 48px; }
+  .top { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .top h1 { font-size:24px; margin:0; }
+  .top .back { margin-left:auto; color:var(--muted); font-size:14px; }
+  .goal { color:var(--muted); margin:4px 0 20px; }
+  .row { display:grid; grid-template-columns:2fr 1fr 1fr; gap:16px; }
+  @media (max-width: 900px) { .row { grid-template-columns:1fr; } }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; }
+  .label { font-size:12px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:var(--muted); }
+  .now { font-size:22px; font-weight:650; margin-top:6px; line-height:1.35; }
+  .now-dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--doing); margin-right:8px; animation:pulse 1.6s infinite; vertical-align:middle; }
+  @keyframes pulse { 50% { opacity:.3; } }
+  .big { font-size:34px; font-weight:800; letter-spacing:-.5px; margin-top:4px; }
+  .muted { color:var(--muted); font-size:14px; }
+  .bar { height:8px; background:var(--chip); border-radius:4px; overflow:hidden; margin-top:10px; }
+  .bar i { display:block; height:100%; background:var(--done); }
+  .grid2 { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; margin-top:16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns:1fr; } }
+  .ms { display:grid; grid-template-columns:110px 1fr; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
+  .ms:first-of-type { border-top:0; }
+  .chip { display:inline-block; font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px; text-align:center; height:fit-content; }
+  .chip.done { color:var(--done); border:1px solid var(--done); }
+  .chip.in_progress { color:#fff; background:var(--doing); }
+  .chip.next { color:var(--next); border:1px solid var(--line); }
+  .ms b { display:block; }
+  .ms span { color:var(--muted); font-size:14.5px; }
+  .metric { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px solid var(--line); font-size:15px; }
+  .metric:first-of-type { border-top:0; }
+  .metric b { white-space:nowrap; }
+  .commit { padding:9px 0; border-top:1px solid var(--line); font-size:14px; }
+  .commit:first-of-type { border-top:0; }
+  .commit code { font-size:12.5px; color:var(--muted); margin-right:6px; }
+  .commit .when { color:var(--muted); font-size:12.5px; display:block; }
+  h2 { font-size:17px; margin:0 0 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Tripwire · build progress</h1>
+    <span class="muted" id="updated"></span>
+    <a class="back" href="/">Tripwire home →</a>
+  </div>
+  <p class="goal" id="goal"></p>
+
+  <div class="row">
+    <div class="card"><div class="label">Working on now</div><div class="now"><span class="now-dot"></span><span id="now">…</span></div></div>
+    <div class="card"><div class="label">Time to deadline</div><div class="big" id="countdown">…</div><div class="muted" id="deadline"></div></div>
+    <div class="card"><div class="label">Milestones done</div><div class="big" id="done">…</div><div class="bar"><i id="donebar" style="width:0"></i></div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Milestones</h2>
+      <div id="milestones"></div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>Latest results</h2>
+        <div class="muted" style="margin-bottom:6px">Read live from the evaluation result files in the repository.</div>
+        <div id="metrics"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>Latest commits</h2>
+        <div id="commits"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pct = x => x == null ? "n/a" : `${Math.round(x * 100)}%`;
+const STATUS = { done: "Done", in_progress: "In progress", next: "Next" };
+let deadline = null;
+
+function ago(ts) {
+  const s = Math.round(Date.now() / 1000 - ts);
+  if (s < 90) return "just now";
+  if (s < 5400) return `${Math.round(s / 60)} min ago`;
+  return `${Math.round(s / 3600)} h ago`;
+}
+function tick() {
+  if (!deadline) return;
+  const ms = deadline - Date.now();
+  if (ms <= 0) { $("countdown").textContent = "Deadline passed"; return; }
+  const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+  $("countdown").textContent = `${d}d ${h}h ${m}m`;
+}
+async function load() {
+  try {
+    const p = await (await fetch("/api/progress")).json();
+    $("now").textContent = p.now || "Nothing published yet";
+    $("goal").textContent = p.goal || "";
+    $("updated").textContent = p.updated ? `updated ${ago(p.updated)}` : "";
+    if (p.deadline) {
+      deadline = new Date(p.deadline);
+      $("deadline").textContent = deadline.toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) + " (your time)";
+    }
+    const ms = p.milestones || [], done = ms.filter(m => m.status === "done").length;
+    $("done").textContent = ms.length ? `${done} / ${ms.length}` : "…";
+    $("donebar").style.width = ms.length ? `${100 * done / ms.length}%` : 0;
+    const order = { in_progress: 0, next: 1, done: 2 };
+    $("milestones").innerHTML = [...ms].sort((a, b) => order[a.status] - order[b.status]).map(m =>
+      `<div class="ms"><span class="chip ${m.status}">${STATUS[m.status] || m.status}</span><div><b>${esc(m.title)}</b><span>${esc(m.detail)}</span></div></div>`).join("");
+    $("commits").innerHTML = (p.commits || []).map(c =>
+      `<div class="commit"><code>${esc(c.sha)}</code>${esc(c.subject)}<span class="when">${new Date(c.date).toLocaleString()}</span></div>`).join("") || "<span class='muted'>None yet.</span>";
+    tick();
+  } catch (e) { $("now").textContent = "Could not load progress."; }
+  try {
+    const R = await (await fetch("/api/results")).json();
+    const L = R.latest?.summary, E = R.external?.summary, B = R.external_baseline?.summary, F = R.frames?.summary;
+    const rows = [];
+    if (L) rows.push(["Scripted scams stopped / false alarms", `${pct(L.detection_rate)} / ${pct(L.false_alarm_rate)}`],
+                     ["Median time to stop (scripted)", `${L.median_time_to_detection_s} s`],
+                     ["Stopped before money was asked for", pct(L.stopped_before_money_ask)]);
+    if (E?.dialogue) rows.push(["External dialogues: stopped / false alarms", `${pct(E.dialogue.detection_rate)} / ${pct(E.dialogue.false_alarm_rate)}` + (B?.dialogue ? ` (was ${pct(B.dialogue.detection_rate)})` : "")]);
+    if (E?.youtube_real) rows.push(["Real scam calls stopped", pct(E.youtube_real.detection_rate) + (B?.youtube_real ? ` (was ${pct(B.youtube_real.detection_rate)})` : "")]);
+    if (E && E.claims != null) rows.push(["Judge claims verified / unsupported", `${E.claims} / ${E.unsupported_claims}`]);
+    if (F) rows.push(["Single screens correct", `${pct(F.recall)} recall, ${pct(F.false_positive_rate)} false positives`]);
+    $("metrics").innerHTML = rows.map(([k, v]) => `<div class="metric"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("");
+  } catch (e) {}
+}
+load(); setInterval(load, 20000); setInterval(tick, 30000);
+</script>
+</body>
+</html>
