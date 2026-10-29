@@ -35,6 +35,8 @@ bank, then fake government agent), bank impersonation with a one-time-code reque
 government impersonation with a courier pickup of cash or gold, refund or prize scam).
 
 Every timeline event and every lead must include "quote": words copied exactly from one line of <record>.
+Write numbers, amounts and phone numbers exactly as they appear in the record (if the caller said "two thousand dollars",
+write that, not "$2,000"): anything not found in the record is removed.
 
 Reply with one JSON object:
 {{"title": "<short headline>",

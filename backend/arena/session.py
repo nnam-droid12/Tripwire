@@ -144,6 +144,8 @@ class ArenaSession:
         self.incident_id: str | None = None
         self._family_updates: list[dict] = []  # live updates sent to the family, stored on the incident
         self.family_checked = False
+        self._swapped = threading.Event()  # cleared from the hard stop until the decoy is on the line
+        self._swapped.set()
         self.case.on_update(self._on_case)
         self.bus.subscribe(self._on_event)
 
@@ -176,6 +178,8 @@ class ArenaSession:
             self.send({"type": "line", "who": "scammer", "text": text})
             if self.warning_active and is_disable_instruction(text) and self.decoy is None:
                 self._resist(text)
+            if not self._swapped.is_set():  # Margaret is being taken off the call: this line goes to the decoy
+                self._swapped.wait(30)
             if self.decoy is not None:
                 self.bus.publish(Event("audio", "transcript", {"speaker": "A", "text": text, "summary": f'Caller (to the decoy): "{text}"'}))
                 self._decoy_hears(text)
@@ -188,6 +192,8 @@ class ArenaSession:
                 self._code_shield(text)  # Margaret never gets the chance to read the code out
                 return
             turn = self.margaret.respond(text, self.page)
+            if self.warning_active and DECOY_ON:
+                return  # Tripwire stopped the call while she was answering: the decoy has the line now
             self._margaret_speaks(turn.reply)
             if turn.open_page and turn.open_page != self.page:
                 self._show(turn.open_page)
@@ -333,6 +339,8 @@ class ArenaSession:
             if self.warning_active:
                 return
             self.warning_active = True
+            if DECOY_ON:
+                self._swapped.clear()  # from now on, nothing the caller says reaches Margaret
         brand = next((b.title() for b in sorted(self.case.brands.get("call", set())) if b not in ("windows", "security", "support")), None)
         speech = hard_stop_speech(brand)
         stage, confidence, _ = self.case.assess()
@@ -344,7 +352,9 @@ class ArenaSession:
         })
         self.send({"type": "speak", "audio": voice_clip("tripwire", speech)})
         self.margaret.note("hard_stop")
-        if DECOY_ON and self._swap_in_decoy(verdict):
+        swapped = DECOY_ON and self._swap_in_decoy(verdict)
+        self._swapped.set()
+        if swapped:
             return
         with self._turn_lock:  # Margaret reacts to the warning before anything else is said, then hangs up
             turn = self.margaret.respond("(silence on the line while you read your screen)", self.page)
@@ -413,12 +423,12 @@ class ArenaSession:
         try:
             decoy = Decoy()
             decoy.caller_lines += [t["text"] for t in self.case.snapshot()["timeline"] if t["source"] == "call"]
-            with self._turn_lock:
-                self.send({"type": "swap", "text": "Tripwire took Margaret off the call. The caller is now talking to Tripwire's decoy "
-                           "(Muse Wonder), which is trying to learn how they get paid."})
-                opening = decoy.opening("\n".join(record[-20:]))
-                self.decoy = decoy
-                self._decoy_speaks(opening)
+            self.send({"type": "swap", "text": "Tripwire took Margaret off the call. The caller is now talking to Tripwire's decoy "
+                       "(Muse Wonder), which is trying to learn how they get paid."})
+            opening = decoy.opening("\n".join(record[-20:]))
+            self.decoy = decoy
+            self._report_intel(decoy.intel)  # details the caller already gave before the swap
+            self._decoy_speaks(opening)
         except Exception:  # no decoy: Margaret simply hangs up, as before
             self.decoy = None
             return False
@@ -442,14 +452,19 @@ class ArenaSession:
         if turn is None:
             threading.Thread(target=self._finish_decoy, args=("The decoy hung up.",), daemon=True).start()
             return
-        for item in turn.new_intel:
+        self._report_intel(turn.new_intel)
+        if self._decoy_done:  # the caller hung up while the decoy was thinking
+            return
+        self._decoy_speaks(turn.reply)
+        if turn.hang_up or self.decoy_turns >= DECOY_MAX_TURNS or self.expired():
+            threading.Thread(target=self._finish_decoy, args=("The decoy said goodbye and hung up.",), daemon=True).start()
+
+    def _report_intel(self, items: list) -> None:
+        for item in items:
             self.send({"type": "intel", **item.to_dict()})
             if item.kind == "pickup":
                 self._alert_family(f"TRIPWIRE: the caller told Margaret someone will come to collect money: \"{item.value}\". "
                                    "Don't let anyone collect cash, gold or cards. If a pickup is arranged, call 911.")
-        self._decoy_speaks(turn.reply)
-        if turn.hang_up or self.decoy_turns >= DECOY_MAX_TURNS or self.expired():
-            threading.Thread(target=self._finish_decoy, args=("The decoy said goodbye and hung up.",), daemon=True).start()
 
     def _alert_family(self, text: str) -> None:
         result = send_sms(text)

@@ -36,6 +36,10 @@
   .checks li { padding:4px 0; }
   .report { background:var(--bg); border-radius:10px; padding:14px 16px; white-space:pre-wrap; font-size:16px; }
   button { font:inherit; font-weight:600; border:0; border-radius:10px; padding:12px 18px; background:var(--ink); color:var(--card); cursor:pointer; margin-top:12px; }
+  .lead { padding:10px 0; border-top:1px solid var(--line); }
+  .lead:first-child { border-top:0; }
+  .kicker { font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); }
+  .update { background:var(--alertbg); border-radius:10px; padding:10px 14px; margin:8px 0; font-size:16px; }
   .log { font:13px/1.5 Consolas, monospace; white-space:pre-wrap; overflow-wrap:anywhere; margin-top:10px; }
 </style>
 </head>
@@ -52,6 +56,17 @@
   <section class="card"><h2>What happened</h2><ol class="steps" id="steps"><li class="muted">Writing the summary…</li></ol></section>
   <section class="card why" id="why-card" hidden><h2>Why Tripwire acted, and how it checked itself</h2>
     <ul id="why"></ul><ul class="checks" id="checks"></ul></section>
+  <section class="card" id="updates-card" hidden><h2>Sent to you during the call</h2><div id="updates"></div></section>
+  <section class="card" id="case-card" hidden><h2>Case file for the police <span class="badge">Muse Wonder</span></h2>
+    <p class="kicker" id="case-scheme"></p>
+    <p id="case-summary"></p>
+    <div id="case-leads"></div>
+    <details><summary>Timeline</summary><ol class="steps" id="case-timeline"></ol></details>
+    <ul class="checks" id="case-checks"></ul>
+    <p class="muted">File it at <a href="https://www.ic3.gov" target="_blank" rel="noopener">ic3.gov</a> (FBI) and <a href="https://reportfraud.ftc.gov" target="_blank" rel="noopener">reportfraud.ftc.gov</a> (FTC). If a pickup is scheduled at the house, call the police now.</p></section>
+  <section class="card" id="intel-card" hidden><h2>What the scammer revealed to Tripwire's decoy</h2>
+    <p class="muted">After Tripwire took the call over, a decoy kept the caller talking. Each detail below is quoted from the caller's own words.</p>
+    <div id="intel"></div></section>
   <section class="card" id="report-card" hidden><h2>Draft fraud report <span class="badge" id="report-badge"></span></h2>
     <div class="report" id="report"></div>
     <button id="signoff" hidden>I've read it: sign off</button>
@@ -106,6 +121,25 @@ async function load() {
     for (const c of v.recovery || []) checks.push(`${c.ok ? '<span class="ok">✓</span>' : '<span class="no">✗</span>'} ${c.tool === "notify_family" ? "Family message" : "Fraud report"}: ${c.ok ? "checked before sending" + (c.coverage != null ? `, covers ${Math.round(c.coverage * 100)}% of the key facts` : "") + ", no invented numbers" : "rejected and sent back to be fixed: " + esc(c.issues.join("; "))}`);
     if (n && n.verification) checks.push(`<span class="ok">✓</span> The story above was checked sentence by sentence for numbers not in the record (${n.verification.removed} removed).`);
     document.getElementById("checks").innerHTML = checks.map(c => `<li>${c}</li>`).join("");
+  }
+  const KINDS = { pickup: "Courier pickup", payment_destination: "Where the money was to go", callback_number: "Callback number", identity_claimed: "Who they claimed to be", website_or_app: "Website or app", amount: "What they asked for" };
+  if ((i.family_updates || []).length) {
+    document.getElementById("updates-card").hidden = false;
+    document.getElementById("updates").innerHTML = i.family_updates.map(u => `<div class="update"><span class="t">${hhmm(u.ts)}</span> ${esc(u.text)}</div>`).join("");
+  }
+  if ((i.intel || []).length) {
+    document.getElementById("intel-card").hidden = false;
+    document.getElementById("intel").innerHTML = i.intel.map(x => `<div class="lead"><span class="kicker">${esc(KINDS[x.kind] || x.kind)}</span><br><b>${esc(x.value)}</b><span class="quote">“${esc(x.quote)}”</span></div>`).join("");
+  }
+  const cf = i.case_file;
+  if (cf && !cf.error) {
+    document.getElementById("case-card").hidden = false;
+    document.getElementById("case-scheme").textContent = cf.scheme || "";
+    document.getElementById("case-summary").textContent = cf.summary || "";
+    document.getElementById("case-leads").innerHTML = (cf.leads || []).map(l => `<div class="lead"><b>${esc(l.lead)}</b><br><span class="muted">${esc(l.why)}</span><span class="quote">“${esc(l.source || l.quote)}”</span></div>`).join("");
+    document.getElementById("case-timeline").innerHTML = (cf.timeline || []).map(e => `<li><span class="t">${esc(e.time)}</span><span>${esc(e.event)}</span></li>`).join("");
+    const cv = cf.verification || {};
+    document.getElementById("case-checks").innerHTML = `<li><span class="ok">✓</span> ${(cv.claims_checked || 0) - (cv.claims_dropped || 0)} of ${cv.claims_checked || 0} statements quote the record word for word${cv.claims_dropped ? `; ${cv.claims_dropped} that didn't were removed` : ""}.</li><li><span class="ok">✓</span> No number appears that isn't in the record.</li>`;
   }
   const rep = i.verdict.report;
   if (rep) {

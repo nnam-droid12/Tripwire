@@ -31,7 +31,8 @@ MIN_DIGITS = 8
 OCR_SCALE = 2  # upscale before OCR: small UI text is read far more reliably
 
 _NUMERIC_TOKEN = re.compile(r"^[\d\-–•*xX#.:/()+]*\d[\d\-–•*xX#.:/()+]*$")
-_PHONE = re.compile(r"^\+?\d?[\s.-]*\(\d{3}\)[\s.-]*\d{3}[\s.-]+\d{4}$|^\+\d[\d\s().-]{8,}$|^\d{3}[.-]\d{3}[.-]\d{4}$")
+# US phone shapes (1-3-3-4 and 3-3-4, as written or as speech recognition spells them): a caller's number is evidence, not a secret
+_PHONE = re.compile(r"^\+?\d?[\s.-]*\(\d{3}\)[\s.-]*\d{3}[\s.-]+\d{4}$|^\+\d[\d\s().-]{8,}$|^1?[\s.-]?\d{3}[\s.-]\d{3}[\s.-]\d{4}$")
 _DATE = re.compile(r"^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$|^\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}$")
 _MONEY = re.compile(r"^[$£€₦]|\d[,.]\d{2}$")
 

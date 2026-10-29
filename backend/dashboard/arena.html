@@ -74,6 +74,26 @@
   .verdict ul { margin:4px 0 0; padding-left:18px; }
   .steps div { padding:8px 0; border-top:1px solid var(--line); font-size:14px; }
   .steps .t { font-weight:600; }
+  .msg.decoy { align-self:flex-start; background:var(--her); border:2px dashed var(--tw); border-bottom-left-radius:4px; }
+  .sms { position:absolute; top:3%; right:3%; width:min(46%, 330px); background:#1c1c1e; color:#fff; border-radius:14px; padding:10px 12px; font-size:clamp(11px,1.15vw,14px); box-shadow:0 10px 30px #0008; display:none; }
+  .sms.on { display:block; animation: pop .25s ease-out; }
+  .sms .from { font-weight:700; font-size:.85em; color:#9fd; margin-bottom:3px; }
+  .check-card { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(80%, 560px); background:#eef6ff; color:#0f2238; border:3px solid #2d5bd7; border-radius:14px; padding:4% 5%; display:none; text-align:center; box-shadow:0 12px 40px #0007; }
+  .check-card.on { display:block; animation: pop .25s ease-out; }
+  .check-card .tag { display:inline-block; background:#2d5bd7; color:#fff; font-weight:800; padding:2px 12px; border-radius:999px; font-size:clamp(11px,1.2vw,15px); }
+  .check-card .big { font-weight:800; font-size:clamp(15px,2vw,24px); margin:.4em 0 .2em; }
+  .check-card .claim { font-style:italic; font-size:clamp(11px,1.2vw,15px); margin:.3em 0; }
+  .check-card a { display:inline-block; margin-top:.6em; background:#0f2238; color:#fff; padding:.5em 1em; border-radius:10px; text-decoration:none; font-weight:700; font-size:clamp(11px,1.2vw,15px); }
+  .swap { display:none; margin:0 0 10px; padding:10px 12px; border-radius:10px; background:color-mix(in srgb, var(--tw) 14%, var(--panel)); border:1px solid var(--tw); font-size:14px; }
+  .swap.on { display:block; }
+  .intel div.item { padding:8px 0; border-top:1px solid var(--line); font-size:14px; }
+  .intel .k { font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); }
+  .intel .v { font-weight:700; }
+  .intel .q { display:block; color:var(--muted); font-style:italic; font-size:13px; }
+  .falert { margin-top:8px; padding:8px 10px; border-radius:8px; background:color-mix(in srgb, var(--stop) 12%, var(--panel)); font-size:13px; }
+  .casefile { white-space:normal; font-size:13.5px; background:var(--bg); border-radius:8px; padding:10px; margin-top:10px; }
+  .casefile h3 { font-size:15px; margin:0 0 4px; }
+  .casefile li { margin:4px 0; }
   .receipt { margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); font-size:12.5px; color:var(--muted); }
   .receipt b { color:var(--tw); font-weight:600; }
   .receipt .x { color:var(--stop); }
@@ -130,6 +150,14 @@
           <div class="hold-wait" id="hold-wait"></div>
           <a class="hold-link" id="hold-link" target="_blank">Open David's phone →</a>
         </div>
+        <div class="sms" id="sms"><div class="from">Messages · Riverbend Bank</div><div id="sms-text"></div></div>
+        <div class="check-card" id="check">
+          <div class="tag">Checking with the family</div>
+          <div class="big" id="check-big"></div>
+          <div class="claim" id="check-claim"></div>
+          <div id="check-status">Waiting for his answer…</div>
+          <a id="check-link" target="_blank">Open Tom's phone →</a>
+        </div>
         <div class="warning" id="warning">
           <div class="h">STOP. This looks like a scam.</div>
           <div class="y">Hang up the phone now.</div>
@@ -142,6 +170,7 @@
 
     <div class="panel call">
       <h2>The call</h2>
+      <div class="swap" id="swap"></div>
       <div class="log" id="log"></div>
       <div class="controls">
         <button class="talk" id="talk" disabled title="Hold to talk (or hold Space)">&#127908; Hold to talk</button>
@@ -162,6 +191,13 @@
       <div class="small" id="conf-text">Kill-chain confidence 0%</div>
       <div class="feed" id="feed"></div>
       <div id="verdicts"></div>
+    </div>
+    <div class="panel intel" id="intel" hidden>
+      <h2>Scammer intelligence</h2>
+      <p class="small">What the decoy got the caller to say about how they get paid. Each detail is checked against the caller's own words before it appears.</p>
+      <div id="intel-items"></div>
+      <div id="intel-alerts"></div>
+      <div id="casefile"></div>
     </div>
     <div class="panel" id="recovery" hidden>
       <h2>Recovery agent: acting, not just warning</h2>
@@ -218,6 +254,7 @@ const LABELS = {
   known_scam_indicator: "Community Shield match: reported in other homes", remote_control_input: "Someone else is controlling the computer",
   prize_or_reward_claim: "Prize or reward claim", personal_info_request: "Asked for SSN, bank or card details", advance_fee_request: "Fee to receive money",
 };
+const INTEL = { pickup: "Courier pickup", payment_destination: "Where the money goes", callback_number: "Callback number", identity_claimed: "Who they claim to be", website_or_app: "Website or app", amount: "Amount asked for" };
 const TOOLS = { end_remote_session: "Ended the remote session", freeze_card: "Froze the card", draft_fraud_report: "Drafted the fraud report", notify_family: "Alerted the family" };
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -255,7 +292,7 @@ function next() {
 function say(who, text) {
   const d = document.createElement("div");
   d.className = `msg ${who}`;
-  const name = { scammer: "You", margaret: "Margaret", tripwire: "Tripwire" }[who];
+  const name = { scammer: "You", margaret: "Margaret", tripwire: "Tripwire", decoy: "“Margaret” (Tripwire's decoy)" }[who];
   d.innerHTML = (name && who !== "tripwire" ? `<span class="who">${name}</span>` : "") + esc(text);
   $("log").appendChild(d); $("log").scrollTop = 1e9;
 }
@@ -314,7 +351,53 @@ function handle(m) {
     case "busy": say("system", m.text); break;
     case "started": enable(); break;
     case "laptop": showPage(m.page, m.hash); break;
-    case "line": say(m.who, m.text); if (m.who === "margaret") play(m.audio); break;
+    case "line": say(m.who, m.text); if (m.who === "margaret" || m.who === "decoy") play(m.audio); break;
+    case "sms":
+      $("sms-text").textContent = m.text; $("sms").classList.add("on");
+      setTimeout(() => $("sms").classList.remove("on"), 12000);
+      say("system", "A text from the bank just arrived on Margaret's phone, with a one-time code.");
+      break;
+    case "family_check":
+      $("check-big").textContent = `Someone says they're ${m.relative}. Tripwire is asking the real ${m.relative}.`;
+      $("check-claim").textContent = `“${m.claim}”`;
+      $("check-status").textContent = "Waiting for his answer…";
+      $("check-link").href = `/check/${m.check}`;
+      $("check-link").textContent = `Open ${m.relative}'s phone →`;
+      $("check").classList.add("on");
+      say("tripwire", "Tripwire (spoken): " + m.text); setState(`Checking with ${m.relative}`, "--warn"); play(m.audio, true); break;
+    case "family_check_result":
+      $("check-status").textContent = m.status === "safe" ? `${m.relative}: “That's not me. I'm safe.”` : m.status === "me" ? `${m.relative}: “Yes, it's really me.”` : `${m.relative} hasn't answered yet.`;
+      setTimeout(() => $("check").classList.remove("on"), m.status === "safe" ? 1500 : 6000);
+      if (m.text) { say("tripwire", "Tripwire (spoken): " + m.text); play(m.audio, true); }
+      break;
+    case "swap":
+      $("swap").innerHTML = `<b>Margaret is safe.</b> ${esc(m.text)} Keep going: see what it learns about you.`;
+      $("swap").classList.add("on"); $("intel").hidden = false;
+      setState("Decoy on the line", "--tw");
+      break;
+    case "intel": {
+      const d = document.createElement("div");
+      d.className = "item";
+      d.innerHTML = `<span class="k">${esc(INTEL[m.kind] || m.kind)}</span><br><span class="v">${esc(m.value)}</span><span class="q">“${esc(m.quote)}”</span>`;
+      $("intel-items").appendChild(d);
+      break;
+    }
+    case "family_alert": {
+      const d = document.createElement("div");
+      d.className = "falert";
+      d.innerHTML = `<b>Family alerted live</b> ${m.sent ? "" : "(demo mode: text not sent)"}<br>${esc(m.text)}`;
+      $("intel-alerts").appendChild(d);
+      break;
+    }
+    case "case_file_start":
+      $("casefile").innerHTML = `<div class="casefile">Muse Wonder is writing the case file for the police…</div>`;
+      break;
+    case "case_file": {
+      const c = m.case_file || {}, v = c.verification || {};
+      const leads = (c.leads || []).map(l => `<li><b>${esc(l.lead)}</b><br><span class="small">${esc(l.why)}</span></li>`).join("");
+      $("casefile").innerHTML = `<div class="casefile"><h3>${esc(c.title)}</h3><div class="small">${esc(c.scheme)}</div><p>${esc(c.summary)}</p>${leads ? `<b>Leads for investigators</b><ul>${leads}</ul>` : ""}<div class="receipt">Verification · <b>${(v.claims_checked || 0) - (v.claims_dropped || 0)}/${v.claims_checked || 0}</b> statements quote the record word for word · no numbers that aren't in the record</div></div>`;
+      break;
+    }
     case "case": onCase(m); break;
     case "verdict": onVerdict(m); break;
     case "nudge":

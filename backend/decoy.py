@@ -101,7 +101,7 @@ def value_in_quote(value: str, quote: str) -> bool:
 def verify_intel(items: list, caller_lines: list[str], known: list[Intel]) -> tuple[list[Intel], list[dict]]:
     """Keep items whose quote is in the caller's own lines and contains the value; drop duplicates."""
     kept, rejected = [], []
-    seen = {(i.kind, normalize(i.value)) for i in known}
+    seen = {(i.kind, normalize(i.value)) for i in known} | {(i.kind, normalize(i.quote)) for i in known}
     for item in items if isinstance(items, list) else []:
         if not isinstance(item, dict):
             continue
@@ -112,9 +112,9 @@ def verify_intel(items: list, caller_lines: list[str], known: list[Intel]) -> tu
         if source is None or not value_in_quote(value, quote):
             rejected.append({"kind": kind, "value": value, "why": "quote not in the caller's words" if source is None else "detail not in the quote"})
             continue
-        if (kind, normalize(value)) in seen:
-            continue
-        seen.add((kind, normalize(value)))
+        if (kind, normalize(value)) in seen or (kind, normalize(quote)) in seen:
+            continue  # the same detail again, perhaps worded differently
+        seen |= {(kind, normalize(value)), (kind, normalize(quote))}
         kept.append(Intel(kind, value.strip(), quote.strip(), source))
     return kept, rejected
 
