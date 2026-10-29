@@ -8,14 +8,27 @@ rarely visible in any single moment.
 
 It is the only component allowed to recommend ``hard_stop``, and even then
 :class:`core.policy.EscalationPolicy` checks its confidence before acting.
+
+Before a stop, the verdict goes through verification (see :class:`Verification`):
+
+1. deterministic: every quote must be in the record (:mod:`core.grounding`);
+2. an independent model, the :class:`analysts.reviewer.Reviewer`, confirms each
+   surviving quote really shows what its reason claims;
+3. if either layer leaves no reason standing, the judge is told exactly what
+   failed and gets one more attempt (verify, give feedback, retry).
+
+What happened is kept as a receipt on the verdict, shown to the family.
 """
 
 from __future__ import annotations
 
 import json
+import time
+from dataclasses import replace
 from datetime import datetime
 
 from analysts.common import SAFETY_RULES
+from analysts.reviewer import Reviewer
 from core.grounding import verify_reasons
 from core.model_client import ModelClient
 from core.policy import Action, Verdict
@@ -90,13 +103,76 @@ def render_case(snapshot: dict) -> str:
     )
 
 
+MAX_ATTEMPTS = 2
+HARD_STOP_MIN = 0.8  # the reviewer only runs where a stop is actually possible (matches EscalationPolicy)
+
+
+def _feedback(unsupported: list[dict], rejected: list[dict]) -> str:
+    lines = ["Your previous answer failed verification, so nothing was done. Fix it and answer again with the same JSON format."]
+    for r in unsupported:
+        lines.append(f'- NOT FOUND in the record (quote must be copied exactly from one line): "{r.get("evidence", "")}"')
+    for r in rejected:
+        lines.append(f'- REJECTED by the independent reviewer: "{r.get("reason", "")}" ({r.get("review", "")})')
+    lines.append("If the record does not really support a stop, say so: lower the confidence and recommend nudge or log.")
+    return "\n".join(lines)
+
+
 class CaseJudge:
-    def __init__(self, client: ModelClient | None = None) -> None:
+    def __init__(self, client: ModelClient | None = None, reviewer: Reviewer | None | bool = None) -> None:
         self.client = client or ModelClient.for_provider("meta")
+        # reviewer=False turns the second layer off (unit tests, or no Baseten key)
+        if reviewer is False:
+            self.reviewer = None
+        else:
+            try:
+                self.reviewer = reviewer or Reviewer()
+            except Exception:
+                self.reviewer = None
 
     def judge(self, snapshot: dict) -> Verdict:
-        messages = [{"role": "system", "content": PROMPT}, {"role": "user", "content": render_case(snapshot)}]
-        data = self.client.chat_json(messages, max_tokens=4096)
+        started = time.time()
+        case_text = render_case(snapshot)
+        messages = [{"role": "system", "content": PROMPT}, {"role": "user", "content": case_text}]
+        receipt = {"attempts": 0, "quotes_checked": 0, "quotes_found": 0, "reviewed": 0, "confirmed": 0,
+                   "reviewer": "off" if self.reviewer is None else "not needed", "dropped": []}
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            receipt["attempts"] = attempt
+            reply = self.client.chat_json(messages, max_tokens=4096)
+            verdict = self._parse(reply, snapshot)
+            receipt["quotes_checked"] += len(verdict.reasons) + len(verdict.unsupported)
+            receipt["quotes_found"] += len(verdict.reasons)
+            receipt["dropped"] += [{"reason": r.get("reason", ""), "why": "quote not in the record", "attempt": attempt} for r in verdict.unsupported]
+            wants_stop = verdict.recommended_action == Action.HARD_STOP and verdict.is_scam and verdict.confidence >= HARD_STOP_MIN
+            if not wants_stop:
+                break  # verification guards actions; a log or nudge does not need the slow second layer
+            rejected: list[dict] = []
+            if verdict.reasons and self.reviewer is not None:
+                try:
+                    reviews = self.reviewer.review(case_text, verdict.reasons)
+                    receipt["reviewer"] = "Muse Spark Open"
+                except Exception as exc:  # second layer unavailable: the deterministic layer still stands
+                    reviews = None
+                    receipt["reviewer"] = f"unavailable ({type(exc).__name__})"
+                if reviews is not None:
+                    receipt["reviewed"] += len(verdict.reasons)
+                    kept = []
+                    for r, rv in zip(verdict.reasons, reviews):
+                        if rv["supported"]:
+                            kept.append({**r, "review": rv["note"]})
+                        else:
+                            rejected.append({**r, "review": rv["note"]})
+                    receipt["confirmed"] += len(kept)
+                    receipt["dropped"] += [{"reason": r.get("reason", ""), "why": f"reviewer: {r['review']}", "attempt": attempt} for r in rejected]
+                    verdict = replace(verdict, reasons=kept)
+            if verdict.reasons:
+                break  # at least one reason passed every layer
+            if attempt < MAX_ATTEMPTS:
+                messages += [{"role": "assistant", "content": json.dumps(reply)},
+                             {"role": "user", "content": _feedback(verdict.unsupported, rejected)}]
+        receipt["seconds"] = round(time.time() - started, 1)
+        return replace(verdict, verification=receipt)
+
+    def _parse(self, data: dict, snapshot: dict) -> Verdict:
         claimed = [
             {"reason": str(r.get("reason", ""))[:200], "evidence": str(r.get("evidence", ""))[:300]}
             for r in data.get("reasons", [])

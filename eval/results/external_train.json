@@ -1,8 +1,8 @@
 {
   "meta": {
-    "date": "2026-10-28",
+    "date": "2026-10-29",
     "conversations": 80,
-    "minutes": 9.6,
+    "minutes": 9.7,
     "split": "train"
   },
   "summary": {
@@ -21,8 +21,8 @@
       "detection_rate": 0.975,
       "false_alarm_rate": 0.0,
       "benign_nudge_rate": 0.0,
-      "median_stop_turn": 9,
-      "median_stop_fraction": 0.5
+      "median_stop_turn": 7,
+      "median_stop_fraction": 0.47
     },
     "by_kind": {
       "delivery": {
@@ -75,8 +75,12 @@
       }
     },
     "errors": 0,
-    "claims": 316,
-    "unsupported_claims": 0
+    "claims": 328,
+    "unsupported_claims": 2,
+    "reviewed": 104,
+    "confirmed": 103,
+    "retries": 0,
+    "retry_rescued": 0
   },
   "runs": [
     {
@@ -86,16 +90,20 @@
       "turns": 13,
       "action": "hard_stop",
       "stop_turn": 9,
-      "nudge_turn": 3,
+      "nudge_turn": 5,
       "stop_fraction": 0.69,
-      "judge_calls": 5,
+      "judge_calls": 4,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (unknown): Single greeting line with no scam indicators.",
-        "  call   [none] B (protected_person): Caller asks for John and protected person asks for identification; no scam indicators yet."
+        "  call   [none] A (caller): Initial greeting with no scam indicators.",
+        "  call   [none] B (protected_person): Protected person answers call and asks caller to identify themselves."
       ],
-      "claims": 10,
-      "unsupported_claims": 0
+      "claims": 9,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -109,11 +117,15 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Initial greeting with no scam indicators.",
-        "  call   [none] B (protected_person): Caller asks for John and protected person asks who is calling; no scam indicators yet."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators present.",
+        "  call   [none] B (protected_person): Initial greeting with no scam indicators in newest line."
       ],
       "claims": 5,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -122,16 +134,20 @@
       "turns": 20,
       "action": "hard_stop",
       "stop_turn": 7,
-      "nudge_turn": 7,
+      "nudge_turn": 3,
       "stop_fraction": 0.35,
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Initial greeting with no scam indicators.",
-        "  call   [none] B (protected_person): Caller asks to confirm identity and protected person responds, no scam indicators yet."
+        "  call   [none] A (caller): Caller greeting with no scam indicators yet.",
+        "  call   [none] B (protected_person): Protected person answers and asks caller to identify themselves; no scam indicators yet."
       ],
-      "claims": 6,
-      "unsupported_claims": 0
+      "claims": 5,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -145,11 +161,15 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Initial greeting exchange with no scam indicators."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators.",
+        "  call   [none] B (protected_person): Initial greeting with no scam indicators yet."
       ],
       "claims": 4,
-      "unsupported_claims": 0
+      "unsupported_claims": 2,
+      "reviewed": 1,
+      "confirmed": 1,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -160,14 +180,18 @@
       "stop_turn": 7,
       "nudge_turn": 1,
       "stop_fraction": 0.35,
-      "judge_calls": 4,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [high] A (caller): Caller impersonates SSA officer claiming a serious SSN problem.",
-        "  call   [none] B (protected_person): Caller claimed to be SSA officer and protected person asked for clarification."
+        "  call   [med] A (caller): Caller impersonates SSA and claims SSN problem.",
+        "  call   [none] B (protected_person): Caller claimed to be SSA officer about SSN issue; protected person is asking for details."
       ],
-      "claims": 11,
-      "unsupported_claims": 0
+      "claims": 6,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -178,14 +202,18 @@
       "stop_turn": 5,
       "nudge_turn": 1,
       "stop_fraction": 0.56,
-      "judge_calls": 2,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
         "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN problem.",
-        "  call   [low] B (protected_person): Protected person is engaging with caller who previously claimed to be SSA officer about SSN issue."
+        "  call   [none] B (protected_person): Protected person asks for details about alleged Social Security issue; no new scam signal in this line alone."
       ],
-      "claims": 6,
-      "unsupported_claims": 0
+      "claims": 7,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -196,14 +224,18 @@
       "stop_turn": 9,
       "nudge_turn": 1,
       "stop_fraction": 0.45,
-      "judge_calls": 4,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [high] A (caller): Caller impersonates SSA officer claiming SSN problem.",
-        "  call   [none] B (protected_person): Protected person is responding with a question to the caller's SSA impersonation claim from the prior line."
+        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN problem.",
+        "  call   [none] B (protected_person): Caller previously claimed to be SSA officer about SSN issue; protected person is asking for details, no new scam signal in this line alone."
       ],
-      "claims": 10,
-      "unsupported_claims": 0
+      "claims": 7,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -214,14 +246,18 @@
       "stop_turn": 7,
       "nudge_turn": 1,
       "stop_fraction": 0.35,
-      "judge_calls": 5,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN issue.",
-        "  call   [none] B (protected_person): Protected person asks for details after caller claimed to be Social Security Administration officer."
+        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN problem.",
+        "  call   [none] B (protected_person): Protected person is responding to caller's claim to be from SSA and asking for details."
       ],
-      "claims": 11,
-      "unsupported_claims": 0
+      "claims": 8,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -229,17 +265,21 @@
       "is_scam": true,
       "turns": 14,
       "action": "hard_stop",
-      "stop_turn": 3,
+      "stop_turn": 5,
       "nudge_turn": 1,
-      "stop_fraction": 0.21,
-      "judge_calls": 2,
+      "stop_fraction": 0.36,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN problem.",
-        "  call   [low] B (protected_person): Protected person asks for details after caller claimed to be SSA officer about SSN problem."
+        "  call   [high] A (caller): Caller impersonates SSA officer claiming SSN problem.",
+        "  call   [low] B (protected_person): Protected person asks for details about alleged SSN problem; caller previously claimed to be SSA officer."
       ],
-      "claims": 5,
-      "unsupported_claims": 0
+      "claims": 8,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -253,11 +293,15 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN problem.",
-        "  call   [none] B (protected_person): Protected person responds to caller's claim to be from SSA asking about the issue."
+        "  call   [med] A (caller): Caller impersonates SSA officer reporting SSN problem.",
+        "  call   [low] B (protected_person): Protected person responding to caller who claimed to be SSA officer about SSN problem."
       ],
       "claims": 4,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -272,10 +316,14 @@
       "errors": 0,
       "error_samples": [
         "  call   [none] A (caller): Initial greeting with no scam indicators.",
-        "  call   [none] B (protected_person): Caller asks for John and recipient confirms identity, no scam indicators yet."
+        "  call   [none] B (protected_person): Initial greeting exchange, no scam indicators yet."
       ],
       "claims": 4,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -289,11 +337,15 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators in this line.",
-        "  call   [none] B (protected_person): Caller asks to confirm identity and protected person asks who is calling, no scam indicators yet."
+        "  call   [none] A (caller): Caller greeting asking for John, no scam indicators present.",
+        "  call   [none] B (protected_person): Caller asks for John and protected person asks who is calling; no scam indicators yet."
       ],
       "claims": 5,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -304,14 +356,18 @@
       "stop_turn": 15,
       "nudge_turn": 1,
       "stop_fraction": 0.65,
-      "judge_calls": 3,
+      "judge_calls": 6,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller initiates unsolicited Amazon refund offer.",
-        "  call   [low] B (protected_person): Caller claims Amazon refund department offering $500 refund; protected person questions unfamiliar purchase."
+        "  call   [med] A (caller): Caller impersonates Amazon to offer an unsolicited $500 refund.",
+        "  call   [none] B (protected_person): Protected person questions unexpected Amazon refund claim, no new caller instruction in this line."
       ],
-      "claims": 7,
-      "unsupported_claims": 0
+      "claims": 13,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -320,16 +376,20 @@
       "turns": 18,
       "action": "hard_stop",
       "stop_turn": 7,
-      "nudge_turn": 1,
+      "nudge_turn": 5,
       "stop_fraction": 0.39,
-      "judge_calls": 2,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller introduces himself as Amazon customer service without prior context.",
-        "  call   [none] B (protected_person): Caller introduced as Amazon support, protected person asks purpose of call."
+        "  call   [low] A (caller): Caller introduces himself as Amazon customer service without prior context.",
+        "  call   [none] B (protected_person): Protected person responding to introductory call from caller claiming to be Amazon customer service."
       ],
-      "claims": 4,
-      "unsupported_claims": 0
+      "claims": 7,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -338,16 +398,20 @@
       "turns": 21,
       "action": "hard_stop",
       "stop_turn": 9,
-      "nudge_turn": 9,
+      "nudge_turn": 3,
       "stop_fraction": 0.43,
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for Mr. Johnson and protected person responds asking who is calling; no scam indicators yet."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asks to confirm identity, protected person responds asking who is calling."
       ],
       "claims": 5,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -358,14 +422,18 @@
       "stop_turn": 11,
       "nudge_turn": 1,
       "stop_fraction": 0.69,
-      "judge_calls": 2,
+      "judge_calls": 4,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Amazon to offer a refund for a transaction error.",
-        "  call   [low] B (protected_person): Protected person questions the unsolicited Amazon refund claim and asks for details."
+        "  call   [med] A (caller): Caller claims to be Amazon support offering a refund for a transaction error.",
+        "  call   [low] B (protected_person): Caller previously claimed Amazon refund error; newest line is protected person asking for details, no new scam instruction yet."
       ],
-      "claims": 5,
-      "unsupported_claims": 0
+      "claims": 9,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -373,17 +441,21 @@
       "is_scam": true,
       "turns": 20,
       "action": "hard_stop",
-      "stop_turn": 11,
-      "nudge_turn": 3,
-      "stop_fraction": 0.55,
-      "judge_calls": 5,
+      "stop_turn": 13,
+      "nudge_turn": 1,
+      "stop_fraction": 0.65,
+      "judge_calls": 6,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Amazon to offer unsolicited refund.",
-        "  call   [none] B (protected_person): Protected person asks for clarification about claimed Amazon refund; no new scam instruction in this turn."
+        "  call   [low] A (caller): Caller impersonates Amazon to offer a refund for a purchase error.",
+        "  call   [none] B (protected_person): Protected person asks for clarification about claimed Amazon refund; no new scam instruction in this line."
       ],
-      "claims": 12,
-      "unsupported_claims": 0
+      "claims": 16,
+      "unsupported_claims": 0,
+      "reviewed": 4,
+      "confirmed": 4,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -397,11 +469,15 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Amazon and introduces overcharge/refund pretext.",
-        "  call   [low] B (protected_person): Protected person asks for details about alleged overcharge after caller claimed to be Amazon customer service."
+        "  call   [med] A (caller): Caller impersonates Amazon and introduces an overcharge refund pretext.",
+        "  call   [none] B (protected_person): Protected person asks caller for details about alleged Amazon overcharge."
       ],
       "claims": 5,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -415,11 +491,15 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller initiates contact claiming to be XYZ Corporation customer service offering a refund.",
-        "  call   [none] B (protected_person): Protected person asks for clarification about a refund mentioned by the caller; no new scam instruction in this line."
+        "  call   [med] A (caller): Caller initiates unsolicited refund offer claiming to be XYZ Corporation customer service.",
+        "  call   [none] B (protected_person): Protected person asks for details about claimed refund; no new scam instruction in this line."
       ],
-      "claims": 5,
-      "unsupported_claims": 0
+      "claims": 4,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -427,17 +507,21 @@
       "is_scam": true,
       "turns": 15,
       "action": "hard_stop",
-      "stop_turn": 11,
-      "nudge_turn": 2,
-      "stop_fraction": 0.73,
-      "judge_calls": 6,
+      "stop_turn": 5,
+      "nudge_turn": 1,
+      "stop_fraction": 0.33,
+      "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Amazon and initiates refund pretext about unauthorized transaction.",
-        "  call   [low] B (protected_person): Caller introduced as Amazon about a refund, protected person is asking for details and engagement continues."
+        "  call   [med] A (caller): Caller impersonates Amazon to offer refund for claimed unauthorized transaction.",
+        "  call   [low] B (protected_person): Caller previously claimed Amazon refund; protected person is asking for details, no new scam instruction yet."
       ],
-      "claims": 16,
-      "unsupported_claims": 0
+      "claims": 5,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -452,10 +536,14 @@
       "errors": 0,
       "error_samples": [
         "  call   [med] A (caller): Caller impersonates Windows support and claims virus on computer.",
-        "  call   [low] B (protected_person): Protected person responding to caller's virus claim, no new scam instruction in this line."
+        "  call   [none] B (protected_person): Protected person asks for clarification about alleged virus after caller claimed to be Windows Technical Support."
       ],
-      "claims": 8,
-      "unsupported_claims": 0
+      "claims": 7,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -466,14 +554,18 @@
       "stop_turn": 7,
       "nudge_turn": 1,
       "stop_fraction": 0.37,
-      "judge_calls": 2,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Microsoft support and claims malware infection.",
-        "  call   [low] B (protected_person): Protected person is engaging with caller who previously claimed Microsoft malware infection; newest line is benign follow-up question."
+        "  call   [med] A (caller): Caller impersonates Microsoft Support and claims malware infection.",
+        "  call   [none] B (protected_person): Protected person is asking for more information after unsolicited tech-support claim."
       ],
-      "claims": 5,
-      "unsupported_claims": 0
+      "claims": 7,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -484,14 +576,18 @@
       "stop_turn": 3,
       "nudge_turn": 1,
       "stop_fraction": 0.27,
-      "judge_calls": 2,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
         "  call   [med] A (caller): Caller impersonates Windows support claiming virus infection.",
-        "  call   [none] B (protected_person): Protected person reacts with concern to caller's prior virus claim, no new instruction in this line."
+        "  call   [med] B (protected_person): Caller impersonating Windows support with fake virus claim; protected person engaging."
       ],
-      "claims": 4,
-      "unsupported_claims": 0
+      "claims": 6,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -499,17 +595,21 @@
       "is_scam": true,
       "turns": 17,
       "action": "hard_stop",
-      "stop_turn": 3,
+      "stop_turn": 5,
       "nudge_turn": 1,
-      "stop_fraction": 0.18,
+      "stop_fraction": 0.29,
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
         "  call   [med] A (caller): Caller impersonates Windows support claiming malware infection.",
-        "  call   [low] B (protected_person): Protected person asks for clarification about alleged malware after caller impersonated Windows support."
+        "  call   [none] B (protected_person): Protected person responding to caller's prior malware claim, no new scam instruction in this line."
       ],
-      "claims": 5,
-      "unsupported_claims": 0
+      "claims": 4,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -520,14 +620,18 @@
       "stop_turn": 11,
       "nudge_turn": 1,
       "stop_fraction": 0.85,
-      "judge_calls": 5,
+      "judge_calls": 4,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Windows support claiming virus infection.",
-        "  call   [low] B (protected_person): Protected person is responding to caller's unsolicited virus alert claim from earlier line."
+        "  call   [med] A (caller): Caller impersonates Windows Technical Support claiming virus infection.",
+        "  call   [med] B (protected_person): Caller previously claimed Windows Technical Support virus alert; protected person is now engaging with the claim."
       ],
-      "claims": 13,
-      "unsupported_claims": 0
+      "claims": 11,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -542,10 +646,14 @@
       "errors": 0,
       "error_samples": [
         "  call   [med] A (caller): Caller impersonates Windows support and claims malware infection.",
-        "  call   [low] B (protected_person): Caller impersonates Windows support claiming malware infection, protected person asks for clarification."
+        "  call   [med] B (protected_person): Caller impersonating Windows support claims malware infection; protected person is engaging and asking for details."
       ],
-      "claims": 10,
-      "unsupported_claims": 0
+      "claims": 9,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -556,14 +664,18 @@
       "stop_turn": 9,
       "nudge_turn": 1,
       "stop_fraction": 0.47,
-      "judge_calls": 4,
+      "judge_calls": 5,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Windows Technical Support and claims malware infection.",
-        "  call   [low] B (protected_person): Caller previously impersonated Windows support with malware claim; newest line is only the protected person reacting with concern."
+        "  call   [med] A (caller): Caller impersonates Windows support claiming malware infection.",
+        "  call   [low] B (protected_person): Protected person responding with concern to caller's prior claim of malware infection."
       ],
-      "claims": 10,
-      "unsupported_claims": 0
+      "claims": 13,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -571,17 +683,21 @@
       "is_scam": true,
       "turns": 18,
       "action": "hard_stop",
-      "stop_turn": 11,
+      "stop_turn": 3,
       "nudge_turn": 1,
-      "stop_fraction": 0.61,
+      "stop_fraction": 0.17,
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Windows support and claims malicious activity detected.",
-        "  call   [none] B (protected_person): Protected person responding to unsolicited technical support call about malicious activity."
+        "  call   [high] A (caller): Caller impersonates Windows Technical Support and claims malicious activity detected.",
+        "  call   [none] B (protected_person): Protected person asks for clarification after caller claimed Windows Technical Support detected malicious activity."
       ],
-      "claims": 5,
-      "unsupported_claims": 0
+      "claims": 4,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -592,14 +708,18 @@
       "stop_turn": 9,
       "nudge_turn": 1,
       "stop_fraction": 0.45,
-      "judge_calls": 3,
+      "judge_calls": 4,
       "errors": 0,
       "error_samples": [
         "  call   [med] A (caller): Caller impersonates Windows support and claims virus infection.",
-        "  call   [low] B (protected_person): Caller previously claimed Windows Technical Support virus infection; newest line is protected person asking how caller knew."
+        "  call   [none] B (protected_person): Protected person asks follow-up question to unsolicited virus claim; newest line itself contains no scam instruction or request."
       ],
-      "claims": 8,
-      "unsupported_claims": 0
+      "claims": 11,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -610,14 +730,18 @@
       "stop_turn": 13,
       "nudge_turn": 1,
       "stop_fraction": 0.65,
-      "judge_calls": 3,
+      "judge_calls": 4,
       "errors": 0,
       "error_samples": [
-        "  call   [high] A (caller): Caller impersonates Microsoft and claims computer virus infection.",
-        "  call   [high] B (protected_person): Caller impersonated Microsoft claiming virus infection, protected person is engaging and asking for details."
+        "  call   [med] A (caller): Caller impersonates Microsoft support and claims virus infection.",
+        "  call   [low] B (protected_person): Caller previously claimed Microsoft virus alert; protected person is now asking for details, continuing the scam contact."
       ],
-      "claims": 8,
-      "unsupported_claims": 0
+      "claims": 12,
+      "unsupported_claims": 0,
+      "reviewed": 4,
+      "confirmed": 4,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -626,16 +750,20 @@
       "turns": 11,
       "action": "hard_stop",
       "stop_turn": 5,
-      "nudge_turn": 3,
+      "nudge_turn": 1,
       "stop_fraction": 0.45,
-      "judge_calls": 3,
+      "judge_calls": 4,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller initiates unsolicited prize offer for $1000 gift card.",
-        "  call   [none] B (protected_person): Caller previously offered $1000 gift card, protected person now asking how they were selected."
+        "  call   [low] A (caller): Caller initiates unsolicited prize offer for a $1000 gift card.",
+        "  call   [low] B (protected_person): Caller offered $1000 gift card prize in prior line; protected person is responding with interest but no extraction yet."
       ],
-      "claims": 5,
-      "unsupported_claims": 0
+      "claims": 7,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -649,11 +777,15 @@
       "judge_calls": 5,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for John and recipient asks for caller identity; no scam indicators yet."
+        "  call   [none] A (caller): Caller greeting asking to confirm identity, no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asks to confirm identity and protected person responds, no scam indicators yet."
       ],
-      "claims": 10,
-      "unsupported_claims": 0
+      "claims": 12,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -662,16 +794,20 @@
       "turns": 12,
       "action": "hard_stop",
       "stop_turn": 11,
-      "nudge_turn": 7,
+      "nudge_turn": 5,
       "stop_fraction": 0.92,
-      "judge_calls": 6,
+      "judge_calls": 4,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greeting protected person with no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for Mrs. Johnson and protected person asks who is calling; no scam indicators yet."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators yet.",
+        "  call   [none] B (protected_person): Initial greeting exchange with no scam indicators."
       ],
-      "claims": 13,
-      "unsupported_claims": 0
+      "claims": 8,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -685,11 +821,15 @@
       "judge_calls": 4,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller initiates unsolicited prize offer for $1000 gift card.",
-        "  call   [none] B (protected_person): Caller previously offered $1000 gift card, protected person is now asking how they were selected, no new scam instruction in newest line."
+        "  call   [low] A (caller): Caller makes unsolicited prize offer of $1000 gift card.",
+        "  call   [none] B (protected_person): Protected person responding to earlier unsolicited $1000 gift card prize offer, no new caller claim in newest line."
       ],
       "claims": 7,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -703,11 +843,15 @@
       "judge_calls": 4,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller initiates unsolicited prize offer for $1,000 gift card.",
-        "  call   [low] B (protected_person): Protected person is engaging with unsolicited $1,000 gift card offer from previous line, no new scam instruction yet."
+        "  call   [low] A (caller): Caller makes unsolicited prize offer of $1,000 gift card.",
+        "  call   [low] B (protected_person): Caller offered unsolicited $1,000 gift card and protected person is asking for details, no extraction or control yet."
       ],
-      "claims": 8,
-      "unsupported_claims": 0
+      "claims": 7,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -718,14 +862,18 @@
       "stop_turn": null,
       "nudge_turn": 5,
       "stop_fraction": null,
-      "judge_calls": 7,
+      "judge_calls": 11,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asked for Mrs. Johnson and protected person responded asking for identification; no scam indicators yet."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity, no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asked for Mrs Johnson and protected person confirmed identity, no scam indicators yet."
       ],
-      "claims": 18,
-      "unsupported_claims": 0
+      "claims": 26,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -739,11 +887,15 @@
       "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller initiates unsolicited prize offer for a free gift card.",
-        "  call   [none] B (protected_person): Caller previously offered $1000 gift card; protected person is asking how they were selected, no new scam instruction in newest line."
+        "  call   [low] A (caller): Caller initiates unsolicited prize offer for a $1000 gift card.",
+        "  call   [none] B (protected_person): Protected person is responding to an unsolicited prize offer from previous line, no new scam instruction in newest line."
       ],
       "claims": 6,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -757,11 +909,15 @@
       "judge_calls": 5,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Initial greeting with no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks to confirm identity, protected person responds asking who is calling."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators present.",
+        "  call   [none] B (protected_person): Caller asks for Mrs. Johnson and protected person answers, no scam indicators yet."
       ],
-      "claims": 11,
-      "unsupported_claims": 0
+      "claims": 10,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -770,16 +926,20 @@
       "turns": 13,
       "action": "hard_stop",
       "stop_turn": 7,
-      "nudge_turn": 3,
+      "nudge_turn": 1,
       "stop_fraction": 0.54,
-      "judge_calls": 4,
+      "judge_calls": 5,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller makes unsolicited prize offer of $1,000 gift card.",
-        "  call   [none] B (protected_person): Protected person responding with interest to unsolicited $1,000 gift card offer from caller."
+        "  call   [low] A (caller): Caller initiates unsolicited prize offer for $1,000 gift card.",
+        "  call   [none] B (protected_person): Protected person responds to caller's prize offer with enthusiasm, no new scam instruction in this line."
       ],
-      "claims": 7,
-      "unsupported_claims": 0
+      "claims": 11,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -793,11 +953,15 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for Mrs. Johnson and protected person confirms identity and asks who is calling."
+        "  call   [none] A (caller): Call opening greeting with no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asks to confirm identity and protected person responds asking who is calling."
       ],
-      "claims": 3,
-      "unsupported_claims": 0
+      "claims": 4,
+      "unsupported_claims": 0,
+      "reviewed": 2,
+      "confirmed": 2,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -812,28 +976,14 @@
       "errors": 0,
       "error_samples": [
         "  call   [none] A (caller): Routine delivery confirmation with no scam indicators.",
-        "  call   [none] B (protected_person): Routine delivery confirmation with no scam indicators."
+        "  call   [none] B (protected_person): Benign delivery confirmation call with no scam indicators in newest line."
       ],
       "claims": 0,
-      "unsupported_claims": 0
-    },
-    {
-      "source": "dialogue",
-      "kind": "delivery",
-      "is_scam": false,
-      "turns": 12,
-      "action": "log",
-      "stop_turn": null,
-      "nudge_turn": null,
-      "stop_fraction": null,
-      "judge_calls": 1,
-      "errors": 0,
-      "error_samples": [
-        "  call   [low] A (caller): Caller identifies as delivery service to confirm package delivery, no scam request yet.",
-        "  call   [none] B (protected_person): Benign delivery confirmation with no scam indicators."
-      ],
-      "claims": 1,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -847,11 +997,37 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller identifies as delivery service confirming expected package, no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller confirming package delivery, protected person asking for clarification, no scam indicators."
+        "  call   [none] A (caller): Caller confirms package delivery; no scam indicators present.",
+        "  call   [none] B (protected_person): Protected person received delivery confirmation call and asked about package contents."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 0,
+      "error_samples": [
+        "  call   [none] A (caller): Caller confirms expected package delivery with no scam indicators.",
+        "  call   [none] B (protected_person): Caller confirms a delivery and protected person asks for clarification; no scam indicators present."
+      ],
+      "claims": 0,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -865,11 +1041,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Routine delivery confirmation with no scam indicators or requests.",
-        "  call   [none] B (protected_person): Caller confirms delivery and protected person asks for clarification, no scam indicators present."
+        "  call   [none] A (caller): Caller confirms a package delivery with no scam indicators.",
+        "  call   [none] B (protected_person): Routine delivery confirmation with no scam indicators."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -883,11 +1063,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (protected_person): Benign delivery inquiry with no scam indicators.",
-        "  call   [none] B (unknown): Benign conversation about confirming laptop delivery order number with no scam indicators."
+        "  call   [none] A (protected_person): Person making routine inquiry about laptop delivery, no scam indicators present.",
+        "  call   [none] B (caller): Benign call about confirming a laptop delivery order number with no scam indicators."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -898,14 +1082,18 @@
       "stop_turn": null,
       "nudge_turn": null,
       "stop_fraction": null,
-      "judge_calls": 1,
+      "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller claims to be from courier service to confirm package delivery, no scam pressure or request yet.",
-        "  call   [none] B (protected_person): Protected person asks for details about a claimed courier delivery; no scam signals in this line."
+        "  call   [none] A (caller): Caller introducing as courier to confirm package delivery, no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller claims courier delivery confirmation; protected person asks for details, no scam indicators yet."
       ],
-      "claims": 1,
-      "unsupported_claims": 0
+      "claims": 0,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -919,11 +1107,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Routine delivery confirmation with no scam indicators.",
-        "  call   [none] B (protected_person): Delivery confirmation call with no scam indicators; protected person asks about package contents."
+        "  call   [none] A (caller): Caller confirms a delivery window with no request for action or personal information.",
+        "  call   [none] B (protected_person): Benign delivery confirmation exchange with no scam indicators in newest line."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -937,11 +1129,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller provides routine package delivery confirmation with no request or threat.",
-        "  call   [none] B (protected_person): Benign delivery confirmation with no scam indicators."
+        "  call   [none] A (caller): Caller confirms a scheduled package delivery window with no request for action or sensitive information.",
+        "  call   [none] B (protected_person): Caller confirms delivery window and protected person asks about package contents, no scam indicators."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -955,11 +1151,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller confirms package delivery window with no request or threat.",
-        "  call   [none] B (protected_person): Caller confirms delivery window and protected person asks for clarification, no scam indicators present."
+        "  call   [none] A (caller): Benign delivery confirmation with no scam indicators.",
+        "  call   [none] B (protected_person): Routine delivery confirmation with no scam indicators."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -973,11 +1173,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Benign delivery confirmation with no scam indicators.",
+        "  call   [none] A (caller): Caller provides routine delivery window confirmation with no scam indicators.",
         "  call   [none] B (protected_person): Benign delivery confirmation exchange with no scam indicators."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -991,11 +1195,15 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller has just introduced himself as from SafeGuard Insurance with no problem claimed yet.",
-        "  call   [none] B (protected_person): Protected person greeting caller who claimed to be from SafeGuard Insurance; no scam signals in newest line."
+        "  call   [low] A (caller): Caller introduces himself as representing SafeGuard Insurance with no problem claimed yet.",
+        "  call   [none] B (protected_person): Caller introduced as SafeGuard Insurance and protected person responded politely with no scam indicators yet."
       ],
       "claims": 1,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1009,11 +1217,15 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as calling from XYZ Insurance.",
+        "  call   [low] A (caller): Caller introduces himself as from XYZ Insurance in opening greeting.",
         "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
       ],
       "claims": 1,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1027,11 +1239,15 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as from XYZ Insurance Company in opening greeting.",
-        "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
+        "  call   [low] A (caller): Caller introduces himself as from an insurance company with no scam problem or pressure yet.",
+        "  call   [none] B (protected_person): Caller introduced as XYZ Insurance and protected person responded politely with no scam indicators yet."
       ],
       "claims": 1,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1045,11 +1261,15 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as calling from SafeGuard Insurance.",
-        "  call   [none] B (protected_person): Caller introduced as SafeGuard Insurance and protected person responded politely with no scam indicators yet."
+        "  call   [low] A (caller): Caller introduced himself as from SafeGuard Insurance with no problem claim or request yet.",
+        "  call   [none] B (protected_person): Benign greeting exchange with no scam indicators in newest line."
       ],
       "claims": 1,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1060,50 +1280,62 @@
       "stop_turn": null,
       "nudge_turn": null,
       "stop_fraction": null,
-      "judge_calls": 1,
-      "errors": 0,
-      "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as representing SafeGuard Insurance.",
-        "  call   [none] B (protected_person): Polite opening exchange with caller identifying as SafeGuard Insurance, no scam indicators yet."
-      ],
-      "claims": 1,
-      "unsupported_claims": 0
-    },
-    {
-      "source": "dialogue",
-      "kind": "insurance",
-      "is_scam": false,
-      "turns": 13,
-      "action": "log",
-      "stop_turn": null,
-      "nudge_turn": null,
-      "stop_fraction": null,
-      "judge_calls": 1,
-      "errors": 0,
-      "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as from SafeGuard Insurance at start of call.",
-        "  call   [none] B (protected_person): Protected person politely responding to introductory insurance call, no scam indicators in this line."
-      ],
-      "claims": 1,
-      "unsupported_claims": 0
-    },
-    {
-      "source": "dialogue",
-      "kind": "insurance",
-      "is_scam": false,
-      "turns": 13,
-      "action": "log",
-      "stop_turn": null,
-      "nudge_turn": null,
-      "stop_fraction": null,
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller introduces himself from SafeGuard Insurance with a routine greeting, no scam indicators yet.",
-        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as SafeGuard Insurance; no scam indicators in newest line."
+        "  call   [none] A (caller): Caller introduces himself as John from SafeGuard Insurance with no scam indicators yet.",
+        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as SafeGuard Insurance, no scam instruction in newest line."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 13,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 1,
+      "errors": 0,
+      "error_samples": [
+        "  call   [low] A (caller): Caller introduced himself as from SafeGuard Insurance; no scam problem claimed yet.",
+        "  call   [none] B (protected_person): Caller introduces as SafeGuard Insurance and protected person responds politely; no scam indicators present."
+      ],
+      "claims": 1,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 13,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 1,
+      "errors": 0,
+      "error_samples": [
+        "  call   [low] A (caller): Caller introduces himself as from SafeGuard Insurance, no problem or request yet.",
+        "  call   [none] B (protected_person): Protected person politely responding to an introductory call from someone claiming to be from SafeGuard Insurance."
+      ],
+      "claims": 1,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1114,14 +1346,18 @@
       "stop_turn": null,
       "nudge_turn": null,
       "stop_fraction": null,
-      "judge_calls": 0,
+      "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller introduces himself from XYZ Insurance with no request or threat yet.",
-        "  call   [none] B (protected_person): Benign greeting exchange with insurance caller, no scam indicators in newest line."
+        "  call   [low] A (caller): Caller introduces as representative of XYZ Insurance with no scam pressure yet.",
+        "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
       ],
-      "claims": 0,
-      "unsupported_claims": 0
+      "claims": 1,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1135,11 +1371,15 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as calling from XYZ Insurance Company.",
-        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as XYZ Insurance Company, no scam instruction in newest line."
+        "  call   [low] A (caller): Caller introduces himself as from an insurance company with no further request yet.",
+        "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
       ],
       "claims": 1,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1153,11 +1393,15 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces themselves as representing ABC Insurance.",
-        "  call   [none] B (protected_person): Polite opening exchange with insurance caller, no scam indicators in newest line."
+        "  call   [low] A (caller): Caller introduces himself as from ABC Insurance; no problem claim or request yet.",
+        "  call   [none] B (protected_person): Protected person answering introductory call from ABC Insurance with no scam indicators in newest line."
       ],
       "claims": 1,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1171,11 +1415,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Telemarketing call offering a home security deal with no scam indicators.",
-        "  call   [none] B (protected_person): Telemarketing call about home security systems with no scam indicators in newest line."
+        "  call   [none] A (caller): Telemarketing call offering home security deal, no scam indicators present.",
+        "  call   [none] B (protected_person): Sales call about home security with no scam indicators in newest line."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1189,11 +1437,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Telemarketing call offering financial software with no scam indicators.",
-        "  call   [none] B (protected_person): Sales call offering finance software with no scam indicators, protected person questioning the pitch."
+        "  call   [none] A (caller): Unsolicited sales call offering finance software with no scam indicators.",
+        "  call   [none] B (protected_person): Sales call offering finance software, protected person questioning need, no scam indicators present."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1207,11 +1459,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller introduces himself from XYZ Company with a subscription sales pitch; no scam indicators in this line.",
-        "  call   [none] B (protected_person): Caller offers a premium subscription and protected person asks for details; no scam indicators present."
+        "  call   [none] A (caller): Caller introduces a sales offer for a premium subscription with no scam indicators.",
+        "  call   [none] B (protected_person): Caller offers premium subscription deal and protected person asks for details."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1225,11 +1481,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Sales call offering premium software deal, no scam indicators present.",
-        "  call   [none] B (protected_person): Sales call about software with no scam indicators in newest line."
+        "  call   [none] A (caller): Unsolicited sales call offering software deal with no scam indicators.",
+        "  call   [none] B (protected_person): Protected person questions an unsolicited sales call about business software."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1243,11 +1503,15 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces herself as from XYZ Insurance; no scam problem claimed yet.",
-        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as XYZ Insurance, no scam indicators in newest line."
+        "  call   [low] A (caller): Caller introduces herself as from XYZ Insurance with no scam problem claimed yet.",
+        "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
       ],
       "claims": 1,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1261,11 +1525,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller introduces as marketer offering home security deal, no scam indicators present.",
-        "  call   [none] B (protected_person): Marketing call about home security with no scam indicators in newest line."
+        "  call   [none] A (caller): Unsolicited marketing call offering home security system deal, no scam indicators present.",
+        "  call   [none] B (protected_person): Marketing call about home security; protected person questions need."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1279,11 +1547,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Telemarketing call offering windows with no scam indicators",
+        "  call   [none] A (caller): Telemarketing call offering energy-efficient windows with no scam indicators.",
         "  call   [none] B (protected_person): Telemarketing call about windows; protected person questions source of number, no scam indicators present."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1298,10 +1570,14 @@
       "errors": 0,
       "error_samples": [
         "  call   [none] A (caller): Unsolicited marketing call offering home security systems with no scam indicators.",
-        "  call   [none] B (protected_person): Marketing call about home security systems with no scam indicators in newest line."
+        "  call   [none] B (protected_person): Marketing call about home security deal, no scam indicators in newest line."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1312,14 +1588,18 @@
       "stop_turn": null,
       "nudge_turn": null,
       "stop_fraction": null,
-      "judge_calls": 1,
+      "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces themselves as calling from XYZ Insurance.",
+        "  call   [none] A (caller): Caller introduces himself as John from XYZ Insurance with no scam indicators yet.",
         "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
       ],
-      "claims": 1,
-      "unsupported_claims": 0
+      "claims": 0,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1333,11 +1613,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller introduces a sales pitch for a subscription service with no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller offers premium subscription and protected person asks for details, no scam indicators present."
+        "  call   [none] A (caller): Caller introduces sales pitch for premium subscription with no scam indicators.",
+        "  call   [none] B (protected_person): Caller offers premium subscription deal and protected person asks for details, no scam indicators present."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1351,11 +1635,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm phone number; no scam indicators in this line.",
+        "  call   [none] A (caller): Caller verifying phone number; no scam indicators in this line.",
         "  call   [none] B (protected_person): Benign wrong-number exchange with no scam indicators."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1369,11 +1657,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (unknown): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Brief greeting exchange with no scam indicators."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators in this line.",
+        "  call   [none] B (protected_person): Routine call opening with identity check, no scam indicators present."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1387,11 +1679,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller asks to confirm phone number; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller dialed wrong number and recipient corrected the number."
+        "  call   [none] A (caller): Caller greets and asks to confirm phone number; no scam indicators present.",
+        "  call   [none] B (protected_person): Caller misdialed number and recipient corrected them, no scam indicators present."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1405,65 +1701,15 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Call begins with caller verifying phone number, no scam indicators yet.",
-        "  call   [none] B (protected_person): Initial greeting exchange with no scam indicators."
+        "  call   [none] A (unknown): Caller asks to confirm phone number with no scam claims or instructions.",
+        "  call   [none] B (protected_person): Caller asks to confirm phone number and protected person responds asking who is calling."
       ],
       "claims": 0,
-      "unsupported_claims": 0
-    },
-    {
-      "source": "dialogue",
-      "kind": "wrong",
-      "is_scam": false,
-      "turns": 8,
-      "action": "log",
-      "stop_turn": null,
-      "nudge_turn": null,
-      "stop_fraction": null,
-      "judge_calls": 0,
-      "errors": 0,
-      "error_samples": [
-        "  call   [none] A (unknown): Caller greets and asks if speaking to John, no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for John and recipient identifies as Michael, no scam indicators present."
-      ],
-      "claims": 0,
-      "unsupported_claims": 0
-    },
-    {
-      "source": "dialogue",
-      "kind": "wrong",
-      "is_scam": false,
-      "turns": 10,
-      "action": "log",
-      "stop_turn": null,
-      "nudge_turn": null,
-      "stop_fraction": null,
-      "judge_calls": 0,
-      "errors": 0,
-      "error_samples": [
-        "  call   [none] A (caller): Single greeting asking to confirm phone number, no scam indicators present.",
-        "  call   [none] B (protected_person): Caller verifies phone number and protected person asks who is calling, no scam indicators yet."
-      ],
-      "claims": 0,
-      "unsupported_claims": 0
-    },
-    {
-      "source": "dialogue",
-      "kind": "wrong",
-      "is_scam": false,
-      "turns": 10,
-      "action": "log",
-      "stop_turn": null,
-      "nudge_turn": null,
-      "stop_fraction": null,
-      "judge_calls": 0,
-      "errors": 0,
-      "error_samples": [
-        "  call   [none] A (caller): Caller asks to confirm phone number; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller misdialed number and recipient corrected them; no scam indicators present."
-      ],
-      "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1478,28 +1724,14 @@
       "errors": 0,
       "error_samples": [
         "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asked for John and recipient corrected name to Michael with no scam content."
+        "  call   [none] B (protected_person): Caller asked for John and recipient corrected name and asked for caller identity; no scam content present."
       ],
       "claims": 0,
-      "unsupported_claims": 0
-    },
-    {
-      "source": "dialogue",
-      "kind": "wrong",
-      "is_scam": false,
-      "turns": 8,
-      "action": "log",
-      "stop_turn": null,
-      "nudge_turn": null,
-      "stop_fraction": null,
-      "judge_calls": 0,
-      "errors": 0,
-      "error_samples": [
-        "  call   [none] A (caller): Caller confirms phone number; no scam indicators in this line.",
-        "  call   [none] B (unknown): Simple phone number verification with no scam indicators."
-      ],
-      "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     },
     {
       "source": "dialogue",
@@ -1513,11 +1745,103 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller makes initial greeting asking to confirm phone number.",
-        "  call   [none] B (protected_person): Initial call greeting with no scam indicators yet."
+        "  call   [none] A (caller): Single greeting line with no scam indicators.",
+        "  call   [none] B (protected_person): Benign greeting with no scam indicators in newest line."
       ],
       "claims": 0,
-      "unsupported_claims": 0
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 0,
+      "error_samples": [
+        "  call   [none] A (caller): Caller verifying phone number, no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller misdialed and recipient corrects the number; no scam indicators present."
+      ],
+      "claims": 0,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 0,
+      "error_samples": [
+        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators present.",
+        "  call   [none] B (protected_person): Caller asked for John, recipient corrected name to Michael and asked for identification; no scam indicators present."
+      ],
+      "claims": 0,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 0,
+      "error_samples": [
+        "  call   [none] A (caller): Caller asks to confirm phone number with no scam indicators.",
+        "  call   [none] B (unknown): Benign wrong-number exchange with no scam indicators."
+      ],
+      "claims": 0,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "action": "log",
+      "stop_turn": null,
+      "nudge_turn": null,
+      "stop_fraction": null,
+      "judge_calls": 0,
+      "errors": 0,
+      "error_samples": [
+        "  call   [none] A (caller): Single greeting with no scam claims or instructions.",
+        "  call   [none] B (protected_person): Protected person answers and asks who is calling; no scam indicators yet."
+      ],
+      "claims": 0,
+      "unsupported_claims": 0,
+      "reviewed": 0,
+      "confirmed": 0,
+      "retries": 0,
+      "retry_rescued": 0
     }
   ]
 }

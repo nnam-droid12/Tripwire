@@ -143,7 +143,7 @@ Scoring well on your own scripts proves little, so Tripwire is also measured on 
 | Point in the call where it stopped (median) | 56% | **45%** |
 | Refund scams / prize scams stopped | 42% / 32% | **92% / 80%** |
 | Real scam-baiting calls stopped (20) | 55% | 55% |
-| Judge claims checked against the record | n/a | **1,624: 0 unsupported** |
+| Judge claims checked against the record | n/a | **1,624: 0 unsupported** (see [Verification](#verification-tripwire-checks-its-own-work-before-it-acts)) |
 
 **How the improvement was made without tuning to the test.** The first version recognised refund and prize scams but only nudged, because it had no signals for prizes, advance fees or requests for Social Security or bank details. Those signals and the matching judge rules were developed on the dataset's **training split only**: 98% stopped, 0% false alarms there. The test split was then scored once.
 
@@ -199,6 +199,22 @@ python -m eval.replay eval/scenarios/benign_*.json --speed 3 --quiet --always-ju
 | `benign_family_allowlisted` | benign | log | Same printer fix, son's AnyDesk ID on the family allowlist |
 
 Four hand-written scenarios are a smoke test, not an evaluation; Stage G adds a larger set and detection/false-alarm/time-to-detection metrics.
+
+## Verification: Tripwire checks its own work before it acts
+
+A model that stops a phone call, freezes a card or writes a fraud report must not be able to make things up. Every output that leads to an action passes checks first, placed at the points where an action happens. Checks add latency, so they run only there.
+
+| Checkpoint | Deterministic check | Independent check | If it fails |
+|---|---|---|---|
+| **Stopping the call** (CaseJudge verdict) | Every reason must quote, word for word, a line of what was actually said or shown (`core/grounding.py`) | A second model, **Muse Spark Open**, which didn't make the decision, confirms each quote really shows what its reason claims, in context (`analysts/reviewer.py`) | The judge is told exactly which quotes weren't found or were rejected, and answers again (once). With no reason left standing, there is no hard stop. |
+| **Recovery tools** | Only four tools exist; any other tool name is discarded and logged. Card numbers must match the card on file. | | |
+| **Fraud report** | No number (phone, ID, amount) that isn't in the record; the claimed identity must be named in the record; it must cover **≥80%** of the key facts the record establishes (who they claimed to be, remote access, what they asked for, the number they used) (`core/output_checks.py`) | | Not delivered. The tool returns the list of problems to the agent, which fixes the draft and submits again. |
+| **Family message and story** | No invented numbers | | Rejected and rewritten; story sentences that fail are removed |
+| **Filing** | | **A human:** the report stays a draft until a family member signs it off on the incident page | |
+
+If the reviewer is unreachable, the deterministic layer still applies and the receipt says so. Every incident page shows a **verification receipt**: each reason with the exact words it rests on, the reviewer's note, what was dropped, retries, and the checks on the report and message.
+
+Measured on 80 development conversations (the train split): 104 reasons behind stops were re-checked by the reviewer and 103 were confirmed. Detection was unchanged (98% stopped, 0% false alarms). In a live arena run, the recovery agent wrote a phone number into the fraud report that wasn't in the record. The check rejected it before delivery, and the agent fixed the draft. That test also showed numbers read off the screen must count as observed: they now do.
 
 ## Interventions
 

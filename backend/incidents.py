@@ -25,6 +25,7 @@ from backend.highlight import highlight
 from backend.sms import send_sms
 from backend.storage import IncidentStore
 from core.model_client import ModelClient
+from core.output_checks import invented_numbers
 from core.shield import from_incident
 
 PUBLIC_BASE_URL = os.environ.get("TRIPWIRE_PUBLIC_URL", "http://127.0.0.1:8765").rstrip("/")
@@ -73,7 +74,8 @@ def create_incident(
         "created": time.time(),
         "source": source,
         "protected_name": protected_name,
-        "verdict": {**verdict, "family_message": redact_text(verdict.get("family_message", ""))},
+        "verdict": {**verdict, "family_message": redact_text(verdict.get("family_message", "")),
+                    "report": {k: redact_text(str(v)) for k, v in verdict["report"].items()} if verdict.get("report") else None},
         "stage": snapshot.get("stage", 0),
         "stage_name": snapshot.get("stage_name", ""),
         "confidence": snapshot.get("confidence", 0.0),
@@ -123,7 +125,7 @@ def _enrich(incident_id: str) -> None:
             out = name.replace("frame_", "highlight_")
             STORE.put_image(incident_id, out, png)
             highlights.append({"image": out, "frame": name, "labels": sorted({b.label for b in boxes})})
-    narration = narrate(incident)
+    narration = check_narration(narrate(incident), incident)
     STORE.update(incident_id, lambda i: i.update(highlights=highlights, narration=narration))
 
 
@@ -133,6 +135,17 @@ Write what happened during this incident for a worried family member, in plain w
 Reply with one JSON object: {{"title": "<short headline>", "steps": [{{"time": "HH:MM", "text": "<one plain sentence>"}}], "next": ["<what the family member should do now, 2-3 short items>"]}}
 Use 4 to 7 steps, oldest first. Do not include account, card or phone numbers, and do not use internal
 signal names written with underscores (say "a hidden message aimed at AI software", not "ai_directed_text")."""
+
+
+def check_narration(narration: dict[str, Any] | None, incident: dict[str, Any]) -> dict[str, Any] | None:
+    """Drop any sentence of the story that states a number the record does not contain."""
+    if not narration or not narration.get("steps"):
+        return narration
+    record = [t["text"] for t in incident["timeline"]]
+    kept = [s for s in narration["steps"] if isinstance(s, dict) and not invented_numbers(str(s.get("text", "")), record)]
+    narration["verification"] = {"sentences_checked": len(narration["steps"]), "removed": len(narration["steps"]) - len(kept)}
+    narration["steps"] = kept
+    return narration
 
 
 def narrate(incident: dict[str, Any]) -> dict[str, Any] | None:

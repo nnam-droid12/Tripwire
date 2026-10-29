@@ -28,14 +28,14 @@ from analysts.screen_analyst import ScreenAnalyst
 from backend import approvals, shield
 from backend.arena import laptop, scores
 from backend.arena.margaret import Margaret
-from backend.arena.recovery import RecoveryAgent
+from backend.arena.recovery import REJECTED, RecoveryAgent
 from backend.incidents import create_incident
 from core.casefile import CaseFile, CaseUpdate
 from core.config import LOGS_DIR, RUNTIME_DIR
 from core.events import Event, EventBus
-from core.grounding import ground_truth
 from core.guard import is_disable_instruction
 from core.killchain import Stage
+from core.output_checks import check_message, check_report, invented_numbers, observed
 from core.orchestrator import Orchestrator
 from core.policy import Action
 from core.rules import SENSITIVE, Decision, Facts, FamilyRules
@@ -64,6 +64,7 @@ def grounded_contacts(text: str, record: list[str]) -> str:
 
 
 MAX_SECONDS = 8 * 60
+MAX_REJECTIONS = 2  # per tool: after this, the output is delivered with anything unverifiable removed
 
 
 def prewarm_voices() -> None:
@@ -102,6 +103,7 @@ class ArenaSession:
         self.first_line_at: float | None = None
         self.lines = 0
         self.warning_active = False
+        self.report: dict | None = None  # the verified fraud report draft, once written
         self.call_ended = False  # Margaret hung up after the warning; the scammer can no longer reach her
         self.over = False
         self._turn_lock = threading.Lock()
@@ -265,7 +267,8 @@ class ArenaSession:
         if event.source == "judge" and event.kind == "verdict":
             d = event.data
             self.send({"type": "verdict", "is_scam": d["is_scam"], "confidence": d["confidence"], "action": d["action"],
-                       "reasons": [r["reason"] for r in d.get("reasons", [])][:4]})
+                       "reasons": [r["reason"] for r in d.get("reasons", [])][:4], "verification": d.get("verification", {}),
+                       "dropped": len(d.get("verification", {}).get("dropped", []))})
         elif event.source == "decision" and event.kind == "nudge":
             threading.Thread(target=self._nudge, daemon=True).start()
         elif event.source == "decision" and event.kind == "hard_stop":
@@ -309,6 +312,23 @@ class ArenaSession:
     def _recover(self, verdict: dict) -> None:
         self.send({"type": "recovery_start"})
         incident: dict[str, str] = {}
+        rejections: dict[str, int] = {}
+        checks: list[dict] = []  # the recovery half of the verification receipt
+        record = observed(self.case.snapshot())
+
+        def verified(tool: str, result: dict) -> bool:
+            """Record a check; True if the output may be delivered (it passed, or retries are used up)."""
+            checks.append({"tool": tool, **result})
+            self.send({"type": "check", "tool": tool, "ok": result["ok"], "issues": result["issues"][:3], "coverage": result.get("coverage")})
+            if result["ok"]:
+                return True
+            rejections[tool] = rejections.get(tool, 0) + 1
+            return rejections[tool] > MAX_REJECTIONS
+
+        def strip_numbers(text: str) -> str:
+            for n in invented_numbers(text, record):
+                text = text.replace(n, "[removed: not in record]")
+            return text
 
         def execute(tool: str, args: dict) -> str:
             if tool == "end_remote_session":
@@ -325,13 +345,24 @@ class ArenaSession:
                     detail = f"Card ending {CARD_ON_FILE} frozen on the bank's security page."
             elif tool == "draft_fraud_report":
                 report = {k: str(v)[:600] for k, v in args.items()}
-                report["contact_methods"] = grounded_contacts(report.get("contact_methods", ""), ground_truth(self.case.snapshot()))
+                result = check_report(report, self.case.snapshot(), record)
+                if not verified(tool, result):
+                    return f"{REJECTED} by verification, nothing was delivered. Fix: " + "; ".join(result["issues"])
+                report = {k: strip_numbers(v) for k, v in report.items()}
+                report["contact_methods"] = grounded_contacts(report.get("contact_methods", ""), record)
+                report["coverage"] = f"{result['coverage']:.0%}"
+                self.report = report
                 self.send({"type": "report", "report": report})
-                detail = "Draft fraud report prepared for the family to file at reportfraud.ftc.gov."
+                detail = f"Draft fraud report verified ({result['coverage']:.0%} of key facts, no invented numbers); awaiting family sign-off before filing at reportfraud.ftc.gov."
             elif tool == "notify_family":
                 snap = self.case.snapshot()
                 frames = [laptop.png_path(p).read_bytes() for p in dict.fromkeys(self.pages_seen) if p != "bank_freeze"][-3:]
-                verdict_with_msg = {**verdict, "family_message": str(args.get("message", ""))[:400] or verdict.get("family_message", "")}
+                message = str(args.get("message", ""))[:400]
+                if message and not verified(tool, check_message(message, record)):
+                    return f"{REJECTED} by verification, nothing was sent. Fix: " + "; ".join(checks[-1]["issues"])
+                verdict_with_msg = {**verdict, "family_message": strip_numbers(message) or verdict.get("family_message", ""),
+                                    "verification": {**verdict.get("verification", {}), "recovery": list(checks)},
+                                    "report": self.report}
                 incident["id"], incident["link"] = create_incident(verdict_with_msg, snap, frames, "Margaret", redact_frames=False,
                                                                    source="arena", protected_ids=MARGARET_IDS)
                 detail = "Family alerted with a link to the incident."

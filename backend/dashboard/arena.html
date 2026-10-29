@@ -74,6 +74,11 @@
   .verdict ul { margin:4px 0 0; padding-left:18px; }
   .steps div { padding:8px 0; border-top:1px solid var(--line); font-size:14px; }
   .steps .t { font-weight:600; }
+  .receipt { margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); font-size:12.5px; color:var(--muted); }
+  .receipt b { color:var(--tw); font-weight:600; }
+  .receipt .x { color:var(--stop); }
+  .check { font-size:13px; padding:6px 0; border-top:1px solid var(--line); }
+  .check.ok .t { color:var(--tw); } .check.no .t { color:var(--stop); }
   .report { white-space:pre-wrap; font-size:13px; background:var(--bg); border-radius:8px; padding:10px; margin-top:8px; }
   .side > .panel + .panel { margin-top:16px; }
 
@@ -272,9 +277,20 @@ function onCase(m) {
 function onVerdict(m) {
   const d = document.createElement("div");
   d.className = "verdict";
-  d.innerHTML = `<b>CaseJudge:</b> ${m.is_scam ? "scam" : "not a scam"} (${Math.round(m.confidence * 100)}%) → <b>${esc(m.action.replace("_", " "))}</b><ul>${m.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>`;
+  d.innerHTML = `<b>CaseJudge:</b> ${m.is_scam ? "scam" : "not a scam"} (${Math.round(m.confidence * 100)}%) → <b>${esc(m.action.replace("_", " "))}</b><ul>${m.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>${receipt(m.verification || {})}`;
   $("verdicts").prepend(d);
   if (!stopped && m.action === "log") setState("Watching", "--tw");
+}
+
+// the verification receipt: what was checked before Tripwire was allowed to act
+function receipt(v) {
+  if (!v.quotes_checked) return "";
+  const parts = [`<b>✓ ${v.quotes_found}/${v.quotes_checked}</b> quotes found word for word in the call record`];
+  if (v.reviewed) parts.push(`<b>✓ ${v.confirmed}/${v.reviewed}</b> confirmed by an independent model (${esc(v.reviewer)})`);
+  else if (String(v.reviewer || "").startsWith("unavailable")) parts.push(`second check ${esc(v.reviewer)}: evidence check still applied`);
+  if (v.attempts > 1) parts.push(`sent back to the judge with feedback ${v.attempts - 1}×`);
+  const dropped = (v.dropped || []).map(x => `<div class="x">✗ dropped: ${esc(x.reason)} (${esc(x.why)})</div>`).join("");
+  return `<div class="receipt">Verification · ${parts.join(" · ")}${dropped}</div>`;
 }
 
 // ---- the game ----------------------------------------------------------------------
@@ -344,9 +360,21 @@ function handle(m) {
       if (m.tool === "end_remote_session" || m.tool === "freeze_card") $("warning").classList.remove("on"); // show the agent working on her screen
       break;
     }
+    case "check": {
+      const d = document.createElement("div");
+      d.className = `check ${m.ok ? "ok" : "no"}`;
+      const what = TOOLS[m.tool] || m.tool;
+      d.innerHTML = m.ok
+        ? `<span class="t">✓ Verified before sending:</span> ${esc(what)}${m.coverage != null ? ` · covers ${Math.round(m.coverage * 100)}% of the key facts` : ""} · no invented numbers`
+        : `<span class="t">✗ Verification rejected:</span> ${esc(what)}, sent back to the agent to fix<br><span class="small">${m.issues.map(esc).join("<br>")}</span>`;
+      $("steps").appendChild(d);
+      break;
+    }
     case "report": {
       const r = m.report;
-      $("report").innerHTML = `<div class="report"><b>Draft fraud report</b> (for reportfraud.ftc.gov and the bank)\n\nWhat happened: ${esc(r.summary)}\nScammer claimed to be: ${esc(r.scammer_claimed_to_be)}\nContact used: ${esc(r.contact_methods || "not recorded")}\nMoney lost: ${esc(r.money_lost)}</div>`;
+      $("report").innerHTML = `<div class="report"><b>Draft fraud report</b> (for reportfraud.ftc.gov and the bank)\n\nWhat happened: ${esc(r.summary)}\nScammer claimed to be: ${esc(r.scammer_claimed_to_be)}\nContact used: ${esc(r.contact_methods || "not recorded")}\nMoney lost: ${esc(r.money_lost)}
+
+Status: draft, awaiting the family's sign-off before anything is filed.</div>`;
       break;
     }
     case "recovery_done":

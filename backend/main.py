@@ -234,6 +234,20 @@ def get_incident(incident_id: str, k: str = Query("")) -> dict[str, Any]:
     return _public(_load_incident(incident_id, k))
 
 
+@app.post("/api/incidents/{incident_id}/report/signoff")
+def sign_off_report(incident_id: str, k: str = Query("")) -> dict[str, Any]:
+    """The human in the loop: the recovery agent's fraud report stays a draft until a family member signs it off."""
+    incident = _load_incident(incident_id, k)
+    if not incident["verdict"].get("report"):
+        raise HTTPException(404)
+
+    def sign(i: dict[str, Any]) -> None:
+        i["verdict"]["report"].setdefault("signed_off_at", time.time())
+
+    STORE.update(incident_id, sign)
+    return {"ok": True}
+
+
 @app.get("/api/incidents/{incident_id}/image/{name}")
 def get_image(incident_id: str, name: str, k: str = Query("")) -> Response:
     _load_incident(incident_id, k)

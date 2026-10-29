@@ -26,6 +26,16 @@
   details summary { cursor:pointer; color:var(--muted); }
   .badge { font-size:13px; font-weight:600; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:2px 10px; margin-left:8px; vertical-align:middle; }
   .sms { background:var(--bg); border-radius:16px 16px 16px 4px; padding:12px 16px; max-width:520px; overflow-wrap:anywhere; }
+  .why li { padding:10px 0; border-top:1px solid var(--line); list-style:none; }
+  .why li:first-child { border-top:0; }
+  .why ul { padding:0; margin:0; }
+  .quote { display:block; margin-top:4px; padding-left:10px; border-left:3px solid var(--line); color:var(--muted); font-size:15px; font-style:italic; }
+  .ok { color:#1f7a4d; font-weight:600; } .no { color:var(--alert); font-weight:600; }
+  @media (prefers-color-scheme: dark) { .ok { color:#4cbf86; } }
+  .checks { margin:12px 0 0; padding:0; list-style:none; font-size:15px; }
+  .checks li { padding:4px 0; }
+  .report { background:var(--bg); border-radius:10px; padding:14px 16px; white-space:pre-wrap; font-size:16px; }
+  button { font:inherit; font-weight:600; border:0; border-radius:10px; padding:12px 18px; background:var(--ink); color:var(--card); cursor:pointer; margin-top:12px; }
   .log { font:13px/1.5 Consolas, monospace; white-space:pre-wrap; overflow-wrap:anywhere; margin-top:10px; }
 </style>
 </head>
@@ -40,6 +50,12 @@
   <section class="card"><h2>What was on the screen</h2><div id="shots" class="muted">Preparing screenshots…</div>
     <p class="muted">Account and card numbers were blacked out on the computer before anything was sent.</p></section>
   <section class="card"><h2>What happened</h2><ol class="steps" id="steps"><li class="muted">Writing the summary…</li></ol></section>
+  <section class="card why" id="why-card" hidden><h2>Why Tripwire acted, and how it checked itself</h2>
+    <ul id="why"></ul><ul class="checks" id="checks"></ul></section>
+  <section class="card" id="report-card" hidden><h2>Draft fraud report <span class="badge" id="report-badge"></span></h2>
+    <div class="report" id="report"></div>
+    <button id="signoff" hidden>I've read it: sign off</button>
+    <p class="muted" id="report-note">Nothing is filed until you sign off. File it at reportfraud.ftc.gov and with the bank.</p></section>
   <section class="card" id="sms-card" hidden><h2>Text message to the family <span class="badge" id="sms-badge"></span></h2>
     <div class="sms" id="sms-body"></div></section>
   <section class="card"><details><summary>Full record</summary><div class="log" id="log"></div></details></section>
@@ -77,6 +93,32 @@ async function load() {
     document.getElementById("next-card").hidden = false;
     document.getElementById("next").innerHTML = n.next.map(x => `<li>${esc(x)}</li>`).join("");
   }
+  // why Tripwire acted: each reason with the exact words it rests on, and every check it passed
+  const v = i.verdict.verification || {};
+  const reasons = i.verdict.reasons || [];
+  if (reasons.length) {
+    document.getElementById("why-card").hidden = false;
+    document.getElementById("why").innerHTML = reasons.map(r => `<li>${esc(r.reason)}<span class="quote">“${esc(r.source || r.evidence)}”</span>${r.review ? `<span class="muted">Independent check: ${esc(r.review)}</span>` : ""}</li>`).join("");
+    const checks = [];
+    if (v.quotes_checked) checks.push(`<span class="ok">✓</span> ${v.quotes_found} of ${v.quotes_checked} quoted lines were found word for word in what was actually said and shown. Anything else was thrown away.`);
+    if (v.reviewed) checks.push(`<span class="ok">✓</span> ${v.confirmed} of ${v.reviewed} reasons were confirmed by a second, independent AI model that did not make the decision.`);
+    if (v.attempts > 1) checks.push(`<span class="ok">↻</span> The first answer failed these checks; it was sent back with the problems listed and corrected.`);
+    for (const c of v.recovery || []) checks.push(`${c.ok ? '<span class="ok">✓</span>' : '<span class="no">✗</span>'} ${c.tool === "notify_family" ? "Family message" : "Fraud report"}: ${c.ok ? "checked before sending" + (c.coverage != null ? `, covers ${Math.round(c.coverage * 100)}% of the key facts` : "") + ", no invented numbers" : "rejected and sent back to be fixed: " + esc(c.issues.join("; "))}`);
+    if (n && n.verification) checks.push(`<span class="ok">✓</span> The story above was checked sentence by sentence for numbers not in the record (${n.verification.removed} removed).`);
+    document.getElementById("checks").innerHTML = checks.map(c => `<li>${c}</li>`).join("");
+  }
+  const rep = i.verdict.report;
+  if (rep) {
+    document.getElementById("report-card").hidden = false;
+    document.getElementById("report").textContent = `What happened: ${rep.summary || ""}
+They claimed to be: ${rep.scammer_claimed_to_be || ""}
+How they made contact: ${rep.contact_methods || "not recorded"}
+Money lost: ${rep.money_lost || ""}`;
+    const signed = !!rep.signed_off_at;
+    document.getElementById("report-badge").textContent = signed ? "Signed off" : `Verified draft${rep.coverage ? " · " + rep.coverage + " of key facts" : ""}`;
+    document.getElementById("signoff").hidden = signed;
+    if (signed) document.getElementById("report-note").textContent = `Signed off ${new Date(rep.signed_off_at * 1000).toLocaleString()}. Ready to file at reportfraud.ftc.gov and with the bank.`;
+  }
   if (i.sms) {
     document.getElementById("sms-card").hidden = false;
     document.getElementById("sms-badge").textContent = i.sms.sent ? "Sent" : "Demo mode: not sent";
@@ -85,6 +127,10 @@ async function load() {
   document.getElementById("log").textContent = i.timeline.map(t => `${hhmm(t.ts)} [${t.source}] ${t.text}`).join("\n");
   if (!n) setTimeout(load, 3000); // narration and highlights are still being prepared
 }
+document.getElementById("signoff").onclick = async () => {
+  const r = await fetch(`/api/incidents/${id}/report/signoff?k=${encodeURIComponent(key)}`, { method: "POST" });
+  if (r.ok) load();
+};
 load();
 </script>
 </body>

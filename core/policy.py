@@ -47,6 +47,7 @@ class Verdict:
     tier1_confidence: float = 0.0
     ts: float = field(default_factory=time.time)
     unsupported: list[dict[str, str]] = field(default_factory=list)  # reasons dropped: their quote was not in the record
+    verification: dict[str, Any] = field(default_factory=dict)  # the receipt: what was checked, by whom, and what was dropped
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -59,6 +60,7 @@ class Verdict:
             "tier1_confidence": self.tier1_confidence,
             "ts": self.ts,
             "unsupported": self.unsupported,
+            "verification": self.verification,
         }
 
 

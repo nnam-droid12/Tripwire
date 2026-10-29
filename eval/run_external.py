@@ -123,8 +123,13 @@ def run_one(conv: Conversation) -> dict:
         "action": orch.action.label, "stop_turn": stop_turn, "nudge_turn": nudge_turn,
         "stop_fraction": round(stop_turn / len(conv.turns), 2) if stop_turn else None,
         "judge_calls": len(orch.verdicts), "errors": errors, "error_samples": errs[:2],
-        "claims": sum(len(v.reasons) + len(v.unsupported) for v in orch.verdicts),
-        "unsupported_claims": sum(len(v.unsupported) for v in orch.verdicts),
+        "claims": sum(v.verification.get("quotes_checked", len(v.reasons) + len(v.unsupported)) for v in orch.verdicts),
+        "unsupported_claims": sum(v.verification.get("quotes_checked", 0) - v.verification.get("quotes_found", 0) if v.verification
+                                  else len(v.unsupported) for v in orch.verdicts),
+        "reviewed": sum(v.verification.get("reviewed", 0) for v in orch.verdicts),
+        "confirmed": sum(v.verification.get("confirmed", 0) for v in orch.verdicts),
+        "retries": sum(max(0, v.verification.get("attempts", 1) - 1) for v in orch.verdicts),
+        "retry_rescued": sum(v.verification.get("attempts", 1) > 1 and bool(v.reasons) for v in orch.verdicts),
     }
 
 
@@ -157,6 +162,8 @@ def summarize(rows: list[dict]) -> dict:
     out["errors"] = sum(r["errors"] for r in rows)
     out["claims"] = sum(r.get("claims", 0) for r in rows)
     out["unsupported_claims"] = sum(r.get("unsupported_claims", 0) for r in rows)  # discarded by the evidence check
+    for key in ("reviewed", "confirmed", "retries", "retry_rescued"):  # the independent reviewer and the retry loop
+        out[key] = sum(r.get(key, 0) for r in rows)
     return out
 
 
@@ -177,6 +184,9 @@ def to_markdown(s: dict, meta: dict) -> str:
     for kind, k in s["by_kind"].items():
         lines.append(f"| {kind} | {'scam' if k['is_scam'] else 'legitimate'} | {pct(k['hard_stop_rate'])} | {pct(k['nudge_rate'])} |")
     lines += ["", f"Judge claims checked against the record: {s['claims']}. Quotes not found in the record, discarded before any action: {s['unsupported_claims']}."]
+    if s.get("reviewed"):
+        lines.append(f"Reasons behind a stop re-checked by the independent reviewer: {s['reviewed']}, confirmed: {s['confirmed']}. "
+                     f"Verdicts sent back to the judge with feedback: {s['retries']}, of which passed on the retry: {s['retry_rescued']}.")
     return "\n".join(lines) + "\n"
 
 
