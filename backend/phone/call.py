@@ -44,6 +44,44 @@ PRE_ROLL = 15  # frames kept from before the onset, so the first syllable isn't 
 MAX_FRAMES = 1000  # 20 s: a monologue is cut into turns
 
 
+class Utterances:
+    """One side of a call, as text: detects each utterance in the audio and transcribes it on its own."""
+
+    def __init__(self, on_text: Callable[[str], None], on_error: Callable[[str], None] = lambda _: None) -> None:
+        self.on_text, self.on_error = on_text, on_error
+        self._asr: MuseTranscriber | None = None  # the open utterance, if this side is speaking
+        self._recent: deque[bytes] = deque(maxlen=PRE_ROLL)
+        self._loud = self._quiet = self._frames = 0
+
+    def frame(self, mulaw: bytes) -> None:
+        """One 20 ms frame of 8 kHz mu-law."""
+        level = energy(mulaw)
+        if self._asr is None:
+            self._recent.append(mulaw)
+            self._loud = self._loud + 1 if level > SPEECH_RMS else 0
+            if self._loud >= START_FRAMES:
+                self._asr = MuseTranscriber(self._heard, mode="PUSH_TO_TALK", paced=True, on_error=self.on_error)
+                self._asr.start()
+                self._asr.feed(phone_to_asr(b"".join(self._recent)))
+                self._recent.clear()
+                self._quiet = self._frames = 0
+            return
+        self._asr.feed(phone_to_asr(mulaw))
+        self._frames += 1
+        self._quiet = self._quiet + 1 if level < SILENCE_RMS else 0
+        if self._quiet >= END_FRAMES or self._frames >= MAX_FRAMES:
+            self.end()
+
+    def end(self) -> None:
+        asr, self._asr = self._asr, None
+        self._loud = 0
+        if asr:
+            threading.Thread(target=asr.close, daemon=True).start()  # the final transcript arrives via _heard
+
+    def _heard(self, turn: TranscriptTurn) -> None:
+        threading.Thread(target=self.on_text, args=(turn.text,), daemon=True).start()
+
+
 def speech(who: str, text: str) -> bytes:
     """8 kHz mu-law samples for one line (cached on disk)."""
     return wav_payload(PHONE_VOICES[who].synthesize(text).read_bytes())
@@ -61,9 +99,7 @@ class PhoneLine:
         self._played = threading.Condition()
         self._marks = 0
         self.closed = False
-        self._asr: MuseTranscriber | None = None  # the open utterance, if the caller is speaking
-        self._recent: deque[bytes] = deque(maxlen=PRE_ROLL)
-        self._loud = self._quiet = self._frames = 0
+        self.caller = Utterances(on_turn, on_error)
         self._speaker = threading.Thread(target=self._speak_loop, name="phone-speaker", daemon=True)
 
     def start(self) -> None:
@@ -72,35 +108,8 @@ class PhoneLine:
     # -- caller -> Tripwire ------------------------------------------------------------
 
     def caller_audio(self, mulaw_b64: str) -> None:
-        """One 20 ms frame from the caller: detect utterances and stream each to the ASR."""
-        if self.closed:
-            return
-        frame = base64.b64decode(mulaw_b64)
-        level = energy(frame)
-        if self._asr is None:
-            self._recent.append(frame)
-            self._loud = self._loud + 1 if level > SPEECH_RMS else 0
-            if self._loud >= START_FRAMES:
-                self._asr = MuseTranscriber(self._heard, mode="PUSH_TO_TALK", paced=True, on_error=self.on_error)
-                self._asr.start()
-                self._asr.feed(phone_to_asr(b"".join(self._recent)))
-                self._recent.clear()
-                self._quiet = self._frames = 0
-            return
-        self._asr.feed(phone_to_asr(frame))
-        self._frames += 1
-        self._quiet = self._quiet + 1 if level < SILENCE_RMS else 0
-        if self._quiet >= END_FRAMES or self._frames >= MAX_FRAMES:
-            self._end_utterance()
-
-    def _end_utterance(self) -> None:
-        asr, self._asr = self._asr, None
-        self._loud = 0
-        if asr:
-            threading.Thread(target=asr.close, daemon=True).start()  # the final transcript arrives via _heard
-
-    def _heard(self, turn: TranscriptTurn) -> None:
-        threading.Thread(target=self.on_turn, args=(turn.text,), daemon=True).start()
+        if not self.closed:
+            self.caller.frame(base64.b64decode(mulaw_b64))
 
     # -- Tripwire -> caller ------------------------------------------------------------
 
@@ -161,4 +170,4 @@ class PhoneLine:
             return
         self.closed = True
         self._lines.put(None)
-        self._end_utterance()
+        self.caller.end()

@@ -112,9 +112,9 @@
 <header class="hero">
   <div class="wrap split">
     <div>
-      <span class="eyebrow">Scam protection for older adults, on Windows</span>
+      <span class="eyebrow">Scam protection for older adults, on any phone and on Windows</span>
       <h1>Stops the scam while it's <em>still a phone call</em>.</h1>
-      <p class="lead">Tripwire runs quietly on your parent's computer. It watches the screen, listens to calls on speakerphone, and steps in before the money moves: a calm word first, then a hard stop. Then it secures their accounts and tells you what happened.</p>
+      <p class="lead">Tripwire listens to your parent's calls, on any phone with nothing to install, and on their computer it also watches the screen. It steps in before the money moves, ends the scam, secures their accounts and tells you what happened.</p>
       <div class="cta">
         <a class="btn primary" href="#setup">Get Tripwire</a>
         <a class="btn" href="/arena">Try the live demo →</a>
@@ -172,6 +172,19 @@
       <div class="card"><h3>Holds the payment, asks the family</h3><p>Before a wire, gift cards or crypto during a call with a stranger, Tripwire checks with your parent, holds the payment, or stops it, by rules you choose. Held payments wait for your Approve or Deny.</p></div>
       <div class="card"><h3>Private by design</h3><p>Redaction on the device, fail-closed. Screenshots and audio deleted after 24 hours. A visible tray icon and a consent screen: a tool the person chose, not spyware.</p></div>
     </div>
+  </div>
+</section>
+
+<section class="alt" id="phone">
+  <div class="wrap">
+    <h2>On any phone. Nothing to install.</h2>
+    <p class="sub">Most scams start with a phone call, and phone apps aren't allowed to hear calls, on iPhone or on Android. So Tripwire works on the phone line itself. It protects an iPhone, a Samsung, a Pixel or a landline the same way, and your parent doesn't install or learn anything.</p>
+    <div class="grid3">
+      <div class="card"><span class="k">Before it rings</span><h3>Known scammers, flagged</h3><p>The caller's number is checked against Community Shield. If it was used in scams stopped in other homes, your parent hears a private warning before the call connects, one the caller can't hear.</p></div>
+      <div class="card"><span class="k">During the call</span><h3>Both sides, understood</h3><p>Each side of the call is transcribed live by Muse Voice Transcribe and runs through the same detection as the computer: kill chain, Sentinel, the CaseJudge, verification.</p></div>
+      <div class="card"><span class="k">When it's sure</span><h3>The scammer is cut off</h3><p>Tripwire takes your parent out of the call, tells them in a calm voice what happened and what to do, and leaves the scammer on a dead line. You get the incident page; every home learns the number.</p></div>
+    </div>
+    <p class="sub" id="call-margaret" hidden style="margin-top:16px"></p>
   </div>
 </section>
 
@@ -269,6 +282,12 @@ fetch("/api/shield").then(r => r.json()).then(s => {
   document.getElementById("shield-count").textContent = s.indicators;
   document.getElementById("shield-recent").innerHTML = s.recent.map(i =>
     `<div class="r"><code>${i.display}</code> · ${i.kind === "phone" ? "callback number" : i.kind === "remote_id" ? "remote-access ID" : "crypto address"} · reported ${i.reports}×</div>`).join("");
+}).catch(() => {});
+fetch("/api/phone").then(r => r.json()).then(p => {
+  if (!p.number) return;
+  const el = document.getElementById("call-margaret");
+  el.innerHTML = `<b>Try it from your own phone:</b> call <a href="tel:${p.number}">${p.display}</a> and try to scam Margaret. Tripwire will be listening.`;
+  el.hidden = false;
 }).catch(() => {});
 fetch("/api/results").then(r => r.json()).then(R => {
   const L = R.latest?.summary, E = R.external?.summary, B = R.external_baseline?.summary, F = R.frames?.summary;

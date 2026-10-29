@@ -158,7 +158,7 @@ class Orchestrator:
         if signal:
             self.case.add_signals(event.source, [(signal, summary)], ts=event.ts)
 
-    def _check_shield(self, *texts: str) -> None:
+    def check_shield(self, *texts: str) -> None:
         """Exact matches against identifiers reported in other homes' stopped scams: ground truth, not a model."""
         if not self.shield:
             return
@@ -186,7 +186,7 @@ class Orchestrator:
     def _analyze_frame(self, event: Event) -> None:
         finding = self.screen.analyze(Path(event.data["path"]))
         self.case.note("screen", finding.description, finding.risk, ts=event.ts)
-        self._check_shield(finding.description, *(evidence for _, evidence in finding.signals))
+        self.check_shield(finding.description, *(evidence for _, evidence in finding.signals))
         self.log(f"  screen [{finding.risk}] {finding.description}")
         self.case.add_brands("screen", finding.brands, ts=event.ts)
         self.case.add_signals("screen", finding.signals, ts=event.ts)
@@ -196,7 +196,7 @@ class Orchestrator:
         finding = self.call.analyze(speaker, text)
         role = finding.roles.get(speaker or "", "unknown")
         self.case.note("call", f"{speaker or '?'} ({role}): {text}", finding.risk, ts=event.ts)
-        self._check_shield(text)
+        self.check_shield(text)
         self.log(f"  call   [{finding.risk}] {speaker or '?'} ({role}): {finding.note}")
         self.case.add_brands("call", finding.brands, ts=event.ts)
         self.case.add_signals("call", finding.signals, ts=event.ts)

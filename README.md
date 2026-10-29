@@ -1,10 +1,18 @@
 # Tripwire
 
-Tripwire is an AI agent that runs on an older person's Windows laptop. It watches the screen and listens to a speakerphone call, and it stops a tech-support, refund or impersonation scam **while the scam is happening**.
+Tripwire is an AI agent that stops tech-support, refund and impersonation scams against older people **while the scam is happening**. It works in two places:
+
+- **On any phone, with no app**: iPhone, Android or landline. Tripwire works on the phone line itself: it hears both sides of the call, warns the person privately, and cuts the scammer off. See [On any phone](#on-any-phone-the-tripwire-phone-line).
+- **On a Windows computer**, where it also watches the screen: fake virus pop-ups, remote-access tools, banking opened under a stranger's control.
 
 Built for the Meta Global AI Developer Hackathon (indie track). Everything in this repository was written during the event.
 
-**At a glance:** on 12 replayed scenarios (5 scams, 7 benign look-alikes, 2 runs each), Tripwire stopped **every scam** with **zero false alarms**, a median of **27 s** after the first sign. Half of the scams were stopped **before money was asked for**. See [Results](#results).
+**At a glance:**
+- **Third-party phone calls** (scored once, on calls we didn't write): **100%** of 160 scam calls stopped with **0%** false alarms on 160 legitimate calls, and **95%** of 20 real recorded scam calls.
+- **Scripted whole sessions:** every scam stopped, a median of **21.8 s** after the first sign, **88%** of them before money was asked for.
+- **No action without evidence:** no stop has ever been taken on a claim that failed verification.
+
+See [Results](#results).
 
 ### Meta tools, and what each one does here
 
@@ -15,6 +23,31 @@ Built for the Meta Global AI Developer Hackathon (indie track). Everything in th
 | **Muse Voice Transcribe** | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode), and push-to-talk transcription of the scammer in the arena |
 | **SAM 3.1** | Outlines the threat (the fake warning, the scammer's number) on already-redacted screenshots for the family |
 | **Muse Image** | Generated the synthetic scam and look-alike screens used to evaluate the screen analyst |
+
+## On any phone: the Tripwire phone line
+
+Phone apps can't hear calls: iPhone and Android both block it. So the phone version of Tripwire works on the phone line instead (Twilio Programmable Voice + Media Streams), and protects any phone with nothing installed.
+
+**Protecting a person** (`backend/phone/guard_line.py`). Calls reach Tripwire's number first. In practice, unknown callers are forwarded to it, for example with iPhone's "Silence Unknown Callers" plus carrier no-answer forwarding. Then:
+
+1. **Before it rings:** the caller's number is checked against [Community Shield](#community-shield). The caller hears "This call is protected by Tripwire, and may be monitored to prevent fraud." The protected person picks up and hears a private whisper before the call connects: a warning if the number was reported in other homes' stopped scams, otherwise "Tripwire is listening to protect you."
+2. **During the call:** both sides stream to Tripwire (`both_tracks`). Each side is cut into utterances on the telephone audio and transcribed by Muse Voice Transcribe, the caller as speaker A and the protected person as B. The lines run through the same pipeline as the computer: CallAnalyst, kill-chain CaseFile, Sentinel, CaseJudge, verification, policy.
+3. **On a hard stop:** Tripwire redirects the protected person's leg of the call (Twilio REST) to a spoken explanation in its own voice, then hangs up, leaving the scammer on a dead line. The family gets the incident page, and Community Shield learns the scammer's number from the caller ID.
+
+There are no spoken nudges on this line: Twilio can't speak into a connected two-way call without breaking the bridge, so on the phone Tripwire only steps in when it is sure.
+
+**Call Margaret** (`backend/phone/margaret_line.py`). The arena game below, over a real phone call: phone Tripwire's number and try to scam Margaret by voice. Margaret answers in her own voice, Tripwire listens, and when it stops you, its warning cuts in over Margaret mid-sentence. She says she's hanging up, and the line goes dead.
+
+**How the line is built:**
+
+| Piece | How |
+|---|---|
+| Telephone audio | 8 kHz G.711 mu-law in both directions. Decoded and upsampled to 24 kHz PCM for the ASR; voices synthesized directly as 8 kHz mu-law (Chirp 3 HD) |
+| Turn-taking | Speech is detected on the phone audio, and each utterance gets its own push-to-talk ASR session. The text arrives about 1 s after the caller stops; a continuous session waited about 10 s for a long silence. |
+| Security | Every webhook checks Twilio's `X-Twilio-Signature`. Media streams need a one-time token that only a signed webhook hands out. In the Margaret game, the caller's own number is never stored or added to Community Shield. |
+| Cost control | Demo calls share the arena's limit of 4 games at once and 8 minutes each, plus a daily cap on minutes. A protected person's line is never capped. |
+
+Both modes were tested end to end with simulated Twilio streams (synthesized voices in, audio out, Twilio REST stubbed). The live number is the last step: Twilio's 2026 trial accounts can't own a number or use Media Streams, and buying one needs an identity check.
 
 ## Try it now: "Can you scam Margaret?"
 
@@ -273,6 +306,12 @@ The second command replays the scam with real interventions, using Notepad as a 
 | Deny | Any payment while someone else controls the computer |
 
 The rules (`core/rules.py`) cannot hallucinate, and they work alongside the CaseJudge: the stricter of the two always wins, and neither can relax the other.
+
+## Community Shield
+
+When Tripwire stops a scam, the scammer's own identifiers join Community Shield (`core/shield.py`, `backend/shield.py`): the callback number on a fake pop-up, the remote-access ID they connected from, the crypto address they wanted paid, and, on the phone line, their caller ID. When any of them shows up again on any protected screen, call or phone line, Tripwire flags it instantly as `known_scam_indicator`. That flag is an exact match against real reports, so the judge can cite it as evidence.
+
+Only the scammer's side is ever learned. The protected person's own words are skipped, remote-access IDs are taken only from the screen or connection data (a victim reads out her own), and the protected person's own numbers are excluded. No names, account numbers or conversation content are shared.
 
 ## Privacy and family alerts
 

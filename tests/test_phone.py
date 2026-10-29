@@ -64,3 +64,35 @@ def test_each_utterance_gets_its_own_asr_session(monkeypatch):
     for _ in range(100):  # silence alone never opens a session
         line.caller_audio(quiet)
     assert len(sessions) == 2
+
+
+def test_guard_stop_takes_the_protected_person_out_of_the_call(monkeypatch):
+    from backend.phone import guard_line, twilio_api
+
+    redirected, incidents = [], []
+    monkeypatch.setattr(twilio_api, "child_calls", lambda parent: ["CAchild"] if parent == "CAparent" else [])
+    monkeypatch.setattr(twilio_api, "redirect", lambda sid, twiml: redirected.append((sid, twiml)))
+    monkeypatch.setattr(guard_line, "voice_clip", lambda who, text: "clip")
+    monkeypatch.setattr(guard_line, "create_incident", lambda *a, **k: incidents.append(k) or ("id", "link"))
+    monkeypatch.setattr(guard_line.sentinel_client, "shared", lambda: None)
+    guard = guard_line.GuardCall("CAparent", "+15550134477", "+1 (555) 000-1111", "Dorothy")
+    guard._stop({"reasons": []})
+    guard._stop({"reasons": []})  # a second hard stop does nothing
+    assert len(redirected) == 1
+    sid, twiml = redirected[0]
+    assert sid == "CAchild" and "/arena/voice/clip.mp3" in twiml and twiml.endswith("<Hangup/></Response>")
+    assert incidents[0]["protected_ids"] == {"5550001111"} and incidents[0]["source"] == "phone"
+    assert guard.audio("inbound", b"\xff" * 160) is None  # nothing is analysed after the stop
+
+
+def test_daily_minutes_cap(monkeypatch, tmp_path):
+    from backend.phone import usage
+    from backend.storage import LocalStore
+
+    monkeypatch.setattr(usage.STORE, "backend", LocalStore(tmp_path))
+    monkeypatch.setenv("TRIPWIRE_PHONE_DAILY_MINUTES", "1")
+    assert usage.allowed()
+    usage.add(45)
+    assert usage.allowed()
+    usage.add(30)
+    assert not usage.allowed() and usage.today()["calls"] == 2

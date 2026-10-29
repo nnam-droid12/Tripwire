@@ -169,6 +169,15 @@ def results() -> dict[str, Any]:
     return out
 
 
+@app.get("/api/phone")
+def phone_info() -> dict[str, str]:
+    """The public demo number, once one is set up (``TRIPWIRE_PHONE_NUMBER``)."""
+    number = os.environ.get("TRIPWIRE_PHONE_NUMBER", "")
+    digits = re.sub(r"\D", "", number)[-10:]
+    display = f"+1 ({digits[:3]}) {digits[3:6]}-{digits[6:]}" if len(digits) == 10 else number
+    return {"number": number, "display": display}
+
+
 @app.get("/api/progress")
 def get_progress() -> dict[str, Any]:
     raw = STORE.backend.get_bytes(PROGRESS_KEY)
