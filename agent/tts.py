@@ -44,15 +44,17 @@ class GoogleVoice:
     """Synthesize text to a cached 24 kHz audio file with Google Cloud TTS.
 
     WAV (LINEAR16) for the desktop agent, which plays it with ``winsound``;
-    MP3 for the web arena, which streams it to the browser.
+    MP3 for the web arena, which streams it to the browser; 8 kHz MULAW (in a
+    WAV container) for phone calls.
     """
 
-    def __init__(self, voice: str = VOICE, rate: float = SPEAKING_RATE, cache_dir: Path = CACHE_DIR, encoding: str = "LINEAR16") -> None:
-        self.voice, self.rate, self.cache_dir, self.encoding = voice, rate, cache_dir, encoding
+    def __init__(self, voice: str = VOICE, rate: float = SPEAKING_RATE, cache_dir: Path = CACHE_DIR, encoding: str = "LINEAR16",
+                 sample_rate: int = 24000) -> None:
+        self.voice, self.rate, self.cache_dir, self.encoding, self.sample_rate = voice, rate, cache_dir, encoding, sample_rate
         self._creds = None
 
     def path_for(self, text: str) -> Path:
-        digest = hashlib.sha256(f"{self.voice}|{self.rate}|{self.encoding}|{text}".encode()).hexdigest()[:24]
+        digest = hashlib.sha256(f"{self.voice}|{self.rate}|{self.encoding}|{self.sample_rate}|{text}".encode()).hexdigest()[:24]
         return self.cache_dir / f"{digest}{'.mp3' if self.encoding == 'MP3' else '.wav'}"
 
     def synthesize(self, text: str) -> Path:
@@ -64,7 +66,7 @@ class GoogleVoice:
         body = {
             "input": {"text": text},
             "voice": {"languageCode": self.voice[:5], "name": self.voice},
-            "audioConfig": {"audioEncoding": self.encoding, "sampleRateHertz": 24000, "speakingRate": self.rate},
+            "audioConfig": {"audioEncoding": self.encoding, "sampleRateHertz": self.sample_rate, "speakingRate": self.rate},
         }
         resp = requests.post(TTS_URL, json=body, headers=self._headers(), timeout=20)
         resp.raise_for_status()

@@ -40,6 +40,7 @@ from backend import approvals, shield
 from backend.arena import laptop, scores
 from backend.arena.session import VOICE_DIR, ArenaSession, prewarm_voices
 from backend.incidents import STORE, create_incident, decode_frames
+from backend.phone.routes import make_router as make_phone_router
 from core.config import RUNTIME_DIR
 
 BACKEND_DIR = RUNTIME_DIR / "backend"
@@ -76,6 +77,7 @@ KEYS = load_keys()
 app = FastAPI(title="Tripwire", docs_url=None, redoc_url=None)
 _status: dict[str, Any] = {"state": "offline", "updated": 0}
 _arena_games = asyncio.Semaphore(MAX_ARENA_GAMES)
+app.include_router(make_phone_router(_arena_games))  # Call Margaret: the same game over a real phone call
 
 
 # -- models ------------------------------------------------------------------------------
