@@ -1,6 +1,42 @@
 # Tripwire
 
-Tripwire is an AI agent that stops tech-support, refund and impersonation scams against older people **while the scam is happening**. It works in two places:
+## Why we built it: a call, a warrant, and $158,000 in gold
+
+In October 2026, a retired couple in Douglas County, Nebraska got a call from a "federal agent". There was a warrant, he said, and their money was at risk. Over the following days their retirement savings were withdrawn, turned into **gold bars worth $158,000**, and handed to a courier who came to the house. The gold was only recovered because the sheriff's fraud investigator followed it to Sterling, Illinois ([Hoodline](https://hoodline.com/2026/10/douglas-county-detective-chases-down-158k-in-scammed-gold-to-illinois)).
+
+It wasn't a one-off. The same year:
+
+- A retired couple in Covina, California lost about **$845,000** over several months to people posing as postal workers and then the FBI, including a loan taken out on the home they'd lived in for 37 years ([ABC7](https://abc7.com/post/elderly-covina-couple-loses-tens-thousands-dollars-scam-cost-life-savings/19144580/), [KTLA](https://ktla.com/news/local-news/southern-california-elderly-couple-loses-life-savings-in-fbi-imposter-scam/)).
+- In Florida, a man was talked into withdrawing **$55,000** in cash by a caller posing as his bank and then the FBI. The courier was only arrested because he came back for more ([Yahoo News](https://www.yahoo.com/news/florida-man-posing-bank-worker-093100373.html)).
+- An Orlando couple lost more than **$7,500** after a fake bank call that asked them to read out the codes their real bank had just texted them ([ClickOrlando](https://clickorlando.com/news/local/2026/10/26/read-me-the-code-a-fake-bank-call-cost-an-orlando-couple-more-than-dollar7500)).
+- The Justice Department closed a **$65 million** ring that had fake bank employees and tech-support agents talk seniors into withdrawing cash and mailing it ([All About Cookies](https://allaboutcookies.org/senior-cash-mailing-scam)).
+
+The FBI calls the pattern behind many of these the **"Phantom Hacker"** scam: a fake tech-support call gets access to the computer, a fake bank says hackers are in the accounts, and a fake government agent tells the victim to move everything somewhere "safe", now often as cash or gold collected by a courier ([FBI Phoenix](https://www.fbi.gov/contact-us/field-offices/phoenix/news/california-man-pleads-guilty-to-role-in-phantom-hacker-scheme-targeting-elderly-victims), [ABC News](https://abcnews.com/US/scammers-target-seniors-steal-100m-gold-bar-scheme/story?id=135430602)).
+
+## The problem
+
+Americans aged 60 and over reported **$7.7 billion** in losses to the FBI in 2025, **59% more than the year before**, including about $1 billion to tech-support scams and $413 million to government impersonation ([FBI IC3 2025 report](https://www.ic3.gov/AnnualReport/Reports/2025_IC3Report.pdf), [summary](https://cyberthreatintelligencenetwork.com/index.php/2026/07/30/understanding-elder-fraud-what-the-fbis-ic3-is-seeing-and-why-it-matters/)). And the tools are getting cheaper: one vendor study found voice-cloning activity on dark-web markets grew 7.4 times in two years, with bank fraud the most discussed use, and bots that phone victims to steal one-time codes for about $30 a week ([Cord Cutters News](https://cordcuttersnews.com/ai-voice-cloning-surges-7-4-fold-as-scammers-target-loved-ones-banks-and-even-police-study-finds/)).
+
+What the cases have in common is time. The victims aren't fooled in one moment. They're kept on the phone for hours, coached on what to tell the bank teller, and told not to tell their family. The warning signs are all there, said out loud, while it's happening. But the protections people have act **too late or too far away**:
+
+- banks see the withdrawal, not the call that caused it;
+- caller ID can be spoofed, and a cloned voice sounds exactly like the grandson;
+- family members find out afterwards;
+- and once the courier has the gold, there is almost never a way back.
+
+## The solution
+
+**Tripwire listens to the call itself, and acts while the scam is still a conversation.** It hears what the caller says, understands which stage of the scam they've reached, and steps in before the money moves: a calm word first, then a hard stop. Then it secures the accounts and tells the family. Every decision it makes must quote what was actually said, and a second, independent model checks it, so it can't act on a hallucination.
+
+Three defences go straight at the scams in those stories:
+
+| The scam | Tripwire's answer |
+|---|---|
+| **"Read me the code we just texted you."** | **Code Shield.** The moment a caller asks for a one-time code, Tripwire stops the call by rule, before the code can be read out. No real bank ever asks for it. |
+| **"Grandma, it's me. I'm in jail. Don't tell Mom."** (a cloned voice) | **Call Tom.** Nobody can hear a voice clone, but anyone can ask the real person. Tripwire texts the real grandchild: "Someone on the phone with Grandma says they're you. Are you OK?" A "That's not me" ends the call, whatever the voice sounded like. |
+| **"Our courier will come to your house tomorrow at 3 pm."** | **Swap in Margaret.** When Tripwire is sure, it takes the real person off the call and puts an AI decoy in their place, played by **Muse Wonder**. The decoy keeps the scammer talking to learn how they get paid: the courier's time and description, the callback number, the wallet, the account. Every detail is checked against the scammer's own words. The family is told about the pickup live, every Tripwire home learns the scammer's number, and Muse Wonder writes a case file for the police. |
+
+Tripwire works in two places:
 
 - **On any phone, with no app**: iPhone, Android or landline. Tripwire works on the phone line itself: it hears both sides of the call, warns the person privately, and cuts the scammer off. See [On any phone](#on-any-phone-the-tripwire-phone-line).
 - **On a Windows computer**, where it also watches the screen: fake virus pop-ups, remote-access tools, banking opened under a stranger's control.
@@ -14,7 +50,32 @@ Built for the Meta Global AI Developer Hackathon (indie track). Everything in th
 
 See [Results](#results).
 
-### Meta tools, and what each one does here
+## Three defences against the scams draining savings now
+
+All three run in the web arena and on the phone line.
+
+**Code Shield** (`core/code_shield.py`). A deterministic rule on the caller's own words, not a model's judgement, so it fires in milliseconds, before the person can answer. It was written to recognise requests for a code ("read me the code we just sent", "what's the six-digit code") and not offers ("let me give you our confirmation number"). On the 640 legitimate calls in the dataset's training split, it matched **none**. In the arena, the bank's code text appears on Margaret's phone, and the stop comes in the same instant the caller asks for it.
+
+**Call Tom** (`backend/family_check.py`, `/check/<id>`). When a caller claims to be a relative in trouble (the `family_emergency_claim` signal), Tripwire tells the person it's checking, and texts the real relative a link with the caller's exact words and two buttons. "That's not me. I'm safe" becomes a fact in the record (`family_denied_call`) and stops the call. In testing, the stop came half a second after the answer. An unanswered check never counts as a yes.
+
+**Swap in Margaret** (`backend/decoy.py`, `backend/investigator.py`). On a hard stop, the real person is taken off the call:
+- **In the arena,** Margaret leaves and the decoy takes the line.
+- **On the phone line,** the protected person's leg is redirected to a spoken warning, and the scammer's leg to the decoy's audio stream.
+
+The decoy is **Muse Wonder** (`muse-wonder-1.0`), Meta's agentic model, given one goal: keep the caller talking until they reveal how they get paid. Muse Wonder is built to keep pursuing a goal when it gets hard, which is what a decoy needs when a scammer dodges a question. It never gives real information: no codes, no numbers, no money.
+
+Each detail it reports is verified:
+- the detail must come with a quote that is in the caller's own words;
+- every word and number of the detail must be in that quote;
+- the same detail said twice is counted once.
+
+A courier pickup is texted to the family at once. When the decoy is done:
+- the scammer's identifiers go to Community Shield;
+- Muse Wonder writes an IC3/FTC-style case file (scheme, timeline, leads), in which every statement must quote the record and every number must be in it.
+
+In one arena test, the decoy got the claimed agent and badge, the amount, a courier "tomorrow at 3 pm, Kevin, a white Toyota" and the callback number; the case file passed 8 of 8 checks. In a simulated phone call, Code Shield stopped the call, the decoy took the scammer's leg, and it came back with a cash pickup "tonight at 7 pm" by a courier named Mike.
+
+## Meta tools, and what each one does here
 
 | Tool | Job in Tripwire |
 |---|---|
@@ -22,7 +83,9 @@ See [Results](#results).
 | **Muse Spark** (`muse-spark-1.3`, Meta Model API) | The CaseJudge: reasons over the whole session and is the only component that can authorize a hard stop. Also plays Margaret in the arena, runs the tool-calling recovery agent, and writes the family's plain-language incident story |
 | **Muse Voice Transcribe** | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode), and push-to-talk transcription of the scammer in the arena |
 | **SAM 3.1** | Outlines the threat (the fake warning, the scammer's number) on already-redacted screenshots for the family |
+| **Muse Wonder** (`muse-wonder-1.0`) | The decoy that keeps the scammer talking after a stop, and the investigator that writes the police case file |
 | **Muse Image** | Generated the synthetic scam and look-alike screens used to evaluate the screen analyst |
+| **Llama 3.2 1B** (fine-tuned on Modal) | Tripwire Sentinel, a small model of our own that gives the judge a second opinion |
 
 ## On any phone: the Tripwire phone line
 
@@ -62,7 +125,11 @@ You play the scammer. Hold the button and speak, or type. Margaret, 78, answers 
 
 When it stops you, a **recovery agent** takes over. Muse Spark uses tools to end the remote session, freeze her card on the bank's security page, draft an FTC fraud report and alert her family. Your score is how far you got.
 
-Try being her grandson Tom instead: Tripwire should stay quiet.
+Things to try:
+- **Ask her to read you the code the bank just texted.** Code Shield stops you before she can.
+- **Say you're her grandson Tom, in jail and needing bail.** Tripwire checks with the real Tom; open "Tom's phone" and answer as him.
+- **Keep scamming after you're stopped.** You're now talking to the Muse Wonder decoy; watch the "Scammer intelligence" panel fill with what you reveal.
+- **Be a genuine relative helping with her computer.** Tripwire should stay quiet.
 
 | Who | Played by |
 |---|---|
