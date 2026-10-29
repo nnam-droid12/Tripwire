@@ -1,0 +1,3081 @@
+{
+  "summary": {
+    "threshold": 0.96,
+    "youtube_real": {
+      "scam": 20,
+      "benign": 0,
+      "detection_rate": 1.0,
+      "false_alarm_rate": null,
+      "median_flag_fraction": 0.08
+    },
+    "dialogue": {
+      "scam": 160,
+      "benign": 160,
+      "detection_rate": 1.0,
+      "false_alarm_rate": 0.106,
+      "median_flag_fraction": 0.07
+    }
+  },
+  "runs": [
+    {
+      "source": "youtube",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 71,
+      "flag_turn": 4,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 0.9998
+    },
+    {
+      "source": "youtube",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 37,
+      "flag_turn": 2,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 2,
+      "flag_fraction": 0.1,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 22,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 60,
+      "flag_turn": 3,
+      "flag_fraction": 0.05,
+      "max_p": 0.9999
+    },
+    {
+      "source": "youtube",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 43,
+      "flag_turn": 1,
+      "flag_fraction": 0.02,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 31,
+      "flag_turn": 6,
+      "flag_fraction": 0.19,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 21,
+      "flag_turn": 4,
+      "flag_fraction": 0.19,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 7,
+      "flag_fraction": 0.35,
+      "max_p": 0.9996
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 2,
+      "flag_fraction": 0.1,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 24,
+      "flag_turn": 5,
+      "flag_fraction": 0.21,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 24,
+      "flag_turn": 2,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 26,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 39,
+      "flag_turn": 2,
+      "flag_fraction": 0.05,
+      "max_p": 0.9999
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 24,
+      "flag_turn": 6,
+      "flag_fraction": 0.25,
+      "max_p": 1.0
+    },
+    {
+      "source": "youtube",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 0.9988
+    },
+    {
+      "source": "youtube",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 27,
+      "flag_turn": 5,
+      "flag_fraction": 0.19,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 3,
+      "flag_fraction": 0.23,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 12,
+      "flag_turn": 3,
+      "flag_fraction": 0.25,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 21,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 12,
+      "flag_turn": 3,
+      "flag_fraction": 0.25,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 23,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 3,
+      "flag_fraction": 0.17,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 12,
+      "flag_turn": 3,
+      "flag_fraction": 0.25,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 12,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 3,
+      "flag_fraction": 0.2,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 3,
+      "flag_fraction": 0.17,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 22,
+      "flag_turn": 3,
+      "flag_fraction": 0.14,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 14,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 3,
+      "flag_fraction": 0.15,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 3,
+      "flag_fraction": 0.15,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 21,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 3,
+      "flag_fraction": 0.17,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 14,
+      "flag_turn": 3,
+      "flag_fraction": 0.21,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 25,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 3,
+      "flag_fraction": 0.19,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 3,
+      "flag_fraction": 0.18,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 3,
+      "flag_fraction": 0.17,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 3,
+      "flag_fraction": 0.15,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 10,
+      "flag_turn": 1,
+      "flag_fraction": 0.1,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "ssn",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 21,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 14,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 3,
+      "flag_fraction": 0.17,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 22,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 14,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 21,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 11,
+      "flag_turn": 3,
+      "flag_fraction": 0.27,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 23,
+      "flag_turn": 3,
+      "flag_fraction": 0.13,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 3,
+      "flag_fraction": 0.2,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "refund",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 28,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 21,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 14,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 23,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 21,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 14,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 11,
+      "flag_turn": 1,
+      "flag_fraction": 0.09,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 12,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 14,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 22,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 25,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 25,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 14,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 12,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 14,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 16,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 10,
+      "flag_turn": 1,
+      "flag_fraction": 0.1,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 8,
+      "flag_turn": 1,
+      "flag_fraction": 0.12,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "support",
+      "is_scam": true,
+      "turns": 11,
+      "flag_turn": 1,
+      "flag_fraction": 0.09,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 21,
+      "flag_turn": 3,
+      "flag_fraction": 0.14,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 22,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 14,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 12,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 19,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 10,
+      "flag_turn": 1,
+      "flag_fraction": 0.1,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 24,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 15,
+      "flag_turn": 1,
+      "flag_fraction": 0.07,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 24,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 21,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 11,
+      "flag_turn": 1,
+      "flag_fraction": 0.09,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 24,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 11,
+      "flag_turn": 1,
+      "flag_fraction": 0.09,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 10,
+      "flag_turn": 1,
+      "flag_fraction": 0.1,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 3,
+      "flag_fraction": 0.17,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 21,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 18,
+      "flag_turn": 3,
+      "flag_fraction": 0.17,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 26,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 11,
+      "flag_turn": 1,
+      "flag_fraction": 0.09,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 22,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 22,
+      "flag_turn": 3,
+      "flag_fraction": 0.14,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 9,
+      "flag_turn": 1,
+      "flag_fraction": 0.11,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 22,
+      "flag_turn": 3,
+      "flag_fraction": 0.14,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 12,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 17,
+      "flag_turn": 1,
+      "flag_fraction": 0.06,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 23,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 25,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 23,
+      "flag_turn": 1,
+      "flag_fraction": 0.04,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 11,
+      "flag_turn": 1,
+      "flag_fraction": 0.09,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 20,
+      "flag_turn": 1,
+      "flag_fraction": 0.05,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 9,
+      "flag_turn": 1,
+      "flag_fraction": 0.11,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 13,
+      "flag_turn": 1,
+      "flag_fraction": 0.08,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "reward",
+      "is_scam": true,
+      "turns": 9,
+      "flag_turn": 1,
+      "flag_fraction": 0.11,
+      "max_p": 1.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0008
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0036
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 9,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 14,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0003
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0006
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0001
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0001
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 14,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0103
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0002
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0001
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0001
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0013
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 14,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0001
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0014
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0001
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 15,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4007
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0001
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0
+    },
+    {
+      "source": "dialogue",
+      "kind": "delivery",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0005
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0062
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.931
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0022
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0071
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 14,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0052
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0092
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0286
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 15,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.931
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0324
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0396
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0073
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0071
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0396
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.003
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 9,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.2762
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0324
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 15,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0202
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0044
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0037
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.9161
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0047
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 14,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0598
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0676
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0456
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0037
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0097
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0456
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0024
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0324
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 14,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.931
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0456
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 15,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.9102
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0324
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0044
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0304
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.9248
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0119
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.1746
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.2742
+    },
+    {
+      "source": "dialogue",
+      "kind": "insurance",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0146
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.8067
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 16,
+      "flag_turn": 14,
+      "flag_fraction": 0.88,
+      "max_p": 0.9788
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 9,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.9396
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": 4,
+      "flag_fraction": 0.4,
+      "max_p": 0.9949
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.8817
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.9184
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0124
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": 9,
+      "flag_fraction": 0.9,
+      "max_p": 0.9781
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": 11,
+      "flag_fraction": 1.0,
+      "max_p": 0.9853
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0022
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": 9,
+      "flag_fraction": 0.9,
+      "max_p": 0.9999
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.7348
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 9,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0741
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.8792
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": 10,
+      "flag_fraction": 0.91,
+      "max_p": 0.9901
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.9372
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": 10,
+      "flag_fraction": 0.83,
+      "max_p": 0.9675
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.9561
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0043
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.9386
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.7868
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": 10,
+      "flag_fraction": 0.91,
+      "max_p": 0.9991
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": 9,
+      "flag_fraction": 0.9,
+      "max_p": 0.9988
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": 5,
+      "flag_fraction": 0.45,
+      "max_p": 0.9949
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0043
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0033
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0111
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.6598
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 15,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.8275
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 16,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.944
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": 11,
+      "flag_fraction": 1.0,
+      "max_p": 0.9694
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.3004
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": 11,
+      "flag_fraction": 0.85,
+      "max_p": 0.9988
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": 11,
+      "flag_fraction": 1.0,
+      "max_p": 0.9889
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0055
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": 10,
+      "flag_fraction": 1.0,
+      "max_p": 0.9755
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.0212
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 13,
+      "flag_turn": 11,
+      "flag_fraction": 0.85,
+      "max_p": 0.9998
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": 12,
+      "flag_fraction": 1.0,
+      "max_p": 0.9829
+    },
+    {
+      "source": "dialogue",
+      "kind": "telemarketing",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": 9,
+      "flag_fraction": 0.82,
+      "max_p": 0.9967
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.5295
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.5239
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 6,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.2325
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.6172
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.2696
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.318
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.5246
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.3412
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 6,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.7554
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.3968
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 6,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4919
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 6,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.2282
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.7976
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.5239
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 11,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 6,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.502
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 8,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 6,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 10,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.4081
+    },
+    {
+      "source": "dialogue",
+      "kind": "wrong",
+      "is_scam": false,
+      "turns": 12,
+      "flag_turn": null,
+      "flag_fraction": null,
+      "max_p": 0.8698
+    }
+  ]
+}

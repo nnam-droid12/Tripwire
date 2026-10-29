@@ -149,6 +149,18 @@ Scoring well on your own scripts proves little, so Tripwire is also measured on 
 
 **What didn't improve.** The 20 real scam-baiting calls are long and rambling (up to 71 turns), and there is no separate training split for them, so they were not tuned on. That number is reported as is.
 
+### Tripwire Sentinel: a small model of our own
+
+Tripwire Sentinel is **Llama 3.2 1B, fine-tuned with LoRA** on the training split of the scam-dialogue set (2,304 examples, 288 steps), trained on Modal CPU containers (`modal_app/sentinel.py`). Training, choosing the alarm threshold on 128 held-out training calls, and saving the result all run in the cloud. The threshold (0.96) was the lowest that kept held-out false alarms at 1% or less. It was then scored once on the untouched test split:
+
+| | Sentinel alone | Full Tripwire (for comparison) |
+|---|---|---|
+| Scam dialogues flagged (160) | **100%**, at 7% of the call (median) | 92% stopped, at 45% |
+| Real scam-baiting calls flagged (20) | **100%**, at 8% of the call | 55% |
+| Legitimate calls flagged (160) | **10.6%**: all 17 are pushy telemarketing calls (17 of 40); 0 delivery, insurance or wrong-number calls | 0% |
+
+Sentinel is fast, cheap and catches everything early, but it can't tell a hard sell from a scam often enough to stop a call by itself. That is why it can't act alone. Its job is to be a first-line screener that sends the case to the CaseJudge and the verification layers, which decide.
+
 ### Screen analyst on single screens
 
 29 screens (14 scam, 15 benign look-alikes); 16 generated with **Muse Image**, 13 hand-written HTML pages for the fraud screens Muse Image's content filter declined to draw (wire forms, Bitcoin ATM instructions, gift-card codes). Flagged = rated medium/high risk.
