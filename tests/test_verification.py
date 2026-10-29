@@ -115,3 +115,23 @@ def test_numbers_read_off_the_screen_count_as_observed():
     snap = {**SNAPSHOT, "signals": [{"name": "scareware_phone_number", "evidence": "Call PC SafeGuard now: +1 (555) 013-4477"}]}
     assert invented_numbers("They used +1 (555) 013-4477", observed(snap)) == []
     assert invented_numbers("They used +1 (555) 013-4478", observed(snap)) == ["+1 (555) 013-4478"]
+
+
+def test_sentinel_raises_one_signal_that_cannot_be_quoted():
+    from core.casefile import CaseFile
+    from core.events import Event, EventBus
+    from core.grounding import ground_truth, verify_reasons
+    from core.orchestrator import Orchestrator
+
+    case = CaseFile()
+    stub = SimpleNamespace()
+    orch = Orchestrator(EventBus(), case, screen=stub, call=stub, judge=stub, log=lambda _: None,
+                        sentinel=lambda turns: 0.99, sentinel_threshold=0.96)
+    for n in (1, 2):
+        orch._run_sentinel(Event("sentinel", "score", {"turns": [("A", "hello")] * n}))
+    flags = [s for s in case.snapshot()["signals"] if s["name"] == "sentinel_flag"]
+    assert len(flags) == 1
+    snap = case.snapshot()
+    assert not any("Sentinel" in line for line in ground_truth(snap))
+    verified, _ = verify_reasons([{"reason": "r", "evidence": flags[0]["evidence"]}], snap)
+    assert verified == []  # a model's opinion is never evidence a stop can rest on

@@ -126,9 +126,11 @@ Evaluated 2026-10-27: 12 scenarios x 2 runs (10 scam runs, 14 benign runs), text
 |---|---|---|---|
 | Baseline | 46.5 s | 25% | 0% |
 | + escalate on strong early signs, explicit early-stop rules for the judge | 31.1 s | 38% | 0% |
-| + judge on low reasoning effort (about 3x faster) | **27.0 s** | **50%** | **0%** |
+| + judge on low reasoning effort (about 3x faster) | 27.0 s | 50% | 0% |
+| + independent reviewer before every stop ([Verification](#verification-tripwire-checks-its-own-work-before-it-acts)) | 29.4 s | 50% | 0% |
+| + [Tripwire Sentinel](#tripwire-sentinel-a-small-model-of-our-own) as a second opinion | **21.8 s** | **88%** | **0%** |
 
-The two remaining late stops (a fake bank "safe account" call and a fake FTC officer) have the money request less than a second after the threat. We stopped tuning there on purpose, because pushing further on scenarios we wrote ourselves would be overfitting.
+We stopped tuning the judge at 27.0 s on purpose, because pushing further on scenarios we wrote ourselves would be overfitting. The later gains came from Sentinel, which was developed on third-party data (below), not on these scenarios. With Sentinel, all 24 runs still pass, including the genuine bank fraud-alert call.
 
 **Caveats.** These scenarios were written by us, replayed as text (the speech path is tested separately), with 2 runs each. They are a regression suite and a sanity check, not a field study.
 
@@ -136,18 +138,20 @@ The two remaining late stops (a fake bank "safe account" call and a fake FTC off
 
 Scoring well on your own scripts proves little, so Tripwire is also measured on **340 third-party conversations** (Apache-2.0): [BothBosu/scam-dialogue](https://huggingface.co/datasets/BothBosu/scam-dialogue) (160 scams, 160 legitimate calls, including pushy telemarketing and insurance calls) and [youtube-scam-conversations](https://huggingface.co/datasets/BothBosu/youtube-scam-conversations) (20 real scam calls from scam-baiting channels). These are calls only, with no screen evidence. Each one is replayed turn by turn through the real pipeline.
 
-| | First version | **Now** |
-|---|---|---|
-| Scam calls stopped (160) | 61% | **92%** |
-| False alarms on legitimate calls (160) | 0% | **0%** (not even a nudge) |
-| Point in the call where it stopped (median) | 56% | **45%** |
-| Refund scams / prize scams stopped | 42% / 32% | **92% / 80%** |
-| Real scam-baiting calls stopped (20) | 55% | 55% |
-| Judge claims checked against the record | n/a | **1,624: 0 unsupported** (see [Verification](#verification-tripwire-checks-its-own-work-before-it-acts)) |
+| | First version | + scam signals | **+ Sentinel (now)** |
+|---|---|---|---|
+| Scam calls stopped (160) | 61% | 92% | **100%** |
+| False alarms on legitimate calls (160) | 0% | 0% | **0%** |
+| Point in the call where it stopped (median) | 56% | 45% | **7%** (usually the scammer's opening line) |
+| Refund scams / prize scams stopped | 42% / 32% | 92% / 80% | **100% / 100%** |
+| **Real scam-baiting calls stopped (20)** | 55% | 55% | **95%** (19 of 20), at 31% of the call |
+| Judge claims checked against the record | n/a | 1,624: 0 unsupported | **564: 2 not found, discarded; 349 of 351 stop reasons confirmed by the [independent reviewer](#verification-tripwire-checks-its-own-work-before-it-acts)** |
 
 **How the improvement was made without tuning to the test.** The first version recognised refund and prize scams but only nudged, because it had no signals for prizes, advance fees or requests for Social Security or bank details. Those signals and the matching judge rules were developed on the dataset's **training split only**: 98% stopped, 0% false alarms there. The test split was then scored once.
 
-**What didn't improve.** The 20 real scam-baiting calls are long and rambling (up to 71 turns), and there is no separate training split for them, so they were not tuned on. That number is reported as is.
+**Real calls.** The 20 real scam-baiting calls are long and rambling (up to 71 turns). There is no training split for them, so nothing was ever tuned on them. The judge-only system stopped 55%: it recognised the patterns but kept nudging. Sentinel, trained on different data, was the second opinion that broke the tie: 95%. The one miss is a 19-turn tech-support call that ended in a nudge.
+
+**How Sentinel was added without tuning to the test.** Sentinel trained on the training split, so its scores there aren't honest. The integration rule (a `sentinel_flag` signal and one judge instruction) was developed on the 128 training calls Sentinel never saw: 84% → 100% stopped, 0% false alarms. The 12 scripted scenarios came next, then the test split, scored once. Eight test conversations logged temporary API errors (rate limits under 6 parallel runs). All eight were legitimate calls that ended correctly, and all eight reran cleanly with the same result.
 
 ### Tripwire Sentinel: a small model of our own
 
@@ -159,7 +163,9 @@ Tripwire Sentinel is **Llama 3.2 1B, fine-tuned with LoRA** on the training spli
 | Real scam-baiting calls flagged (20) | **100%**, at 8% of the call | 55% |
 | Legitimate calls flagged (160) | **10.6%**: all 17 are pushy telemarketing calls (17 of 40); 0 delivery, insurance or wrong-number calls | 0% |
 
-Sentinel is fast, cheap and catches everything early, but it can't tell a hard sell from a scam often enough to stop a call by itself. That is why it can't act alone. Its job is to be a first-line screener that sends the case to the CaseJudge and the verification layers, which decide.
+Alone, Sentinel would be a poor product: one in ten legitimate calls flagged. Combined, it's the opposite. Sentinel raises a `sentinel_flag` signal that the CaseJudge weighs as an independent second opinion. It can never be quoted as a reason, so a stop still needs words actually said and the independent reviewer's confirmation. The judge filters out Sentinel's false alarms (0 of its 17 telemarketing flags led to a stop), and Sentinel stops the judge from hesitating (real calls 55% → 95%).
+
+Live, Sentinel runs as a deployed Modal service (`SentinelService`, 8 CPUs, ~1.6 s per turn when warm, ~27 s cold start; scores identical to the batch export). The arena and the desktop agent warm a container when a call starts. If Modal is slow or down, Tripwire runs as it would without Sentinel.
 
 ### Screen analyst on single screens
 

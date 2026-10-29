@@ -86,6 +86,8 @@ class Orchestrator:
         log: Callable[[str], None] = print,
         analyze_screen: bool = True,
         shield: Callable[[str], list[dict]] | None = None,
+        sentinel: Callable[[list[tuple[str, str]]], float | None] | None = None,
+        sentinel_threshold: float = 0.96,
     ) -> None:
         self.bus = bus
         self.case = case or CaseFile()
@@ -97,6 +99,12 @@ class Orchestrator:
         self.analyze_screen = analyze_screen
         self.shield = shield  # Community Shield lookup: known scammer identifiers in a line of text
         self._shield_seen: set[str] = set()
+        # Tripwire Sentinel: P(scam) for the call so far, from our fine-tuned small model. Supporting evidence only:
+        # it raises a signal the judge weighs, but it is never ground truth and can never be quoted as a reason.
+        self.sentinel = sentinel
+        self.sentinel_threshold = sentinel_threshold
+        self._turns: list[tuple[str, str]] = []
+        self._sentinel_flagged = False
         self.action = Action.LOG
         self.paused = False  # set from the tray; capture keeps running but nothing is analysed
         self.verdicts: list[Verdict] = []
@@ -104,18 +112,21 @@ class Orchestrator:
         self._screen_worker = _Worker("screen-analyst", self._analyze_frame, self._error, latest_only=True)
         self._call_worker = _Worker("call-analyst", self._analyze_turn, self._error)
         self._judge_worker = _Worker("case-judge", self._run_judge, self._error, latest_only=True)
+        self._sentinel_worker = _Worker("sentinel", self._run_sentinel, self._error, latest_only=True)
         self.case.on_update(self._on_case_update)
 
     def start(self) -> None:
         self._screen_worker.start()
         self._call_worker.start()
         self._judge_worker.start()
+        self._sentinel_worker.start()
         self.bus.subscribe(self.handle)
 
     def drain(self) -> None:
         """Block until every submitted frame, turn and judge request has been handled."""
         self._screen_worker.drain()
         self._call_worker.drain()
+        self._sentinel_worker.drain()
         self._judge_worker.drain()
 
     # -- routing -------------------------------------------------------------------
@@ -127,6 +138,9 @@ class Orchestrator:
             if self.analyze_screen:
                 self._screen_worker.submit(event)
         elif event.source == "audio" and event.kind == "transcript":
+            if self.sentinel and not self._sentinel_flagged:
+                self._turns.append((event.data.get("speaker") or "?", redact_text(event.data["text"])))
+                self._sentinel_worker.submit(Event("sentinel", "score", {"turns": list(self._turns)}))
             self._call_worker.submit(event)
         elif event.source in ("process", "network", "clipboard", "control"):
             self._apply_tier0(event)
@@ -160,6 +174,14 @@ class Orchestrator:
                 line = f"Community Shield: {hit['display']} was reported in {hit['reports']} scam(s) stopped in other homes"
                 self.case.note("shield", line)
                 self.case.add_signals("shield", [("known_scam_indicator", line)])
+
+    def _run_sentinel(self, event: Event) -> None:
+        turns = event.data["turns"]
+        p = self.sentinel(turns)
+        if p is None or p < self.sentinel_threshold or self._sentinel_flagged:
+            return
+        self._sentinel_flagged = True
+        self.case.add_signals("sentinel", [("sentinel_flag", f"Sentinel rates the call a likely scam (p={p:.2f}) after {len(turns)} turns")])
 
     def _analyze_frame(self, event: Event) -> None:
         finding = self.screen.analyze(Path(event.data["path"]))

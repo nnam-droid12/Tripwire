@@ -30,6 +30,7 @@ from backend.arena import laptop, scores
 from backend.arena.margaret import Margaret
 from backend.arena.recovery import REJECTED, RecoveryAgent
 from backend.incidents import create_incident
+from core import sentinel_client
 from core.casefile import CaseFile, CaseUpdate
 from core.config import LOGS_DIR, RUNTIME_DIR
 from core.events import Event, EventBus
@@ -92,8 +93,10 @@ class ArenaSession:
         self.situation = situation if situation in ("popup", "call") else "popup"
         self.bus = EventBus(LOGS_DIR / f"arena_{self.id}.jsonl")
         self.case = CaseFile()
+        self.sentinel = sentinel_client.shared()
         self.orchestrator = Orchestrator(self.bus, self.case, screen=ScreenAnalyst(redact=lambda png: png), log=lambda _: None,
-                                         shield=shield.lookup)
+                                         shield=shield.lookup, sentinel=self.sentinel.score if self.sentinel else None,
+                                         sentinel_threshold=sentinel_client.threshold())
         self.margaret = Margaret()
         self.recovery = RecoveryAgent()
         self._warning_lock = threading.Lock()
@@ -117,6 +120,8 @@ class ArenaSession:
     # -- lifecycle -----------------------------------------------------------------
 
     def start(self) -> None:
+        if self.sentinel:
+            self.sentinel.warm()  # a cold container takes ~30 s; until then Tripwire simply runs without Sentinel
         self.orchestrator.start()
         self.send({"type": "started", "session": self.id, "situation": self.situation})
         self._show(self.page)

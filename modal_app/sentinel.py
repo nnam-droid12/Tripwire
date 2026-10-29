@@ -17,6 +17,9 @@ Usage (from the repo root, after ``python -m modal setup``)::
     python -m modal run modal_app/sentinel.py::launch     # train + threshold, entirely in the cloud
     python -m modal run modal_app/sentinel.py::fetch      # once it has finished
     python -m modal run modal_app/sentinel.py::evaluate
+    python -m modal run modal_app/sentinel.py::export_scores  # per-turn scores for eval/run_external.py --sentinel
+
+The deployed ``SentinelService`` class serves live scores (``core/sentinel_client.py``).
 
 Training runs on Modal CPU containers (GPUs require a card on file).
 """
@@ -171,6 +174,45 @@ def pipeline_remote(train_convs: list[dict], val_convs: list[dict]) -> dict:
     return meta
 
 
+@app.cls(image=image.env({"HF_HOME": f"{VOLUME_PATH}/hf"}), cpu=8, memory=16384, volumes={VOLUME_PATH: volume},
+         scaledown_window=600, timeout=600)
+class SentinelService:
+    """The live service: P(scam) for a call so far, one prompt at a time (~1 s warm on 8 CPUs).
+
+    The model loads once per container; containers stay warm for 10 minutes after the
+    last call, and callers warm one up when a call starts.
+    """
+
+    @modal.enter()
+    def load(self) -> None:
+        import os
+
+        import torch
+        from peft import PeftModel
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        torch.set_num_threads(8)
+        cached = os.path.isdir(f"{VOLUME_PATH}/hf")
+        self.torch = torch
+        self.tok = AutoTokenizer.from_pretrained(ADAPTER_DIR)
+        base = AutoModelForCausalLM.from_pretrained(BASE_MODEL, torch_dtype=torch.float32)
+        self.model = PeftModel.from_pretrained(base, ADAPTER_DIR).eval()
+        self.ids = [self.tok(w, add_special_tokens=False).input_ids[0] for w in (" scam", " safe")]
+        if not cached:
+            volume.commit()  # keep the base weights on the volume: later cold starts skip the download
+
+    @modal.method()
+    def score(self, turns: list[list[str]]) -> float:
+        enc = self.tok(prompt(turns), return_tensors="pt", truncation=True, max_length=480)
+        with self.torch.no_grad():
+            logits = self.model(**enc).logits[0, -1, :].float()
+        return round(self.torch.softmax(logits[self.ids], dim=-1)[0].item(), 4)
+
+    @modal.method()
+    def ping(self) -> bool:
+        return True
+
+
 def _convs(split: str) -> list[dict]:
     import sys
 
@@ -202,7 +244,7 @@ def launch() -> None:
     """Start the full pipeline on the *deployed* app (``modal deploy modal_app/sentinel.py`` first)."""
     convs = _convs("train")
     random.Random(1).shuffle(convs)
-    val = convs[:128]  # held out from training: used only to choose the alarm threshold
+    val = convs[:128]  # held out from training: used only to choose the alarm threshold (see val_convs)
     pipeline = modal.Function.from_name("tripwire-sentinel", "pipeline_remote")
     call = pipeline.spawn(convs[128:], val)
     print(f"started: {call.object_id}")
@@ -215,6 +257,35 @@ def fetch() -> None:
     out = Path(__file__).resolve().parent.parent / "eval" / "results" / "sentinel_threshold.json"
     out.write_text(json.dumps(meta, indent=2), encoding="utf-8")
     print(meta)
+
+
+def conv_key(turns: list) -> str:
+    """A stable id for a conversation, shared with the eval harness."""
+    import hashlib
+
+    return hashlib.sha1(json.dumps([list(t) for t in turns]).encode("utf-8")).hexdigest()[:16]
+
+
+def val_convs() -> list[dict]:
+    """The 128 training-split calls held out from training (same shuffle as ``launch``)."""
+    convs = _convs("train")
+    random.Random(1).shuffle(convs)
+    return convs[:128]
+
+
+@app.local_entrypoint()
+def export_scores() -> None:
+    """P(scam) after every turn, for the held-out validation calls and the test split.
+
+    Scoring is deterministic, so the eval harness can replay these exactly as the
+    live service would return them, without calling Modal once per turn.
+    """
+    convs = val_convs() + _convs("test")
+    scores = score_parallel(convs)
+    out = {conv_key(c["turns"]): [round(p, 4) for p in sc] for c, sc in zip(convs, scores)}
+    path = Path(__file__).resolve().parent.parent / "eval" / "results" / "sentinel_scores.json"
+    path.write_text(json.dumps(out), encoding="utf-8")
+    print(f"{len(out)} conversations scored")
 
 
 @app.local_entrypoint()

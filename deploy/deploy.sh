@@ -62,9 +62,13 @@ put_secret tripwire-twilio-sid "$(env_value TWILIO_ACCOUNT_SID)"
 put_secret tripwire-twilio-token "$(env_value TWILIO_AUTH_TOKEN)"
 put_secret tripwire-twilio-from "$(env_value TWILIO_FROM_NUMBER)"
 put_secret tripwire-family-phone "$(env_value FAMILY_PHONE_NUMBER)"
+# Tripwire Sentinel runs on Modal. Opt-in: add MODAL_TOKEN_ID / MODAL_TOKEN_SECRET to .env (a dedicated
+# token from modal.com/settings/tokens) and the arena uses Sentinel; without them it runs without it.
+put_secret tripwire-modal-token-id "$(env_value MODAL_TOKEN_ID)"
+put_secret tripwire-modal-token-secret "$(env_value MODAL_TOKEN_SECRET)"
 
 SECRETS="TRIPWIRE_AGENT_TOKEN=tripwire-agent-token:latest,TRIPWIRE_DASHBOARD_KEY=tripwire-dashboard-key:latest,META_API_KEY=tripwire-meta-api-key:latest,BASETEN_API_KEY=tripwire-baseten-api-key:latest"
-for pair in TWILIO_ACCOUNT_SID=tripwire-twilio-sid TWILIO_AUTH_TOKEN=tripwire-twilio-token TWILIO_FROM_NUMBER=tripwire-twilio-from FAMILY_PHONE_NUMBER=tripwire-family-phone; do
+for pair in MODAL_TOKEN_ID=tripwire-modal-token-id MODAL_TOKEN_SECRET=tripwire-modal-token-secret TWILIO_ACCOUNT_SID=tripwire-twilio-sid TWILIO_AUTH_TOKEN=tripwire-twilio-token TWILIO_FROM_NUMBER=tripwire-twilio-from FAMILY_PHONE_NUMBER=tripwire-family-phone; do
   if $G secrets describe "${pair#*=}" >/dev/null 2>&1; then SECRETS="${SECRETS},${pair}:latest"; fi
 done
 

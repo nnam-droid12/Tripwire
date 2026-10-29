@@ -24,8 +24,10 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import io
 import json
+import random
 import re
 import statistics
 import sys
@@ -82,7 +84,15 @@ def parse_turns(dialogue: str) -> list[tuple[str, str]]:
 
 
 def load(limit: int | None = None, split: str = "test") -> list[Conversation]:
-    """``split="test"`` is what we report; ``"train"`` is for developing changes without touching the test set."""
+    """``split="test"`` is what we report; ``"train"`` is for developing changes without touching the test set.
+
+    ``"val"`` is the 128 training-split calls Tripwire Sentinel never trained on: the development set for
+    anything that uses Sentinel (its scores on the rest of the training split are not honest).
+    """
+    if split == "val":
+        convs = load(split="train")
+        random.Random(1).shuffle(convs)
+        return convs[:128]
     convs: list[Conversation] = []
     if split == "test":
         for row in csv.DictReader(io.StringIO(_fetch("youtube"))):
@@ -102,9 +112,24 @@ class _NoScreen:
     """These conversations have no screen; the ScreenAnalyst is never called."""
 
 
+def conv_key(turns: list) -> str:
+    """Same id as ``modal_app/sentinel.py``."""
+    return hashlib.sha1(json.dumps([list(t) for t in turns]).encode("utf-8")).hexdigest()[:16]
+
+
+SENTINEL: dict[str, list[float]] = {}  # conversation id -> P(scam) after each turn, exported from Modal
+
+
+def sentinel_replay(conv: Conversation):
+    """What the live Sentinel service returns for this call, turn by turn (scoring is deterministic)."""
+    scores = SENTINEL[conv_key(conv.turns)]
+    return lambda turns: scores[min(len(turns), len(scores)) - 1]
+
+
 def run_one(conv: Conversation) -> dict:
     bus, case = EventBus(), CaseFile()
-    orch = Orchestrator(bus, case, screen=_NoScreen(), log=lambda _: None)
+    sentinel = sentinel_replay(conv) if SENTINEL else None
+    orch = Orchestrator(bus, case, screen=_NoScreen(), log=lambda _: None, sentinel=sentinel)
     orch.start()
     stop_turn = nudge_turn = None
     errs: list[str] = []
@@ -129,6 +154,7 @@ def run_one(conv: Conversation) -> dict:
         "reviewed": sum(v.verification.get("reviewed", 0) for v in orch.verdicts),
         "confirmed": sum(v.verification.get("confirmed", 0) for v in orch.verdicts),
         "retries": sum(max(0, v.verification.get("attempts", 1) - 1) for v in orch.verdicts),
+        "sentinel_flag_turn": next((i + 1 for i in range(len(conv.turns)) if sentinel and sentinel(conv.turns[: i + 1]) >= orch.sentinel_threshold), None) if sentinel else None,
         "retry_rescued": sum(v.verification.get("attempts", 1) > 1 and bool(v.reasons) for v in orch.verdicts),
     }
 
@@ -194,8 +220,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--limit", type=int, help="stratified sample size of the dialogue set")
     parser.add_argument("--parallel", type=int, default=6)
-    parser.add_argument("--split", choices=("test", "train"), default="test", help="train: for development only; results are reported on test")
+    parser.add_argument("--split", choices=("test", "train", "val"), default="test", help="train/val: for development only; results are reported on test")
+    parser.add_argument("--sentinel", action="store_true", help="add Tripwire Sentinel (scores from eval/results/sentinel_scores.json)")
     args = parser.parse_args()
+    if args.sentinel:
+        SENTINEL.update(json.loads((RESULTS / "sentinel_scores.json").read_text(encoding="utf-8")))
     sys.stdout.reconfigure(encoding="utf-8")
     convs = load(args.limit, args.split)
     print(f"{len(convs)} conversations, {args.parallel} in parallel", flush=True)
@@ -219,7 +248,8 @@ def main() -> None:
     meta = {"date": time.strftime("%Y-%m-%d"), "conversations": len(rows), "minutes": round((time.time() - started) / 60, 1)}
     RESULTS.mkdir(parents=True, exist_ok=True)
     meta["split"] = args.split
-    stem = "external" if args.split == "test" else "external_train"
+    meta["sentinel"] = args.sentinel
+    stem = {"test": "external", "train": "external_train", "val": "external_val"}[args.split] + ("_sentinel" if args.sentinel else "")
     (RESULTS / f"{stem}.json").write_text(json.dumps({"meta": meta, "summary": summary, "runs": rows}, indent=2), encoding="utf-8")
     md = to_markdown(summary, meta)
     (RESULTS / f"{stem}.md").write_text(md, encoding="utf-8")

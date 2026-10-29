@@ -24,6 +24,7 @@ from agent import shield_client
 from agent.reporter import BackendReporter
 from agent.tray import TrayIcon
 from analysts.interventionist import Interventionist
+from core import sentinel_client
 from core.casefile import CaseFile
 from core.config import LOGS_DIR
 from core.events import EventBus
@@ -61,8 +62,12 @@ def main() -> None:
     bus.subscribe(lambda e: log(e.summary()))
     case = CaseFile()
     case.on_update(lambda u: log(format_update(u)))
+    sentinel = sentinel_client.shared()
+    if sentinel:
+        sentinel.warm()
     orchestrator = Orchestrator(bus, case, log=log, analyze_screen=not args.no_screen_analysis,
-                                shield=None if args.no_backend else shield_client.lookup)
+                                shield=None if args.no_backend else shield_client.lookup,
+                                sentinel=sentinel.score if sentinel else None, sentinel_threshold=sentinel_client.threshold())
     orchestrator.start()
     interventionist = Interventionist(
         bus, case, orchestrator, settings, kill_mode=args.kill, extra_tools={exe: f"{exe} (test)" for exe in args.watch}

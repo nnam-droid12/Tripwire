@@ -140,9 +140,17 @@ def main() -> None:
     parser.add_argument("--parallel", type=int, default=6)
     parser.add_argument("--speed", type=float, default=1.0)
     parser.add_argument("--only", nargs="*", help="scenario names to run (default: all)")
+    parser.add_argument("--sentinel", action="store_true", help="add the live Tripwire Sentinel service on Modal")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
 
+    sentinel = None
+    if args.sentinel:
+        from core.sentinel_client import SentinelClient
+
+        client = SentinelClient(timeout=120)
+        client.score([("A", "hello")])  # wait for a warm container, so a cold start doesn't count against the first scenario
+        sentinel = client.score
     paths = sorted(SCENARIOS.glob("*.json"))
     if args.only:
         paths = [p for p in paths if p.stem in args.only]
@@ -152,7 +160,7 @@ def main() -> None:
     def run(path: Path) -> dict:
         started = time.time()
         try:
-            scored = score_run(replay(path, "text", args.speed, log=lambda _: None))
+            scored = score_run(replay(path, "text", args.speed, log=lambda _: None, sentinel=sentinel))
         except Exception as exc:  # report a crashed run as a failure, keep the rest
             scored = {"scenario": path.stem, "label": "scam" if path.stem.startswith("scam") else "benign", "action": "error",
                       "passed": False, "error": f"{type(exc).__name__}: {exc}", "time_to_detection": None, "before_money_ask": None,
@@ -165,11 +173,12 @@ def main() -> None:
         runs = list(pool.map(run, jobs))
 
     summary = summarize(runs)
-    meta = {"date": time.strftime("%Y-%m-%d"), "runs": args.runs, "speed": args.speed}
+    meta = {"date": time.strftime("%Y-%m-%d"), "runs": args.runs, "speed": args.speed, "sentinel": args.sentinel}
     RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "latest.json").write_text(json.dumps({"meta": meta, "summary": summary, "runs": runs}, indent=2), encoding="utf-8")
+    stem = "latest_sentinel" if args.sentinel else "latest"
+    (RESULTS / f"{stem}.json").write_text(json.dumps({"meta": meta, "summary": summary, "runs": runs}, indent=2), encoding="utf-8")
     md = to_markdown(summary, runs, meta)
-    (RESULTS / "latest.md").write_text(md, encoding="utf-8")
+    (RESULTS / f"{stem}.md").write_text(md, encoding="utf-8")
     print("\n" + md)
 
 

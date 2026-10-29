@@ -9,3 +9,4 @@ google-auth>=2.29
 requests>=2.31
 websockets>=13
 psutil>=5.9
+modal>=1.0

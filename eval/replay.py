@@ -142,13 +142,14 @@ def replay(
     report: bool = False,
     on_item: Callable[[TimedItem], None] | None = None,
     on_call_start: Callable[[], None] | None = None,
+    sentinel: Callable[[list[tuple[str, str]]], float | None] | None = None,
 ) -> ReplayResult:
     """Run one scenario end to end; return the CaseFile, verdicts and final action."""
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
     # unique per run: parallel eval runs started in the same second used to share one log file
     bus = EventBus(LOGS_DIR / f"replay_{scenario['name']}_{int(time.time())}_{uuid.uuid4().hex[:6]}.jsonl")
     case = CaseFile()
-    orchestrator = Orchestrator(bus, case, policy=policy, log=log)
+    orchestrator = Orchestrator(bus, case, policy=policy, log=log, sentinel=sentinel)
     case.on_update(lambda u: log(format_update(u)))
     tier1_history: list[tuple[float, float]] = []
     case.on_update(lambda u: tier1_history.append((time.time(), u.confidence)))

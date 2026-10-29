@@ -159,8 +159,9 @@ def results() -> dict[str, Any]:
     """Evaluation results, read from the committed result files (never typed in by hand)."""
     out: dict[str, Any] = {}
     for name in ("latest", "external", "external_baseline", "frames"):
-        path = RESULTS_DIR / f"{name}.json"
-        if path.exists():
+        # the configuration that ships includes Tripwire Sentinel; its runs are reported when present
+        path = next((p for p in (RESULTS_DIR / f"{name}_sentinel.json", RESULTS_DIR / f"{name}.json") if p.exists()), None)
+        if path:
             data = json.loads(path.read_text(encoding="utf-8"))
             out[name] = {"meta": data.get("meta"), "summary": data.get("summary")}
     return out
