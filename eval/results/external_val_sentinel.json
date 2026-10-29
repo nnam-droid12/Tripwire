@@ -2,7 +2,7 @@
   "meta": {
     "date": "2026-10-29",
     "conversations": 128,
-    "minutes": 8.1,
+    "minutes": 9.2,
     "split": "val",
     "sentinel": true
   },
@@ -76,9 +76,9 @@
       }
     },
     "errors": 0,
-    "claims": 170,
-    "unsupported_claims": 1,
-    "reviewed": 119,
+    "claims": 176,
+    "unsupported_claims": 0,
+    "reviewed": 120,
     "confirmed": 119,
     "retries": 0,
     "retry_rescued": 0
@@ -96,7 +96,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Amazon to offer a refund."
+        "  call   [med] A (caller): Caller impersonates Amazon to offer an unsolicited refund."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -118,8 +118,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller confirms phone number with no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks to confirm phone number and protected person asks who is calling."
+        "  call   [none] A (caller): Caller makes initial greeting asking to confirm phone number.",
+        "  call   [none] B (protected_person): Initial greeting exchange with no scam indicators yet."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -141,8 +141,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller introduces as delivery service confirming expected package; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller confirming expected package delivery; protected person asking for clarification."
+        "  call   [none] A (caller): Caller makes routine delivery confirmation with no scam indicators.",
+        "  call   [none] B (protected_person): Caller confirming package delivery and protected person asking for details, no scam indicators in newest line."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -164,8 +164,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller confirms a package delivery window with no request or pressure.",
-        "  call   [none] B (protected_person): Caller confirms delivery window and protected person asks about package contents in routine exchange."
+        "  call   [none] A (caller): Benign delivery confirmation with no scam indicators.",
+        "  call   [none] B (protected_person): Legitimate delivery confirmation with no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -209,7 +209,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller initiates unsolicited prize offer for a free gift card."
+        "  call   [low] A (caller): Caller makes unsolicited prize offer of $1000 gift card."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -231,7 +231,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller initiates unsolicited prize offer of $1000 gift card."
+        "  call   [med] A (caller): Caller initiates unsolicited prize notification offering $1000 gift card."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -253,7 +253,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [high] A (caller): Caller impersonates SSA officer claiming SSN problem."
+        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN issue."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -277,10 +277,10 @@
       "error_samples": [
         "  call   [med] A (caller): Caller initiates contact claiming to be SSA officer about serious matter."
       ],
-      "claims": 2,
+      "claims": 1,
       "unsupported_claims": 0,
-      "reviewed": 2,
-      "confirmed": 2,
+      "reviewed": 1,
+      "confirmed": 1,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -294,13 +294,13 @@
       "stop_turn": null,
       "nudge_turn": null,
       "stop_fraction": null,
-      "judge_calls": 1,
+      "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as calling from ABC Insurance.",
-        "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
+        "  call   [none] A (caller): Caller introduces himself from ABC Insurance with no scam indicators yet.",
+        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as ABC Insurance, no scam indicators yet."
       ],
-      "claims": 1,
+      "claims": 0,
       "unsupported_claims": 0,
       "reviewed": 0,
       "confirmed": 0,
@@ -320,7 +320,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Windows support and claims malware infection."
+        "  call   [high] A (caller): Caller impersonates Windows support claiming malware infection."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -342,7 +342,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller initiates contact claiming to be SSA officer about SSN issue."
+        "  call   [high] A (caller): Caller impersonates SSA officer claiming SSN problem to initiate scam."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -364,12 +364,12 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [high] A (caller): Caller impersonates bank claiming suspicious activity to set up refund verification."
+        "  call   [med] A (caller): Caller impersonates bank staff claiming suspicious activity and offering a refund verification."
       ],
-      "claims": 2,
+      "claims": 3,
       "unsupported_claims": 0,
-      "reviewed": 2,
-      "confirmed": 2,
+      "reviewed": 3,
+      "confirmed": 3,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -386,8 +386,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (unknown): Single greeting confirming phone number with no scam indicators.",
-        "  call   [none] B (protected_person): Initial greeting with no scam indicators."
+        "  call   [none] A (caller): Caller is confirming the phone number with no scam indicators yet.",
+        "  call   [none] B (protected_person): Initial greeting with no scam indicators yet."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -409,8 +409,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller opens call with greeting and claims to represent ABC Insurance.",
-        "  call   [none] B (protected_person): Protected person politely responding to introductory insurance call with no scam indicators."
+        "  call   [low] A (caller): Caller introduced as from ABC Insurance, no scam request yet.",
+        "  call   [none] B (protected_person): Routine greeting from insurance caller with no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -432,8 +432,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as calling from XYZ Insurance.",
-        "  call   [none] B (protected_person): Caller introduced as XYZ Insurance and protected person responded politely with no scam indicators yet."
+        "  call   [low] A (caller): Caller introduced themselves as from XYZ Insurance with no problem claim yet.",
+        "  call   [none] B (protected_person): Benign greeting exchange with no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -455,8 +455,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller confirms package delivery availability with no scam indicators.",
-        "  call   [none] B (protected_person): Caller confirms package delivery and protected person asks for clarification, no scam indicators present."
+        "  call   [none] A (caller): Caller confirming package delivery availability with no scam indicators.",
+        "  call   [none] B (protected_person): Routine delivery confirmation with no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -478,8 +478,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller requests address confirmation for a laptop delivery; no scam indicators in this line alone.",
-        "  call   [none] B (protected_person): Protected person asks caller to identify company and source of number before confirming address."
+        "  call   [none] A (caller): Caller asks to confirm address for a laptop delivery; no scam signals in this line alone.",
+        "  call   [none] B (protected_person): Protected person cautiously asks caller to identify company and source of number before confirming address."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -495,16 +495,16 @@
       "is_scam": true,
       "turns": 18,
       "action": "hard_stop",
-      "stop_turn": 3,
+      "stop_turn": 5,
       "nudge_turn": 3,
-      "stop_fraction": 0.17,
-      "judge_calls": 2,
+      "stop_fraction": 0.28,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Initial greeting with no scam indicators.",
-        "  call   [none] B (protected_person): Caller asks to confirm identity and protected person responds, no scam indicators yet."
+        "  call   [none] A (caller): Caller greeting to confirm identity, no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asks for John and protected person asks who is calling, no scam indicators yet."
       ],
-      "claims": 4,
+      "claims": 5,
       "unsupported_claims": 0,
       "reviewed": 2,
       "confirmed": 2,
@@ -524,12 +524,12 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller initiates contact claiming to be Amazon about an overcharge, setting up a refund pretext."
+        "  call   [med] A (caller): Caller impersonates Amazon and introduces overcharge/refund pretext."
       ],
-      "claims": 2,
+      "claims": 1,
       "unsupported_claims": 0,
-      "reviewed": 2,
-      "confirmed": 2,
+      "reviewed": 1,
+      "confirmed": 1,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -546,8 +546,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Initial greeting with phone number verification, no scam indicators present.",
-        "  call   [none] B (protected_person): Call opening with number check, no scam content yet."
+        "  call   [none] A (caller): Caller greets and asks to confirm phone number, no scam indicators yet.",
+        "  call   [none] B (protected_person): Call just started, protected person answered and asked who is calling."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -569,8 +569,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Telemarketing call offering home security deal, no scam indicators present.",
-        "  call   [none] B (protected_person): Marketing call about home security with interested response, no scam indicators."
+        "  call   [none] A (caller): Unsolicited marketing call offering home security deal, no scam indicators yet.",
+        "  call   [none] B (protected_person): Marketing call about home security system with interested response, no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -592,7 +592,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [high] A (caller): Caller impersonates SSA officer claiming SSN problem."
+        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN problem."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -614,7 +614,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [high] A (caller): Caller impersonates Microsoft support claiming virus infection."
+        "  call   [med] A (caller): Caller impersonates Microsoft and claims computer virus infection."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -636,8 +636,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as from SafeGuard Insurance with no problem claimed yet.",
-        "  call   [none] B (protected_person): Protected person politely responds to caller's introduction from SafeGuard Insurance with no scam indicators present."
+        "  call   [low] A (caller): Caller introduces himself as calling from SafeGuard Insurance.",
+        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as SafeGuard Insurance."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -656,13 +656,13 @@
       "stop_turn": null,
       "nudge_turn": null,
       "stop_fraction": null,
-      "judge_calls": 1,
+      "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Initial greeting with no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks to confirm identity and protected person asks who is calling."
+        "  call   [none] A (caller): Initial greeting with no scam indicators.",
+        "  call   [none] B (protected_person): Protected person answered and asked caller to identify themselves."
       ],
-      "claims": 1,
+      "claims": 0,
       "unsupported_claims": 0,
       "reviewed": 0,
       "confirmed": 0,
@@ -704,7 +704,7 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller asks to confirm phone number, no scam indicators yet.",
+        "  call   [none] A (caller): Caller asks to confirm phone number; no scam indicators present.",
         "  call   [none] B (protected_person): Benign wrong-number call with no scam indicators."
       ],
       "claims": 0,
@@ -727,7 +727,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Microsoft and claims virus infection."
+        "  call   [high] A (caller): Caller impersonates Microsoft to claim a virus infection."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -743,18 +743,19 @@
       "is_scam": true,
       "turns": 15,
       "action": "hard_stop",
-      "stop_turn": 1,
+      "stop_turn": 5,
       "nudge_turn": 1,
-      "stop_fraction": 0.07,
-      "judge_calls": 2,
+      "stop_fraction": 0.33,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller impersonates SSA officer reporting SSN issue."
+        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN problem.",
+        "  call   [high] B (protected_person): Caller impersonated SSA in prior line; protected person is now engaging and asking for details, continuing high-risk contact."
       ],
-      "claims": 1,
+      "claims": 5,
       "unsupported_claims": 0,
-      "reviewed": 1,
-      "confirmed": 1,
+      "reviewed": 3,
+      "confirmed": 3,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -771,7 +772,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller initiates unsolicited prize offer for a free gift card."
+        "  call   [low] A (caller): Caller offers unsolicited $500 Walmart gift card prize."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -793,8 +794,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller provides routine delivery window confirmation with no request or threat.",
-        "  call   [none] B (protected_person): Protected person asks caller for details about expected delivery; no scam indicators present."
+        "  call   [none] A (caller): Routine delivery confirmation with no scam indicators.",
+        "  call   [none] B (protected_person): Routine delivery confirmation with no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -838,8 +839,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Benign delivery confirmation with no scam indicators.",
-        "  call   [none] B (protected_person): Caller confirms delivery window and protected person asks for details, no scam indicators present."
+        "  call   [none] A (caller): Benign delivery confirmation with no scam indicators or requests.",
+        "  call   [none] B (protected_person): Benign delivery confirmation exchange with no scam indicators in newest line."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -861,7 +862,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Windows support claiming virus infection."
+        "  call   [high] A (caller): Caller impersonates Windows Technical Support to claim a virus infection."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -883,8 +884,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as from ABC Insurance at start of call.",
-        "  call   [none] B (protected_person): Protected person politely responds to insurance caller with no scam indicators present."
+        "  call   [low] A (caller): Caller introduces himself as calling from ABC Insurance.",
+        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as ABC Insurance, no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -903,13 +904,13 @@
       "stop_turn": null,
       "nudge_turn": null,
       "stop_fraction": null,
-      "judge_calls": 1,
+      "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Unsolicited telemarketing call offering insurance savings.",
-        "  call   [none] B (protected_person): Insurance sales call with no scam indicators in newest line."
+        "  call   [none] A (caller): Telemarketing call offering insurance savings, no scam coercion or extraction signals present.",
+        "  call   [none] B (protected_person): Telemarketing insurance pitch with no scam indicators in newest line."
       ],
-      "claims": 1,
+      "claims": 0,
       "unsupported_claims": 0,
       "reviewed": 0,
       "confirmed": 0,
@@ -923,18 +924,19 @@
       "is_scam": true,
       "turns": 12,
       "action": "hard_stop",
-      "stop_turn": 1,
+      "stop_turn": 5,
       "nudge_turn": 1,
-      "stop_fraction": 0.08,
-      "judge_calls": 2,
+      "stop_fraction": 0.42,
+      "judge_calls": 4,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller introduces as SSA officer, initiating potential government impersonation scam."
+        "  call   [med] A (caller): Caller introduces himself as an officer from the Social Security Administration.",
+        "  call   [none] B (protected_person): Protected person responds to caller who previously claimed to be SSA officer; no new scam signal in this line."
       ],
-      "claims": 1,
+      "claims": 6,
       "unsupported_claims": 0,
-      "reviewed": 1,
-      "confirmed": 1,
+      "reviewed": 3,
+      "confirmed": 3,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -974,8 +976,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller provides routine delivery window confirmation with no scam indicators.",
-        "  call   [none] B (protected_person): Benign delivery confirmation with no scam indicators."
+        "  call   [none] A (caller): Benign delivery confirmation with no scam indicators.",
+        "  call   [none] B (protected_person): Routine delivery confirmation with no scam indicators in newest line."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -997,7 +999,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Microsoft support claiming virus on computer."
+        "  call   [med] A (caller): Caller impersonates Microsoft support and claims a virus on the computer."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1019,8 +1021,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as calling from SafeGuard Insurance.",
-        "  call   [none] B (protected_person): Protected person politely answers introductory call from insurance representative."
+        "  call   [low] A (caller): Caller introduces himself as from SafeGuard Insurance; no scam pressure yet.",
+        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as SafeGuard Insurance, no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -1042,7 +1044,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Windows support and claims virus infection."
+        "  call   [med] A (caller): Caller impersonates Windows support claiming virus infection."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1064,8 +1066,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller opens with a number check; no scam indicators yet.",
-        "  call   [none] B (protected_person): Routine call opening with number verification, no scam indicators yet."
+        "  call   [none] A (caller): Caller verifying phone number, no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller verifying phone number, protected person asking for identification; no scam indicators yet."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -1087,8 +1089,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller confirms a package delivery with no request or pressure.",
-        "  call   [none] B (protected_person): Caller confirmed a delivery and protected person asked for details about the package."
+        "  call   [none] A (caller): Benign delivery confirmation with no scam indicators, requests, or pressure.",
+        "  call   [none] B (protected_person): Benign delivery confirmation exchange with no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -1110,8 +1112,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as from ABC Insurance at start of call.",
-        "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
+        "  call   [low] A (caller): Caller introduces himself as from ABC Insurance, no scam request yet.",
+        "  call   [none] B (protected_person): Benign greeting exchange with no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -1134,7 +1136,7 @@
       "errors": 0,
       "error_samples": [
         "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks to confirm identity and protected person responds asking who is calling; no scam indicators yet."
+        "  call   [none] B (protected_person): Caller asks to confirm identity, protected person responds asking who is calling."
       ],
       "claims": 3,
       "unsupported_claims": 0,
@@ -1156,8 +1158,8 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Call opening with greeting, no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for Mr. Johnson and recipient confirms identity and asks who is calling."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity of Mr. Johnson.",
+        "  call   [none] B (protected_person): Caller asks to confirm identity and protected person responds, no scam indicators yet."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1173,19 +1175,18 @@
       "is_scam": true,
       "turns": 21,
       "action": "hard_stop",
-      "stop_turn": 4,
+      "stop_turn": 1,
       "nudge_turn": 1,
-      "stop_fraction": 0.19,
-      "judge_calls": 3,
+      "stop_fraction": 0.05,
+      "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Microsoft support and claims malware issues.",
-        "  call   [none] B (protected_person): Protected person asks caller to specify the alleged malware after unsolicited Microsoft support claim."
+        "  call   [med] A (caller): Caller impersonates Microsoft support and claims malware problem."
       ],
-      "claims": 5,
+      "claims": 2,
       "unsupported_claims": 0,
-      "reviewed": 3,
-      "confirmed": 3,
+      "reviewed": 2,
+      "confirmed": 2,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -1202,8 +1203,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as representing SafeGuard Insurance; no scam problem or request yet.",
-        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as SafeGuard Insurance, no scam indicators in newest line."
+        "  call   [low] A (caller): Caller introduces himself as from SafeGuard Insurance with no problem claim yet.",
+        "  call   [none] B (protected_person): Caller introduced as SafeGuard Insurance and protected person responded politely with no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -1241,16 +1242,15 @@
       "is_scam": true,
       "turns": 14,
       "action": "hard_stop",
-      "stop_turn": 2,
+      "stop_turn": 1,
       "nudge_turn": 1,
-      "stop_fraction": 0.14,
-      "judge_calls": 3,
+      "stop_fraction": 0.07,
+      "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller opens with unsolicited prize offer for a $1,000 gift card.",
-        "  call   [med] B (protected_person): Caller offered unsolicited $1,000 gift card and protected person is asking how they were selected."
+        "  call   [med] A (caller): Caller makes unsolicited prize offer for $1,000 gift card."
       ],
-      "claims": 2,
+      "claims": 1,
       "unsupported_claims": 0,
       "reviewed": 1,
       "confirmed": 1,
@@ -1270,8 +1270,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as calling from ABC Insurance.",
-        "  call   [none] B (protected_person): Protected person politely responds to insurance caller with no scam indicators in newest line."
+        "  call   [low] A (caller): Caller introduces himself as calling from ABC Insurance with no request yet.",
+        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as ABC Insurance; no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -1293,8 +1293,8 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Call opening with caller asking to confirm identity of Mrs. Johnson.",
-        "  call   [none] B (protected_person): Caller asks to confirm identity, protected person responds asking who is calling."
+        "  call   [none] A (caller): Initial greeting with no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller confirms identity and protected person asks who is calling; no scam indicators yet."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1310,19 +1310,19 @@
       "is_scam": true,
       "turns": 18,
       "action": "hard_stop",
-      "stop_turn": 5,
+      "stop_turn": 9,
       "nudge_turn": 1,
-      "stop_fraction": 0.28,
+      "stop_fraction": 0.5,
       "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller introduces himself as Amazon customer service without prior context.",
-        "  call   [none] B (protected_person): Caller introduced as Amazon support and protected person asked for reason for call, no scam instruction yet."
+        "  call   [low] A (caller): Caller initiates contact claiming to be Amazon customer service.",
+        "  call   [none] B (protected_person): Protected person responding to earlier Amazon impersonation claim and asking for reason for call; newest line itself is benign."
       ],
-      "claims": 3,
+      "claims": 4,
       "unsupported_claims": 0,
-      "reviewed": 2,
-      "confirmed": 2,
+      "reviewed": 3,
+      "confirmed": 3,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -1339,7 +1339,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller initiates unsolicited refund offer claiming to be from XYZ Company refund department."
+        "  call   [low] A (caller): Caller initiates unsolicited refund offer claiming to be from XYZ Company refund department."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1361,8 +1361,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller confirms TV delivery with no scam indicators.",
-        "  call   [none] B (protected_person): Routine delivery confirmation call with no scam indicators yet."
+        "  call   [none] A (caller): Caller confirming TV delivery, no scam indicators in this line.",
+        "  call   [none] B (protected_person): Protected person requests order number to verify routine delivery call."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -1384,8 +1384,8 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity, no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for Mr. Johnson and recipient confirms identity and asks who is calling."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity of Mr. Johnson.",
+        "  call   [none] B (protected_person): Caller confirms identity, no scam indicators yet."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1401,15 +1401,16 @@
       "is_scam": true,
       "turns": 11,
       "action": "hard_stop",
-      "stop_turn": 1,
+      "stop_turn": 3,
       "nudge_turn": 1,
-      "stop_fraction": 0.09,
-      "judge_calls": 2,
+      "stop_fraction": 0.27,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN problem."
+        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN problem.",
+        "  call   [low] B (protected_person): Protected person asks caller to explain the claimed Social Security issue."
       ],
-      "claims": 2,
+      "claims": 4,
       "unsupported_claims": 0,
       "reviewed": 2,
       "confirmed": 2,
@@ -1429,7 +1430,7 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Telemarketing call offering kitchen appliance deal with no scam indicators yet.",
+        "  call   [none] A (caller): Caller introduces telemarketing pitch for kitchen appliances with no scam indicators.",
         "  call   [none] B (protected_person): Telemarketing call about kitchen appliances with no scam indicators in newest line."
       ],
       "claims": 0,
@@ -1447,13 +1448,13 @@
       "turns": 20,
       "action": "hard_stop",
       "stop_turn": 13,
-      "nudge_turn": 13,
+      "nudge_turn": 3,
       "stop_fraction": 0.65,
       "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators.",
-        "  call   [none] B (protected_person): Caller asked for John and recipient confirmed identity, no scam indicators yet."
+        "  call   [none] A (caller): Simple greeting with no scam indicators.",
+        "  call   [none] B (protected_person): Caller asks to confirm identity and protected person responds, no scam indicators yet."
       ],
       "claims": 5,
       "unsupported_claims": 0,
@@ -1475,7 +1476,7 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller confirms package delivery with no request or threat yet.",
+        "  call   [none] A (caller): Caller identifies as delivery service confirming a package, no scam indicators yet.",
         "  call   [none] B (protected_person): Caller confirms package delivery and protected person asks for clarification, no scam indicators present."
       ],
       "claims": 0,
@@ -1498,7 +1499,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller makes unsolicited prize offer of $500 gift card."
+        "  call   [low] A (caller): Caller initiates unsolicited prize offer for $500 gift card."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -1520,12 +1521,12 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Microsoft support and claims virus infection."
+        "  call   [med] A (caller): Caller impersonating Microsoft claims computer virus infection."
       ],
-      "claims": 2,
+      "claims": 1,
       "unsupported_claims": 0,
-      "reviewed": 2,
-      "confirmed": 2,
+      "reviewed": 1,
+      "confirmed": 1,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -1542,8 +1543,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as from XYZ Insurance Company at start of call.",
-        "  call   [none] B (protected_person): Protected person responds politely to insurance caller greeting, no scam indicators yet."
+        "  call   [low] A (caller): Caller introduces himself as calling from an insurance company; no scam request yet.",
+        "  call   [none] B (protected_person): Protected person greeting caller from XYZ Insurance and asking how to help; no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -1566,7 +1567,7 @@
       "errors": 0,
       "error_samples": [
         "  call   [none] A (caller): Caller confirms a package delivery window with no request for action or sensitive information.",
-        "  call   [none] B (protected_person): Caller confirms delivery window and protected person asks for details; no scam indicators present."
+        "  call   [none] B (protected_person): Benign delivery confirmation with no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -1582,19 +1583,19 @@
       "is_scam": true,
       "turns": 20,
       "action": "hard_stop",
-      "stop_turn": 5,
+      "stop_turn": 3,
       "nudge_turn": 3,
-      "stop_fraction": 0.25,
-      "judge_calls": 4,
+      "stop_fraction": 0.15,
+      "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Call opening with greeting, no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks to confirm identity and recipient responds asking who is calling."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asks to confirm identity, no scam indicators yet."
       ],
-      "claims": 6,
+      "claims": 2,
       "unsupported_claims": 0,
-      "reviewed": 2,
-      "confirmed": 2,
+      "reviewed": 1,
+      "confirmed": 1,
       "retries": 0,
       "sentinel_flag_turn": 3,
       "retry_rescued": 0
@@ -1611,7 +1612,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonating SSA officer reporting suspicious SSN activity."
+        "  call   [med] A (caller): Caller impersonates SSA officer and alleges suspicious activity on SSN."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1633,7 +1634,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates FTC claiming fraudulent transaction and offering a refund."
+        "  call   [med] A (caller): Caller impersonates FTC to report fraudulent transaction and offer refund."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1655,7 +1656,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller initiates unsolicited Amazon refund offer for alleged overcharge."
+        "  call   [med] A (caller): Caller impersonating Amazon refund department offering unsolicited refund."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1677,7 +1678,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller initiates contact claiming to be Amazon offering a refund for a purchase error."
+        "  call   [med] A (caller): Caller impersonates Amazon customer service offering a refund for a purchase error."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1699,8 +1700,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller verifies phone number with no scam indicators.",
-        "  call   [none] B (protected_person): Initial greeting exchange with no scam indicators yet."
+        "  call   [none] A (caller): Caller greeting and verifying phone number, no scam indicators yet.",
+        "  call   [none] B (protected_person): Initial greeting and identity confirmation, no scam indicators yet."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -1722,7 +1723,7 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller asks for John with no scam claims or instructions.",
+        "  call   [none] A (caller): Caller simply asks for John with no scam indicators.",
         "  call   [none] B (protected_person): Wrong-number call with no scam indicators."
       ],
       "claims": 0,
@@ -1745,7 +1746,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates SSA officer claiming SSN problem."
+        "  call   [med] A (caller): Caller impersonating SSA officer claiming SSN problem."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -1767,8 +1768,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller asks to confirm phone number; no scam indicators yet.",
-        "  call   [none] B (protected_person): Benign wrong-number exchange with no scam indicators."
+        "  call   [none] A (caller): Caller verifying phone number, no scam indicators in this line.",
+        "  call   [none] B (protected_person): Benign wrong-number exchange with no scam indicators"
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -1790,8 +1791,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller provides routine delivery window confirmation with no request or pressure.",
-        "  call   [none] B (protected_person): Benign delivery confirmation exchange with no scam indicators."
+        "  call   [none] A (caller): Benign delivery confirmation with no scam indicators.",
+        "  call   [none] B (protected_person): Delivery confirmation call with no scam indicators in newest line."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -1813,13 +1814,13 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity of Mrs. Johnson.",
-        "  call   [none] B (protected_person): Caller asks for Mrs Johnson and protected person answers and asks who is calling."
+        "  call   [none] A (caller): Initial greeting with no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asked for Mrs Johnson, protected person answered and asked for caller identity."
       ],
       "claims": 2,
       "unsupported_claims": 0,
       "reviewed": 2,
-      "confirmed": 2,
+      "confirmed": 1,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -1830,19 +1831,19 @@
       "is_scam": true,
       "turns": 13,
       "action": "hard_stop",
-      "stop_turn": 3,
+      "stop_turn": 9,
       "nudge_turn": 3,
-      "stop_fraction": 0.23,
-      "judge_calls": 2,
+      "stop_fraction": 0.69,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Call has just begun with a greeting, no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for Mr Johnson and protected person answers, no scam indicators yet."
+        "  call   [none] A (caller): Initial greeting with no scam indicators.",
+        "  call   [none] B (protected_person): Caller confirms identity and protected person asks who is calling; no scam indicators yet."
       ],
-      "claims": 2,
-      "unsupported_claims": 1,
-      "reviewed": 1,
-      "confirmed": 1,
+      "claims": 5,
+      "unsupported_claims": 0,
+      "reviewed": 3,
+      "confirmed": 3,
       "retries": 0,
       "sentinel_flag_turn": 3,
       "retry_rescued": 0
@@ -1859,8 +1860,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Call opening with number verification, no scam indicators yet.",
-        "  call   [none] B (protected_person): Initial greeting exchange with no scam indicators."
+        "  call   [none] A (caller): Call just started with number verification, no scam indicators yet.",
+        "  call   [none] B (protected_person): Routine call opening with no scam indicators yet."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -1882,12 +1883,12 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Amazon and introduces refund for suspicious activity."
+        "  call   [med] A (caller): Caller impersonates Amazon reporting suspicious activity and offering a refund."
       ],
-      "claims": 3,
+      "claims": 2,
       "unsupported_claims": 0,
-      "reviewed": 3,
-      "confirmed": 3,
+      "reviewed": 2,
+      "confirmed": 2,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -1904,8 +1905,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Benign delivery confirmation with no scam indicators.",
-        "  call   [none] B (protected_person): Routine delivery confirmation with no scam indicators."
+        "  call   [none] A (caller): Caller from delivery service confirming expected package, no scam indicators present.",
+        "  call   [none] B (protected_person): Delivery confirmation call with no scam indicators in newest line."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -1927,8 +1928,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Initial greeting with no scam indicators.",
-        "  call   [none] B (protected_person): Caller asked for John and recipient corrected name to Michael and asked for caller identity."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asks for John and recipient identifies as Michael and asks who is calling."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -1950,8 +1951,8 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for Mrs. Johnson and protected person asks who is calling; no scam indicators yet."
+        "  call   [none] A (caller): Initial greeting with no scam indicators yet.",
+        "  call   [none] B (protected_person): Routine call opening with identity check, no scam indicators yet."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -1973,8 +1974,8 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asked for John and protected person confirmed identity and asked for caller identification."
+        "  call   [none] A (caller): Initial greeting with no scam indicators.",
+        "  call   [none] B (protected_person): Caller asks to confirm identity; protected person asks who is calling, no scam content yet."
       ],
       "claims": 3,
       "unsupported_claims": 0,
@@ -1996,8 +1997,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as from SafeGuard Insurance at start of call.",
-        "  call   [none] B (protected_person): Protected person politely responding to caller's greeting, no scam indicators in this exchange."
+        "  call   [low] A (caller): Inbound call with caller introducing himself as from SafeGuard Insurance, no scam problem or request yet.",
+        "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -2016,13 +2017,13 @@
       "stop_turn": null,
       "nudge_turn": null,
       "stop_fraction": null,
-      "judge_calls": 1,
+      "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller identifies as XYZ Delivery to confirm a package delivery.",
-        "  call   [none] B (protected_person): Caller confirms package delivery and protected person asks for clarification; no scam indicators present."
+        "  call   [none] A (caller): Caller confirming expected package delivery, no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller confirms delivery and protected person asks for clarification, no scam indicators in newest line."
       ],
-      "claims": 1,
+      "claims": 0,
       "unsupported_claims": 0,
       "reviewed": 0,
       "confirmed": 0,
@@ -2042,8 +2043,8 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for Mrs. Johnson and protected person asks for identification."
+        "  call   [none] A (caller): Initial greeting with no scam indicators.",
+        "  call   [none] B (protected_person): Caller asks for Mrs. Johnson and recipient confirms identity and asks who is calling."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -2062,13 +2063,13 @@
       "stop_turn": null,
       "nudge_turn": null,
       "stop_fraction": null,
-      "judge_calls": 0,
+      "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller introduces as insurance salesperson offering a life insurance deal with no scam pressure or requests yet.",
-        "  call   [none] B (protected_person): Insurance sales call with no scam indicators in newest line."
+        "  call   [low] A (caller): Caller introduces as insurance telemarketer offering life insurance deal.",
+        "  call   [none] B (protected_person): Caller offers life insurance deal and protected person asks for details, no scam indicators present."
       ],
-      "claims": 0,
+      "claims": 1,
       "unsupported_claims": 0,
       "reviewed": 0,
       "confirmed": 0,
@@ -2088,7 +2089,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller cold-calls claiming to be Microsoft reporting a virus on the computer."
+        "  call   [med] A (caller): Caller impersonates Microsoft and claims a virus to initiate scam."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -2110,12 +2111,12 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Windows support and claims virus on computer."
+        "  call   [med] A (caller): Caller impersonates Windows support and claims a virus infection."
       ],
-      "claims": 2,
+      "claims": 1,
       "unsupported_claims": 0,
-      "reviewed": 2,
-      "confirmed": 2,
+      "reviewed": 1,
+      "confirmed": 1,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -2132,8 +2133,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller is confirming they reached the correct phone number; no scam indicators present.",
-        "  call   [none] B (unknown): Brief number-check exchange with no scam claims or requests."
+        "  call   [none] A (caller): Caller asks to confirm phone number; no scam indicators yet.",
+        "  call   [none] B (protected_person): Brief phone number check with no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -2155,10 +2156,10 @@
       "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Initial greeting with no scam indicators yet."
+        "  call   [none] A (caller): Initial greeting with no scam indicators.",
+        "  call   [none] B (protected_person): Caller asks for John and protected person asks who is calling, no scam indicators yet."
       ],
-      "claims": 5,
+      "claims": 6,
       "unsupported_claims": 0,
       "reviewed": 3,
       "confirmed": 3,
@@ -2173,13 +2174,13 @@
       "turns": 22,
       "action": "hard_stop",
       "stop_turn": 5,
-      "nudge_turn": 3,
+      "nudge_turn": 5,
       "stop_fraction": 0.23,
       "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Initial greeting with no scam indicators.",
-        "  call   [none] B (protected_person): Caller asked to confirm identity and protected person responded asking who is calling."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators.",
+        "  call   [none] B (protected_person): Initial greeting with no scam indicators."
       ],
       "claims": 3,
       "unsupported_claims": 0,
@@ -2201,8 +2202,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller introduces herself as Karen from XYZ Services with a greeting, no scam indicators yet.",
-        "  call   [none] B (protected_person): Protected person politely responds to caller's greeting, no scam indicators present."
+        "  call   [none] A (caller): Caller introduces herself from XYZ Services with a greeting, no scam indicators yet.",
+        "  call   [none] B (protected_person): Polite greeting exchange with caller identifying as Karen from XYZ Services."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -2224,8 +2225,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller asks to confirm phone number; no scam indicators yet.",
-        "  call   [none] B (protected_person): Initial greeting and verification of phone number, no scam indicators yet."
+        "  call   [none] A (unknown): Single greeting confirming phone number with no scam indicators.",
+        "  call   [none] B (protected_person): Caller verifies phone number and protected person asks for identification."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -2269,8 +2270,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces herself as calling from XYZ Insurance with no scam pressure yet.",
-        "  call   [none] B (protected_person): Polite opening exchange with insurance caller, no scam indicators in newest line."
+        "  call   [low] A (caller): Caller introduces herself as from XYZ Insurance in opening greeting.",
+        "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -2292,8 +2293,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Call opening greeting with no scam indicators yet.",
-        "  call   [none] B (protected_person): Wrong-number call with no scam indicators."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators yet.",
+        "  call   [none] B (protected_person): Wrong-number exchange with no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -2315,7 +2316,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Amazon support and initiates unsolicited refund offer."
+        "  call   [med] A (caller): Caller impersonates Amazon to offer unsolicited refund."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -2337,8 +2338,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller provides routine delivery window confirmation with no request or threat.",
-        "  call   [none] B (protected_person): Delivery confirmation call with no scam indicators; protected person asks for package details."
+        "  call   [none] A (caller): Caller provides routine delivery confirmation with no scam indicators.",
+        "  call   [none] B (protected_person): Delivery service confirming package time and recipient asking for package details."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -2360,7 +2361,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller initiates unsolicited refund call claiming to be Microsoft."
+        "  call   [med] A (caller): Caller impersonates Microsoft to offer an unsolicited refund."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -2382,8 +2383,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators in this line.",
-        "  call   [none] B (protected_person): Caller asks to confirm identity and protected person responds, no scam indicators yet."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
+        "  call   [none] B (protected_person): Initial greeting exchange with no scam indicators."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -2421,19 +2422,19 @@
       "is_scam": true,
       "turns": 12,
       "action": "hard_stop",
-      "stop_turn": 7,
+      "stop_turn": 3,
       "nudge_turn": 3,
-      "stop_fraction": 0.58,
-      "judge_calls": 3,
+      "stop_fraction": 0.25,
+      "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Call opening with caller asking for Mrs. Johnson and recipient confirming identity."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity of Mrs. Johnson, no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asks for Mrs. Johnson and protected person confirms identity; no scam indicators yet."
       ],
-      "claims": 4,
+      "claims": 1,
       "unsupported_claims": 0,
-      "reviewed": 3,
-      "confirmed": 3,
+      "reviewed": 1,
+      "confirmed": 1,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -2450,8 +2451,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller asks to confirm phone number with no scam content yet.",
-        "  call   [none] B (unknown): Speakers clarifying phone number, no scam content present."
+        "  call   [none] A (caller): Caller verifies phone number with no scam indicators.",
+        "  call   [none] B (protected_person): Routine phone number check with no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -2473,8 +2474,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as calling from ABC Insurance Company.",
-        "  call   [none] B (protected_person): Protected person politely responding to an insurance company caller with no scam indicators in this exchange."
+        "  call   [low] A (caller): Caller introduces himself as from ABC Insurance Company.",
+        "  call   [none] B (protected_person): Polite greeting exchange with no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -2496,7 +2497,7 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller provides routine package delivery confirmation with no scam indicators.",
+        "  call   [none] A (caller): Benign delivery confirmation with no scam indicators.",
         "  call   [none] B (protected_person): Routine delivery confirmation with no scam indicators."
       ],
       "claims": 0,
@@ -2520,7 +2521,7 @@
       "errors": 0,
       "error_samples": [
         "  call   [low] A (caller): Caller introduces himself as calling from XYZ Insurance.",
-        "  call   [none] B (protected_person): Benign greeting exchange with no scam indicators in newest line."
+        "  call   [none] B (protected_person): Polite opening exchange with insurance caller, no scam indicators yet."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -2542,8 +2543,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduced themselves as from XYZ Insurance with no other scam indicators yet.",
-        "  call   [none] B (protected_person): Protected person politely responding to an insurance caller with no scam indicators in this line."
+        "  call   [low] A (caller): Caller introduces himself as from XYZ Insurance in opening greeting.",
+        "  call   [none] B (protected_person): Caller introduced as XYZ Insurance and protected person responded politely with no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -2565,8 +2566,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces himself as from XYZ Insurance.",
-        "  call   [none] B (protected_person): Polite greeting exchange with insurance caller, no scam indicators in newest line."
+        "  call   [low] A (caller): Caller introduces as from XYZ Insurance with no scam problem claimed yet.",
+        "  call   [none] B (protected_person): Protected person politely responds to insurance caller with no scam indicators in this line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -2588,7 +2589,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller initiates unsolicited prize offer for a gift card."
+        "  call   [med] A (caller): Caller initiates unsolicited prize offer for $1,000 gift card."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -2610,7 +2611,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller impersonates Microsoft support and claims virus infection."
+        "  call   [high] A (caller): Caller impersonates Microsoft support and claims computer virus infection."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -2626,15 +2627,16 @@
       "is_scam": true,
       "turns": 18,
       "action": "hard_stop",
-      "stop_turn": 1,
+      "stop_turn": 2,
       "nudge_turn": 1,
-      "stop_fraction": 0.06,
-      "judge_calls": 2,
+      "stop_fraction": 0.11,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller makes unsolicited prize offer of a free gift card."
+        "  call   [low] A (caller): Caller claims recipient won an unsolicited $1000 gift card prize.",
+        "  call   [low] B (protected_person): Caller offered unsolicited $1000 gift card prize, protected person is engaging to ask how selected."
       ],
-      "claims": 1,
+      "claims": 2,
       "unsupported_claims": 0,
       "reviewed": 1,
       "confirmed": 1,
@@ -2654,13 +2656,13 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Caller asks for John and protected person asks who is calling; no scam indicators yet."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asks to confirm identity; protected person responds asking who is calling."
       ],
       "claims": 2,
       "unsupported_claims": 0,
-      "reviewed": 0,
-      "confirmed": 0,
+      "reviewed": 1,
+      "confirmed": 1,
       "retries": 0,
       "sentinel_flag_turn": 3,
       "retry_rescued": 0
@@ -2677,7 +2679,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller initiates unsolicited prize offer for a $500 gift card."
+        "  call   [low] A (caller): Caller offers unsolicited $500 gift card prize."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -2700,7 +2702,7 @@
       "errors": 0,
       "error_samples": [
         "  call   [none] A (caller): Unsolicited sales call offering financial software promotion, no scam indicators yet.",
-        "  call   [none] B (protected_person): Telemarketing pitch for finance software with skeptical response, no scam indicators present."
+        "  call   [none] B (protected_person): Caller offers finance software promotion; protected person responds skeptically with no scam indicators yet."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -2722,8 +2724,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller provides routine package delivery window with no request or pressure.",
-        "  call   [none] B (protected_person): Benign delivery confirmation exchange with no scam indicators"
+        "  call   [none] A (caller): Benign delivery confirmation call with no scam indicators.",
+        "  call   [none] B (protected_person): Routine delivery confirmation with no scam indicators in newest line."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -2745,8 +2747,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller gives routine delivery window confirmation with no request or threat.",
-        "  call   [none] B (protected_person): Caller confirms package delivery window and protected person asks about package contents, no scam indicators present."
+        "  call   [none] A (caller): Caller states a routine package delivery window with no request or threat.",
+        "  call   [none] B (protected_person): Routine delivery confirmation with no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -2768,8 +2770,8 @@
       "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller introduces herself as from XYZ Insurance in opening greeting.",
-        "  call   [none] B (protected_person): Protected person politely responding to insurance caller introduction, no scam indicators present."
+        "  call   [low] A (caller): Caller introduces as insurance representative; no scam content yet.",
+        "  call   [none] B (protected_person): Polite exchange with insurance caller, no scam indicators in newest line."
       ],
       "claims": 1,
       "unsupported_claims": 0,
@@ -2791,8 +2793,8 @@
       "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Call begins with caller greeting and asking for Mr. Johnson.",
-        "  call   [none] B (protected_person): Protected person answers and asks caller to identify themselves; no scam indicators yet."
+        "  call   [none] A (unknown): Caller greets the protected person with no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asks for Mr. Johnson and protected person responds asking for identification."
       ],
       "claims": 4,
       "unsupported_claims": 0,
@@ -2808,15 +2810,16 @@
       "is_scam": true,
       "turns": 20,
       "action": "hard_stop",
-      "stop_turn": 1,
+      "stop_turn": 2,
       "nudge_turn": 1,
-      "stop_fraction": 0.05,
-      "judge_calls": 2,
+      "stop_fraction": 0.1,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [high] A (caller): Caller impersonates Microsoft and claims a virus infection."
+        "  call   [high] A (caller): Caller impersonates Microsoft support and claims computer virus infection.",
+        "  call   [med] B (protected_person): Caller impersonating Microsoft claims computer infected, protected person asking for details."
       ],
-      "claims": 2,
+      "claims": 4,
       "unsupported_claims": 0,
       "reviewed": 2,
       "confirmed": 2,
@@ -2836,7 +2839,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [high] A (caller): Caller impersonates Microsoft to claim virus on computer."
+        "  call   [med] A (caller): Caller impersonating Microsoft initiates tech-support scam with virus claim."
       ],
       "claims": 2,
       "unsupported_claims": 0,
@@ -2852,18 +2855,19 @@
       "is_scam": true,
       "turns": 11,
       "action": "hard_stop",
-      "stop_turn": 1,
+      "stop_turn": 2,
       "nudge_turn": 1,
-      "stop_fraction": 0.09,
-      "judge_calls": 2,
+      "stop_fraction": 0.18,
+      "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [med] A (caller): Caller makes unsolicited prize offer of $1000 gift card."
+        "  call   [low] A (caller): Caller initiates unsolicited prize offer for $1000 gift card.",
+        "  call   [med] B (protected_person): Caller offered unsolicited $1000 gift card and protected person is engaging with the prize pitch."
       ],
-      "claims": 1,
+      "claims": 3,
       "unsupported_claims": 0,
-      "reviewed": 1,
-      "confirmed": 1,
+      "reviewed": 2,
+      "confirmed": 2,
       "retries": 0,
       "sentinel_flag_turn": 1,
       "retry_rescued": 0
@@ -2880,10 +2884,10 @@
       "judge_calls": 3,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller greets and asks to confirm identity; no scam indicators yet.",
-        "  call   [none] B (protected_person): Initial greeting with no scam indicators yet."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators yet.",
+        "  call   [none] B (protected_person): Caller asks for Mr. Johnson and recipient confirms identity, no scam content yet."
       ],
-      "claims": 4,
+      "claims": 5,
       "unsupported_claims": 0,
       "reviewed": 2,
       "confirmed": 2,
@@ -2903,8 +2907,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller asks to confirm phone number, no scam indicators yet.",
-        "  call   [none] B (protected_person): Call opening with number verification, no scam indicators yet."
+        "  call   [none] A (unknown): Single greeting line with no scam indicators.",
+        "  call   [none] B (protected_person): Initial call verification with no scam indicators yet."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -2923,13 +2927,13 @@
       "stop_turn": null,
       "nudge_turn": null,
       "stop_fraction": null,
-      "judge_calls": 0,
+      "judge_calls": 1,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller introduces himself as from XYZ Insurance with no scam indicators yet.",
-        "  call   [none] B (protected_person): Protected person answers a routine insurance call with no scam indicators."
+        "  call   [low] A (caller): Caller introduces himself as calling from XYZ Insurance.",
+        "  call   [none] B (protected_person): Protected person politely responding to insurance caller with no scam indicators in newest line."
       ],
-      "claims": 0,
+      "claims": 1,
       "unsupported_claims": 0,
       "reviewed": 0,
       "confirmed": 0,
@@ -2949,8 +2953,8 @@
       "judge_calls": 0,
       "errors": 0,
       "error_samples": [
-        "  call   [none] A (caller): Caller opens with a greeting asking to confirm identity.",
-        "  call   [none] B (protected_person): Caller asks for John and protected person corrects name and asks who is calling."
+        "  call   [none] A (caller): Caller greets and asks to confirm identity with no scam indicators.",
+        "  call   [none] B (protected_person): Routine call opening with no scam indicators."
       ],
       "claims": 0,
       "unsupported_claims": 0,
@@ -2972,7 +2976,7 @@
       "judge_calls": 2,
       "errors": 0,
       "error_samples": [
-        "  call   [low] A (caller): Caller initiates unsolicited prize notification for a gift card."
+        "  call   [low] A (caller): Caller makes unsolicited prize offer of $1,000 gift card."
       ],
       "claims": 1,
       "unsupported_claims": 0,

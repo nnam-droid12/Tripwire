@@ -16,5 +16,5 @@ Evaluated 2026-10-29 on conversations we did not write (call audio only, no scre
 | telemarketing | legitimate | 0% | 0% |
 | wrong | legitimate | 0% | 0% |
 
-Judge claims checked against the record: 170. Quotes not found in the record, discarded before any action: 1.
-Reasons behind a stop re-checked by the independent reviewer: 119, confirmed: 119. Verdicts sent back to the judge with feedback: 0, of which passed on the retry: 0.
+Judge claims checked against the record: 176. Quotes not found in the record, discarded before any action: 0.
+Reasons behind a stop re-checked by the independent reviewer: 120, confirmed: 119. Verdicts sent back to the judge with feedback: 0, of which passed on the retry: 0.

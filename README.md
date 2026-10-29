@@ -45,7 +45,7 @@ Built for the Meta Global AI Developer Hackathon (indie track). Everything in th
 
 **At a glance:**
 - **Third-party phone calls** (scored once, on calls we didn't write): **100%** of 160 scam calls stopped with **0%** false alarms on 160 legitimate calls, and **95%** of 20 real recorded scam calls.
-- **Scripted whole sessions:** every scam stopped, a median of **21.8 s** after the first sign, **88%** of them before money was asked for.
+- **Scripted whole sessions:** every scam stopped, a median of about **22 s** after the first sign, and **62–88%** of them before money was asked for (two runs; see [Results](#results)).
 - **No action without evidence:** no stop has ever been taken on a claim that failed verification.
 
 See [Results](#results).
@@ -228,9 +228,9 @@ Evaluated 2026-10-27: 12 scenarios x 2 runs (10 scam runs, 14 benign runs), text
 | + escalate on strong early signs, explicit early-stop rules for the judge | 31.1 s | 38% | 0% |
 | + judge on low reasoning effort (about 3x faster) | 27.0 s | 50% | 0% |
 | + independent reviewer before every stop ([Verification](#verification-tripwire-checks-its-own-work-before-it-acts)) | 29.4 s | 50% | 0% |
-| + [Tripwire Sentinel](#tripwire-sentinel-a-small-model-of-our-own) as a second opinion | **21.8 s** | **88%** | **0%** |
+| + [Tripwire Sentinel](#tripwire-sentinel-a-small-model-of-our-own) as a second opinion | **21.8 s / 22.1 s** | **88% / 62%** | **0%** |
 
-We stopped tuning the judge at 27.0 s on purpose, because pushing further on scenarios we wrote ourselves would be overfitting. The later gains came from Sentinel, which was developed on third-party data (below), not on these scenarios. With Sentinel, all 24 runs still pass, including the genuine bank fraud-alert call.
+The two Sentinel numbers are two separate runs of the same 24 replays: every difference is in the two scenarios where the money request comes about a second after the threat, so a stop at 21 s or 23 s decides whether it counts as "before". We stopped tuning the judge at 27.0 s on purpose, because pushing further on scenarios we wrote ourselves would be overfitting. The later gains came from Sentinel, which was developed on third-party data (below), not on these scenarios. With Sentinel, all 24 runs still pass, including the genuine bank fraud-alert call.
 
 **Caveats.** These scenarios were written by us, replayed as text (the speech path is tested separately), with 2 runs each. They are a regression suite and a sanity check, not a field study.
 
