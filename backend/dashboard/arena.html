@@ -224,14 +224,27 @@ addEventListener("resize", fit); fit();
 function showPage(page, hash) { $("page").src = `/arena/pages/${page}${hash ? "#" + hash : ""}`; }
 
 // ---- audio: Margaret queued, Tripwire interrupts ---------------------------------
+// One voice at a time. A paused clip never fires "ended", so anything that stops a clip must
+// also release it (stopCurrent), or the queue would wait for it forever.
 const queue = []; let playing = null;
+function stopCurrent() {
+  if (playing) { playing.onended = null; playing.onerror = null; playing.pause(); }
+  playing = null;
+}
 function play(clip, urgent) {
   if (!clip) return;
   const a = new Audio(`/arena/voice/${clip}.mp3`);
-  if (urgent) { queue.length = 0; if (playing) playing.pause(); playing = null; }
-  queue.push(a); if (!playing) next();
+  if (urgent) { queue.length = 0; stopCurrent(); }
+  queue.push(a);
+  if (!playing) next();
 }
-function next() { playing = queue.shift() || null; if (playing) { playing.onended = next; playing.play().catch(next); } }
+function next() {
+  playing = queue.shift() || null;
+  if (!playing) return;
+  playing.onended = next;
+  playing.onerror = next;  // a clip that can't load is skipped, never blocks the rest
+  playing.play().catch(next);
+}
 
 // ---- transcript ---------------------------------------------------------------
 function say(who, text) {
@@ -426,7 +439,7 @@ async function micReady() {
 async function talkStart() {
   if (talking || !ws || $("talk").disabled || !(await micReady())) return;
   await ctx.resume(); talking = true; $("talk").classList.add("live"); $("talk").textContent = "● Listening… release to send";
-  if (playing) playing.pause();
+  stopCurrent();  // you start talking: Margaret stops mid-sentence, and her next lines still play
   ws.send(JSON.stringify({ type: "ptt_start" }));
 }
 function talkEnd() {
