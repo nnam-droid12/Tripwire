@@ -8,12 +8,25 @@ visitor sees and hears: a spoken nudge, the red warning over Margaret's
 laptop, the "close that box" resistance, the recovery agent's actions and the
 family alert.
 
+Three defences act on the call itself:
+
+* **Code Shield**: the moment the caller asks for a one-time code, a
+  deterministic rule stops the call before Margaret can read it out;
+* **Call Tom**: when a caller claims to be a relative in trouble, the real
+  relative is asked through a link ("someone says they're you, are you OK?");
+  "that's not me" ends the call, whatever the voice sounded like;
+* **Swap in Margaret**: after a hard stop, Margaret is taken off the call and a
+  Muse Wonder decoy keeps the scammer talking to learn how they get paid. Its
+  verified intel goes to the family live, to Community Shield and into a case
+  file for the police.
+
 ``send`` is called from worker threads with JSON-able dicts; the web layer
 forwards them over the WebSocket.
 """
 
 from __future__ import annotations
 
+import os
 import re
 import threading
 import time
@@ -25,12 +38,16 @@ from agent.tts import GoogleVoice
 from analysts.case_judge import render_case
 from analysts.interventionist import RESIST_LINE, choose_nudge, hard_stop_speech
 from analysts.screen_analyst import ScreenAnalyst
-from backend import approvals, shield
+from backend import approvals, family_check, shield
 from backend.arena import laptop, scores
 from backend.arena.margaret import Margaret
 from backend.arena.recovery import REJECTED, RecoveryAgent
-from backend.incidents import create_incident
+from backend.decoy import Decoy
+from backend.incidents import STORE, create_incident
+from backend.investigator import write_case_file
+from backend.sms import send_sms
 from core import sentinel_client
+from core.code_shield import code_request
 from core.casefile import CaseFile, CaseUpdate
 from core.config import LOGS_DIR, RUNTIME_DIR
 from core.events import Event, EventBus
@@ -40,6 +57,7 @@ from core.output_checks import check_message, check_report, invented_numbers, ob
 from core.orchestrator import Orchestrator
 from core.policy import Action
 from core.rules import SENSITIVE, Decision, Facts, FamilyRules
+from core.shield import extract
 
 VOICE_DIR = RUNTIME_DIR / "arena_voice"
 VOICES = {
@@ -65,6 +83,11 @@ def grounded_contacts(text: str, record: list[str]) -> str:
 
 
 MAX_SECONDS = 8 * 60
+DECOY_ON = os.environ.get("TRIPWIRE_DECOY", "1") != "0"
+DECOY_MAX_TURNS = 10  # then the decoy says goodbye
+CHECK_WAIT_S = 120  # how long Tripwire waits for the relative's answer in a game
+RELATIVE = "Tom"  # Margaret's grandson (fictional), the relative scammers most often impersonate
+OTP_TEXT = "Riverbend Bank: 482913 is your verification code. We will never call you to ask for this code."
 MAX_REJECTIONS = 2  # per tool: after this, the output is delivered with anything unverifiable removed
 
 
@@ -114,6 +137,13 @@ class ArenaSession:
         self.rules = FamilyRules()
         self.remote_control = False  # someone other than Margaret is driving her mouse and keyboard
         self.guarded: set[str] = set()  # sensitive pages already put through the family rules
+        self.decoy: Decoy | None = None  # once the decoy has taken Margaret's place
+        self.decoy_lines: list[str] = []  # what the decoy said, for the case file
+        self.decoy_turns = 0
+        self._decoy_done = False
+        self.incident_id: str | None = None
+        self._family_updates: list[dict] = []  # live updates sent to the family, stored on the incident
+        self.family_checked = False
         self.case.on_update(self._on_case)
         self.bus.subscribe(self._on_event)
 
@@ -144,12 +174,19 @@ class ArenaSession:
             self.lines += 1
             self.first_line_at = self.first_line_at or time.time()
             self.send({"type": "line", "who": "scammer", "text": text})
-            if self.warning_active and is_disable_instruction(text):
+            if self.warning_active and is_disable_instruction(text) and self.decoy is None:
                 self._resist(text)
+            if self.decoy is not None:
+                self.bus.publish(Event("audio", "transcript", {"speaker": "A", "text": text, "summary": f'Caller (to the decoy): "{text}"'}))
+                self._decoy_hears(text)
+                return
             if self.call_ended:
                 self.send({"type": "line", "who": "system", "text": "Margaret has hung up. She can't hear you any more."})
                 return
             self.bus.publish(Event("audio", "transcript", {"speaker": "A", "text": text, "summary": f'Caller: "{text}"'}))
+            if not self.warning_active and code_request(text):
+                self._code_shield(text)  # Margaret never gets the chance to read the code out
+                return
             turn = self.margaret.respond(text, self.page)
             self._margaret_speaks(turn.reply)
             if turn.open_page and turn.open_page != self.page:
@@ -178,7 +215,9 @@ class ArenaSession:
         threading.Thread(target=self.scammer_says, args=(turn.text,), daemon=True).start()
 
     def hang_up(self) -> None:
-        if not self.over:
+        if self.decoy is not None:
+            threading.Thread(target=self._finish_decoy, args=("The caller hung up on the decoy.",), daemon=True).start()
+        elif not self.over:
             self._end("scammer_hung_up", "You hung up.")
 
     # -- Margaret ----------------------------------------------------------------------
@@ -267,6 +306,10 @@ class ArenaSession:
             "stages": sorted(int(s) for s in update.stages_present),
             "new": [{"name": s.name, "stage": s.stage, "source": s.source, "evidence": s.evidence[:140]} for s in update.new_signals],
         })
+        claim = next((s for s in update.new_signals if s.name == "family_emergency_claim"), None)
+        if claim and not self.family_checked and not self.warning_active:
+            self.family_checked = True
+            threading.Thread(target=self._call_tom, args=(claim.evidence,), daemon=True).start()
 
     def _on_event(self, event: Event) -> None:
         if event.source == "judge" and event.kind == "verdict":
@@ -301,6 +344,8 @@ class ArenaSession:
         })
         self.send({"type": "speak", "audio": voice_clip("tripwire", speech)})
         self.margaret.note("hard_stop")
+        if DECOY_ON and self._swap_in_decoy(verdict):
+            return
         with self._turn_lock:  # Margaret reacts to the warning before anything else is said, then hangs up
             turn = self.margaret.respond("(silence on the line while you read your screen)", self.page)
             self._margaret_speaks(turn.reply)
@@ -314,7 +359,136 @@ class ArenaSession:
 
     # -- act, don't just warn ------------------------------------------------------------
 
-    def _recover(self, verdict: dict) -> None:
+    # -- Code Shield ------------------------------------------------------------------------
+
+    def _code_shield(self, text: str) -> None:
+        """The caller asked for the one-time code: stop now, by rule, before it is read out."""
+        self.send({"type": "sms", "text": OTP_TEXT})  # the bank's text arrives on Margaret's phone
+        self.bus.publish(Event("sms", "code_received", {"summary": "A one-time code from Riverbend Bank arrived by text on Margaret's phone during the call"}))
+        self.case.add_signals("call", [("code_request", text)])
+        reason = {"reason": "Code Shield: the caller asked for the one-time code the bank just texted. No real bank ever asks for it.",
+                  "evidence": text}
+        threading.Thread(target=self._hard_stop, args=({"reasons": [reason], "code_shield": True},), daemon=True).start()
+
+    # -- Call Tom ------------------------------------------------------------------------------
+
+    def _call_tom(self, claim: str) -> None:
+        """Ask the real relative. Their answer is a fact from outside the call, which no voice clone can fake."""
+        check = family_check.create("Margaret", RELATIVE, claim, source="arena")
+        link = f"/check/{check['id']}"
+        speech = f"Margaret, before you do anything, I'm checking with {RELATIVE} right now. Please don't send anything yet."
+        send_sms(f"TRIPWIRE: someone on the phone with Margaret says they're you ({RELATIVE}). Are you OK? Answer here: {link}")
+        self.send({"type": "family_check", "check": check["id"], "relative": RELATIVE, "claim": claim, "text": speech,
+                   "audio": voice_clip("tripwire", speech)})
+        self.margaret.note("nudge", text=speech)
+        self.case.note("intervention", f"Tripwire sent {RELATIVE} a safety check: someone on the call claims to be him")
+        deadline = time.time() + CHECK_WAIT_S
+        while not self.over and time.time() < deadline:
+            answer = family_check.get(check["id"])
+            if answer and answer["status"] != "pending":
+                break
+            time.sleep(1.5)
+        else:
+            if not self.over and not self.warning_active:
+                text = f"I couldn't reach {RELATIVE} yet. Margaret, please hang up and call {RELATIVE} on his own number."
+                self.send({"type": "family_check_result", "status": "no_answer", "relative": RELATIVE, "text": text,
+                           "audio": voice_clip("tripwire", text)})
+            return
+        if answer["status"] == "safe":
+            fact = f'{RELATIVE} answered Tripwire\'s safety check: "That\'s not me. I\'m safe." He did not make this call.'
+            self.send({"type": "family_check_result", "status": "safe", "relative": RELATIVE})
+            self.bus.publish(Event("family", "denied", {"summary": fact}))  # ground truth: the record can now quote it
+            self._hard_stop({"reasons": [{"reason": f"The real {RELATIVE} confirmed he is safe and did not call: the caller is an impostor",
+                                          "evidence": fact}]})
+        elif answer["status"] == "me":
+            text = f"{RELATIVE} says it's really him."
+            self.case.note("family", f"{RELATIVE} answered Tripwire's safety check: it's really him.")
+            self.send({"type": "family_check_result", "status": "me", "relative": RELATIVE, "text": text, "audio": voice_clip("tripwire", text)})
+
+    # -- Swap in Margaret ---------------------------------------------------------------------
+
+    def _swap_in_decoy(self, verdict: dict) -> bool:
+        """Take Margaret off the call and put the decoy in her place. False if the decoy is unavailable."""
+        record = [line for line in observed(self.case.snapshot())]
+        try:
+            decoy = Decoy()
+            decoy.caller_lines += [t["text"] for t in self.case.snapshot()["timeline"] if t["source"] == "call"]
+            with self._turn_lock:
+                self.send({"type": "swap", "text": "Tripwire took Margaret off the call. The caller is now talking to Tripwire's decoy "
+                           "(Muse Wonder), which is trying to learn how they get paid."})
+                opening = decoy.opening("\n".join(record[-20:]))
+                self.decoy = decoy
+                self._decoy_speaks(opening)
+        except Exception:  # no decoy: Margaret simply hangs up, as before
+            self.decoy = None
+            return False
+        threading.Thread(target=self._recover, args=(verdict, False), daemon=True).start()
+        return True
+
+    def _decoy_speaks(self, text: str) -> None:
+        self.decoy_lines.append(f"(decoy, as Margaret) {text}")
+        self.send({"type": "line", "who": "decoy", "text": text, "audio": voice_clip("margaret", text)})
+
+    def _decoy_hears(self, text: str) -> None:
+        """One caller line to the decoy (called under the turn lock)."""
+        if self._decoy_done:
+            self.send({"type": "line", "who": "system", "text": "The line is dead."})
+            return
+        self.decoy_turns += 1
+        try:
+            turn = self.decoy.heard(text)
+        except Exception:
+            turn = None
+        if turn is None:
+            threading.Thread(target=self._finish_decoy, args=("The decoy hung up.",), daemon=True).start()
+            return
+        for item in turn.new_intel:
+            self.send({"type": "intel", **item.to_dict()})
+            if item.kind == "pickup":
+                self._alert_family(f"TRIPWIRE: the caller told Margaret someone will come to collect money: \"{item.value}\". "
+                                   "Don't let anyone collect cash, gold or cards. If a pickup is arranged, call 911.")
+        self._decoy_speaks(turn.reply)
+        if turn.hang_up or self.decoy_turns >= DECOY_MAX_TURNS or self.expired():
+            threading.Thread(target=self._finish_decoy, args=("The decoy said goodbye and hung up.",), daemon=True).start()
+
+    def _alert_family(self, text: str) -> None:
+        result = send_sms(text)
+        update = {"ts": time.time(), "text": text, "sent": result.sent}
+        self._family_updates.append(update)
+        self.send({"type": "family_alert", **update})
+
+    def _finish_decoy(self, why: str) -> None:
+        """End the decoy call, then write the case file and share the scammer's identifiers."""
+        with self._warning_lock:
+            if self._decoy_done:
+                return
+            self._decoy_done = True
+        self.call_ended = True
+        self.send({"type": "line", "who": "system", "text": why})
+        intel = [i.to_dict() for i in self.decoy.intel] if self.decoy else []
+        record = observed(self.case.snapshot()) + self.decoy_lines
+        self.send({"type": "case_file_start", "intel": len(intel)})
+        try:
+            case_file = write_case_file(record, intel)
+        except Exception as exc:
+            case_file = {"title": "Case file unavailable", "error": type(exc).__name__, "timeline": [], "leads": []}
+        # Community Shield learns the scammer's identifiers, only from the caller's own verified words
+        shield.report({ind for i in intel for ind in extract(i["quote"]) if ind.value not in MARGARET_IDS}, self.incident_id or self.id)
+        for _ in range(60):  # the recovery agent creates the incident; wait for it briefly
+            if self.incident_id or self.over:
+                break
+            time.sleep(0.5)
+        if self.incident_id:
+            updates = list(self._family_updates)
+            rejected = self.decoy.rejected if self.decoy else []
+            STORE.update(self.incident_id, lambda inc: inc.update(case_file=case_file, intel=intel, intel_rejected=rejected,
+                                                                   family_updates=updates))
+        self.send({"type": "case_file", "case_file": case_file, "intel": intel})
+        self._end("stopped", f"Tripwire stopped the scam, and its decoy got {len(intel)} detail{'s' if len(intel) != 1 else ''} about how the scammer gets paid.")
+
+    # -- act, don't just warn ------------------------------------------------------------
+
+    def _recover(self, verdict: dict, end_game: bool = True) -> None:
         self.send({"type": "recovery_start"})
         incident: dict[str, str] = {}
         rejections: dict[str, int] = {}
@@ -370,6 +544,7 @@ class ArenaSession:
                                     "report": self.report}
                 incident["id"], incident["link"] = create_incident(verdict_with_msg, snap, frames, "Margaret", redact_frames=False,
                                                                    source="arena", protected_ids=MARGARET_IDS)
+                self.incident_id = incident["id"]
                 detail = "Family alerted with a link to the incident."
             else:
                 detail = "Unknown tool."
@@ -383,7 +558,8 @@ class ArenaSession:
         except Exception as exc:  # the warning already protected her; recovery is a bonus
             steps, summary = [], f"Recovery agent unavailable ({type(exc).__name__})."
         self.send({"type": "recovery_done", "summary": summary, "incident": incident.get("link", "").split("?")[0]})
-        self._end("stopped", "Tripwire stopped the scam.")
+        if end_game:
+            self._end("stopped", "Tripwire stopped the scam.")
 
     def _end(self, reason: str, text: str) -> None:
         if self.over:

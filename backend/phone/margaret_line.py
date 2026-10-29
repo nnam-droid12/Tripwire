@@ -18,7 +18,7 @@ from typing import Callable
 from backend.arena.session import ArenaSession
 from backend.phone.call import PhoneLine
 
-SPOKEN_BY_TRIPWIRE = ("nudge", "resist", "verify", "hold")
+SPOKEN_BY_TRIPWIRE = ("nudge", "resist", "verify", "hold", "family_check", "family_check_result")
 
 
 class PhoneGame:
@@ -37,7 +37,7 @@ class PhoneGame:
         """The arena session's events, turned into speech on the call."""
         kind = msg.get("type")
         self.events.append({k: v for k, v in msg.items() if k not in ("audio", "board")})
-        if kind == "line" and msg.get("who") == "margaret":
+        if kind == "line" and msg.get("who") in ("margaret", "decoy"):  # the decoy speaks in Margaret's voice: the caller can't tell
             self.line.say("margaret", msg["text"])
         elif kind == "hard_stop":
             self.line.say("tripwire", msg["speech"], urgent=True)

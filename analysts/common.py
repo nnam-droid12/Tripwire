@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from core.killchain import SIGNALS, vocabulary_prompt
+from core.killchain import SIGNALS, SYSTEM_ONLY, vocabulary_prompt
 
 RISK_LEVELS = ("none", "low", "med", "high")
 
@@ -30,13 +30,13 @@ def signal_menu() -> str:
 
 
 def clean_signals(raw: Any) -> list[tuple[str, str]]:
-    """Keep only ``(name, evidence)`` pairs whose name is in the vocabulary."""
+    """Keep only ``(name, evidence)`` pairs whose name is in the analysts' vocabulary (never a system-only signal)."""
     out: list[tuple[str, str]] = []
     for item in raw if isinstance(raw, list) else []:
         if not isinstance(item, dict):
             continue
         name = str(item.get("signal", "")).strip()
-        if name in SIGNALS:
+        if name in SIGNALS and name not in SYSTEM_ONLY:
             out.append((name, str(item.get("evidence", ""))[:300]))
     return out
 

@@ -36,7 +36,7 @@ from fastapi import FastAPI, Header, HTTPException, Query, WebSocket, WebSocketD
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel
 
-from backend import approvals, shield
+from backend import approvals, family_check, shield
 from backend.arena import laptop, scores
 from backend.arena.session import VOICE_DIR, ArenaSession, prewarm_voices
 from backend.incidents import STORE, create_incident, decode_frames
@@ -218,6 +218,34 @@ def post_approval(approval_id: str, body: DecisionIn) -> dict[str, Any]:
     if not approval:
         raise HTTPException(404)
     return approval
+
+
+class CheckAnswerIn(BaseModel):
+    status: str
+
+
+@app.get("/check/{check_id}", response_class=HTMLResponse)
+def check_page(check_id: str) -> HTMLResponse:
+    if not family_check.get(check_id):
+        raise HTTPException(404)
+    return HTMLResponse((DASHBOARD_DIR / "check.html").read_text(encoding="utf-8"))
+
+
+@app.get("/api/checks/{check_id}")
+def get_check(check_id: str) -> dict[str, Any]:
+    check = family_check.get(check_id)
+    if not check:
+        raise HTTPException(404)
+    return check
+
+
+@app.post("/api/checks/{check_id}")
+def post_check(check_id: str, body: CheckAnswerIn) -> dict[str, Any]:
+    """The relative's answer to "someone says they're you". The link itself is the credential (unguessable id)."""
+    check = family_check.answer(check_id, body.status)
+    if not check:
+        raise HTTPException(404)
+    return check
 
 
 @app.get("/family", response_class=HTMLResponse)

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Tripwire Safety Check</title>
+<style>
+  :root { --bg:#f5f3ee; --card:#fff; --ink:#1b2127; --muted:#5d6670; --line:#e3ded4; --warn:#9a5b00; --warnbg:#fff4df; --ok:#1f7a4d; --no:#b3261e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#121518; --card:#1b2025; --ink:#eef1f4; --muted:#9aa5b0; --line:#2b3238; --warn:#e8a940; --warnbg:#3a2c12; --ok:#4cbf86; --no:#ff6b5f; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:18px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; }
+  main { max-width:480px; margin:0 auto; padding:28px 16px; }
+  .brand { font-weight:800; font-size:18px; margin-bottom:18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px; }
+  .tag { display:inline-block; background:var(--warnbg); color:var(--warn); font-weight:700; font-size:14px; padding:4px 12px; border-radius:999px; }
+  h1 { font-size:24px; margin:12px 0 8px; line-height:1.25; }
+  p { color:var(--muted); margin:0 0 14px; }
+  blockquote { margin:0 0 14px; padding:10px 14px; border-left:4px solid var(--line); background:var(--bg); border-radius:8px; font-style:italic; }
+  .buttons { display:grid; gap:10px; margin-top:18px; }
+  button { font:inherit; font-weight:700; padding:16px; border-radius:14px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; }
+  button.safe { background:var(--ok); color:#fff; border-color:transparent; }
+  .done { font-size:20px; font-weight:700; margin-top:16px; }
+  .small { font-size:14px; color:var(--muted); margin-top:16px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">Tripwire</div>
+  <div class="card">
+    <span class="tag">Safety check</span>
+    <h1 id="title">Loading…</h1>
+    <p>They said:</p>
+    <blockquote id="claim"></blockquote>
+    <p>Voices can be copied with AI from a few seconds of video. Your answer is how Tripwire knows for sure.</p>
+    <div class="buttons" id="buttons">
+      <button class="safe" id="safe">That's not me. I'm safe.</button>
+      <button id="me">Yes, it's really me.</button>
+    </div>
+    <div class="done" id="done" hidden></div>
+    <p class="small">Only answer for yourself. If you didn't call, Tripwire ends the call and tells them the truth.</p>
+  </div>
+</main>
+<script>
+const id = location.pathname.split("/").pop();
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function show(c) {
+  document.getElementById("title").textContent = `${c.relative}, someone on the phone with ${c.protected_name} says they're you. Are you OK?`;
+  document.getElementById("claim").textContent = c.claim;
+  if (c.status !== "pending") {
+    document.getElementById("buttons").hidden = true;
+    const done = document.getElementById("done");
+    done.hidden = false;
+    done.textContent = c.status === "safe" ? "Thank you. Tripwire is ending that call now." : c.status === "me" ? "Thanks, Tripwire has told them it's really you." : "This check has expired.";
+  }
+}
+async function load() { const r = await fetch(`/api/checks/${id}`); if (r.ok) show(await r.json()); else document.getElementById("title").textContent = "This link is not valid."; }
+async function answer(status) {
+  const r = await fetch(`/api/checks/${id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+  if (r.ok) show(await r.json());
+}
+document.getElementById("safe").onclick = () => answer("safe");
+document.getElementById("me").onclick = () => answer("me");
+load();
+</script>
+</body>
+</html>

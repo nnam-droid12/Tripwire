@@ -64,6 +64,13 @@ class ModelClient:
         """Create a client for ``baseten``, ``meta`` or ``fireworks`` from env vars."""
         return cls(ProviderConfig.from_env(name))
 
+    @classmethod
+    def wonder(cls, reasoning_effort: str = "low") -> "ModelClient":
+        """Muse Wonder (Meta Model API): the agentic model, for goals pursued over many turns."""
+        meta = ProviderConfig.from_env("meta")
+        model = os.environ.get("WONDER_MODEL", "muse-wonder-1.0")
+        return cls(ProviderConfig("wonder", meta.api_key, meta.base_url, model, reasoning_effort))
+
     def chat(self, messages: list[dict[str, Any]], *, temperature: float = 0.2, max_tokens: int = 2048, **kwargs: Any) -> str:
         """Send a chat completion and return the assistant text.
 

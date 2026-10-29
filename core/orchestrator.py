@@ -40,6 +40,8 @@ TIER0_RULES: dict[tuple[str, str], str] = {
     ("clipboard", "ethereum_address"): "crypto_address_copied",
     ("clipboard", "money_amount"): "money_amount_copied",
     ("clipboard", "card_number"): "card_number_copied",
+    ("sms", "code_received"): "code_received_during_call",
+    ("family", "denied"): "family_denied_call",
 }
 
 
@@ -142,7 +144,7 @@ class Orchestrator:
                 self._turns.append((event.data.get("speaker") or "?", redact_text(event.data["text"])))
                 self._sentinel_worker.submit(Event("sentinel", "score", {"turns": list(self._turns)}))
             self._call_worker.submit(event)
-        elif event.source in ("process", "network", "clipboard", "control"):
+        elif event.source in ("process", "network", "clipboard", "control", "sms", "family"):
             self._apply_tier0(event)
         elif event.source == "intervention":
             self.case.note("intervention", event.data.get("summary", event.kind), ts=event.ts)

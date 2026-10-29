@@ -47,6 +47,8 @@ SIGNALS: dict[str, SignalSpec] = {
     "sentinel_flag": SignalSpec(Stage.CONTACT, 0.20, "Tripwire Sentinel, a small model trained on labelled scam and legitimate calls, rates the call so far as a likely scam"),
     "known_scam_indicator": SignalSpec(Stage.CONTACT, 0.60, "A phone number, remote-access ID or crypto address that Community Shield has seen in scams stopped in other homes"),
     "isolation_instruction": SignalSpec(Stage.CONTACT, 0.30, "Told not to hang up, not to call or tell anyone, or that others are listening"),
+    "family_emergency_claim": SignalSpec(Stage.CONTACT, 0.35, "Caller claims to be a grandchild or other relative in trouble (arrest, accident, hospital, stranded), or calls on their behalf as a lawyer, officer or doctor, and needs money or secrecy"),
+    "family_denied_call": SignalSpec(Stage.CONTACT, 0.90, "The relative the caller claims to be confirmed, through Tripwire's check, that they are safe and did not make this call"),
     "prize_or_reward_claim": SignalSpec(Stage.CONTACT, 0.30, "Caller says the person won a prize, lottery, sweepstakes, grant or gift card they did not enter for"),
     # 3. Control
     "remote_tool_install_request": SignalSpec(Stage.CONTROL, 0.40, "Caller asks the user to download/open a remote-access tool"),
@@ -60,6 +62,8 @@ SIGNALS: dict[str, SignalSpec] = {
     "login_instruction": SignalSpec(Stage.ACCESS, 0.35, "Caller tells the user to log in to their bank, email or other account"),
     "bank_open_during_remote": SignalSpec(Stage.ACCESS, 0.55, "A banking site is open while a remote session is active"),
     "card_number_copied": SignalSpec(Stage.ACCESS, 0.25, "A payment card number was copied to the clipboard"),
+    "code_request": SignalSpec(Stage.ACCESS, 0.85, "The caller asks for a one-time, verification or security code that was texted or emailed to the person (Code Shield)"),
+    "code_received_during_call": SignalSpec(Stage.ACCESS, 0.40, "A text message carrying a one-time code arrived while the person was on a call with an unknown caller"),
     "personal_info_request": SignalSpec(Stage.ACCESS, 0.45, "An unsolicited caller asks for a Social Security number, bank account or routing number, password, PIN or one-time code, or for card details to 'verify', 'refund' or 'release' something"),
     # 5. Extraction
     "overpayment_refund_story": SignalSpec(Stage.EXTRACTION, 0.55, "Claim that too much was refunded and the user must send money back"),
@@ -79,10 +83,20 @@ SIGNALS: dict[str, SignalSpec] = {
 CHAIN_MULTIPLIER = {0: 0.0, 1: 0.35, 2: 0.6, 3: 0.85, 4: 0.95, 5: 1.0}
 
 
+# Raised only by Tripwire's own code (watchers, Community Shield, Sentinel, Code Shield's text check, a relative's
+# answer), never by a model reading the screen or the call: a fooled analyst must not be able to claim them.
+SYSTEM_ONLY = {
+    "cross_modal_brand_match", "bank_open_during_remote", "known_scam_indicator", "sentinel_flag",
+    "family_denied_call", "code_received_during_call", "remote_control_input",
+}
+
+
 def vocabulary_prompt() -> str:
-    """The vocabulary as a compact list for analyst prompts."""
+    """The vocabulary as a compact list for analyst prompts (system-only signals left out)."""
     lines = []
     for name, spec in SIGNALS.items():
+        if name in SYSTEM_ONLY:
+            continue
         lines.append(f"- {name} (stage {int(spec.stage)} {spec.stage.name.lower()}): {spec.description}")
     return "\n".join(lines)
 
