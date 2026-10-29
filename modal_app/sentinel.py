@@ -13,7 +13,9 @@ the threshold fixed beforehand.
 Usage (from the repo root, after ``python -m modal setup``)::
 
     python -m modal run modal_app/sentinel.py::timing     # seconds per step on CPU
-    python -m modal run --detach modal_app/sentinel.py::train
+    python -m modal deploy modal_app/sentinel.py
+    python -m modal run modal_app/sentinel.py::launch     # train + threshold, entirely in the cloud
+    python -m modal run modal_app/sentinel.py::fetch      # once it has finished
     python -m modal run modal_app/sentinel.py::evaluate
 
 Training runs on Modal CPU containers (GPUs require a card on file).
@@ -29,7 +31,9 @@ import modal
 
 BASE_MODEL = "unsloth/Llama-3.2-1B-Instruct"  # ungated mirror of Meta's Llama 3.2 1B Instruct (Llama 3.2 license)
 VOLUME_PATH = "/vol"
-ADAPTER_DIR = f"{VOLUME_PATH}/sentinel-lora"
+ADAPTER_DIR = f"{VOLUME_PATH}/sentinel-lora-full"
+TIMING_DIR = f"{VOLUME_PATH}/timing-lora"  # short timing runs never overwrite the real adapter
+META_PATH = f"{VOLUME_PATH}/sentinel-meta.json"
 MAX_CHARS = 1200  # keep the most recent turns that fit; a call is judged on what was just said
 CPUS = 16  # GPUs on Modal need a card on file; CPU containers don't, so Sentinel trains on CPUs
 
@@ -65,8 +69,8 @@ def prefixes(conv: dict) -> list[tuple[str, str]]:
     return [(prompt(turns[:k]), label) for k in cuts]
 
 
-@app.function(image=image, cpu=CPUS, memory=32768, volumes={VOLUME_PATH: volume}, timeout=8 * 3600)
-def train_remote(train_convs: list[dict], epochs: int = 1, lr: float = 2e-4, batch: int = 8, max_examples: int | None = None) -> dict:
+def _train(train_convs: list[dict], adapter_dir: str, epochs: int = 1, lr: float = 2e-4, batch: int = 8, max_examples: int | None = None) -> dict:
+    """LoRA fine-tuning (runs inside a Modal container)."""
     import torch
     from peft import LoraConfig, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -99,26 +103,25 @@ def train_remote(train_convs: list[dict], epochs: int = 1, lr: float = 2e-4, bat
             losses.append(loss.item())
             if len(losses) % 20 == 0:
                 print(f"step {len(losses)} loss {sum(losses[-20:]) / 20:.4f} ({(time.time() - started) / len(losses):.1f} s/step)", flush=True)
-    model.save_pretrained(ADAPTER_DIR)
-    tok.save_pretrained(ADAPTER_DIR)
+    model.save_pretrained(adapter_dir)
+    tok.save_pretrained(adapter_dir)
     volume.commit()
     k = min(10, len(losses))
     return {"examples": len(examples), "steps": len(losses), "first_loss": round(sum(losses[:k]) / k, 4), "last_loss": round(sum(losses[-k:]) / k, 4),
             "seconds_per_step": round((time.time() - started) / max(1, len(losses)), 2)}
 
 
-@app.function(image=image, cpu=CPUS, memory=32768, volumes={VOLUME_PATH: volume}, timeout=4 * 3600)
-def score_remote(convs: list[dict], batch: int = 16) -> list[list[float]]:
-    """P(scam) after every turn of every conversation (streaming, as live)."""
+def _score(convs: list[dict], adapter_dir: str, batch: int = 16) -> list[list[float]]:
+    """P(scam) after every turn of every conversation, streaming as it would live (runs inside a container)."""
     import torch
     from peft import PeftModel
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     torch.set_num_threads(CPUS)
-    tok = AutoTokenizer.from_pretrained(ADAPTER_DIR)
+    tok = AutoTokenizer.from_pretrained(adapter_dir)
     tok.pad_token = tok.eos_token
     base = AutoModelForCausalLM.from_pretrained(BASE_MODEL, torch_dtype=torch.float32)
-    model = PeftModel.from_pretrained(base, ADAPTER_DIR).eval()
+    model = PeftModel.from_pretrained(base, adapter_dir).eval()
     scam_id = tok(" scam", add_special_tokens=False).input_ids[0]
     safe_id = tok(" safe", add_special_tokens=False).input_ids[0]
     jobs = [(ci, k, prompt(c["turns"][:k])) for ci, c in enumerate(convs) for k in range(1, len(c["turns"]) + 1)]
@@ -132,6 +135,40 @@ def score_remote(convs: list[dict], batch: int = 16) -> list[list[float]]:
             for (ci, k, _), p in zip(chunk, probs):
                 out[ci][k - 1] = round(p, 4)
     return out
+
+
+def choose_threshold(val: list[dict], scores: list[list[float]]) -> dict:
+    """Lowest alarm threshold with at most 1% of held-out legitimate calls ever crossing it."""
+    legit_max = sorted(max(sc) for c, sc in zip(val, scores) if not c["is_scam"])
+    threshold = round(legit_max[int(len(legit_max) * 0.99) - 1] + 0.01, 3) if legit_max else 0.5
+    threshold = min(threshold, 0.99)
+    caught = [any(p >= threshold for p in sc) for c, sc in zip(val, scores) if c["is_scam"]]
+    return {"threshold": threshold, "val_detection": round(sum(caught) / len(caught), 3), "val_size": len(val)}
+
+
+@app.function(image=image, cpu=CPUS, memory=32768, volumes={VOLUME_PATH: volume}, timeout=8 * 3600)
+def train_remote(train_convs: list[dict], max_examples: int | None = None) -> dict:
+    return _train(train_convs, TIMING_DIR, max_examples=max_examples)
+
+
+@app.function(image=image, cpu=CPUS, memory=32768, volumes={VOLUME_PATH: volume}, timeout=4 * 3600)
+def score_remote(convs: list[dict]) -> list[list[float]]:
+    volume.reload()
+    return _score(convs, ADAPTER_DIR)
+
+
+@app.function(image=image, cpu=CPUS, memory=32768, volumes={VOLUME_PATH: volume}, timeout=12 * 3600)
+def pipeline_remote(train_convs: list[dict], val_convs: list[dict]) -> dict:
+    """Train, choose the threshold on held-out data, and save it all: entirely in the cloud.
+
+    Started with ``.spawn()`` on the deployed app, so it finishes even if the
+    machine that started it goes offline.
+    """
+    stats = _train(train_convs, ADAPTER_DIR)
+    meta = {**choose_threshold(val_convs, _score(val_convs, ADAPTER_DIR)), "training": stats}
+    Path(META_PATH).write_text(json.dumps(meta, indent=2))
+    volume.commit()
+    return meta
 
 
 def _convs(split: str) -> list[dict]:
@@ -161,17 +198,20 @@ def timing() -> None:
 
 
 @app.local_entrypoint()
-def train() -> None:
+def launch() -> None:
+    """Start the full pipeline on the *deployed* app (``modal deploy modal_app/sentinel.py`` first)."""
     convs = _convs("train")
     random.Random(1).shuffle(convs)
     val = convs[:128]  # held out from training: used only to choose the alarm threshold
-    print(train_remote.remote(convs[128:]))
-    scores = score_parallel(val)
-    legit_max = sorted(max(s) for c, s in zip(val, scores) if not c["is_scam"])
-    # lowest threshold with at most 1% of held-out legitimate calls ever crossing it
-    threshold = round(legit_max[int(len(legit_max) * 0.99) - 1] + 0.01, 3) if legit_max else 0.5
-    caught = [any(p >= threshold for p in s) for c, s in zip(val, scores) if c["is_scam"]]
-    meta = {"threshold": min(threshold, 0.99), "val_detection": round(sum(caught) / len(caught), 3), "val_size": len(val)}
+    pipeline = modal.Function.from_name("tripwire-sentinel", "pipeline_remote")
+    call = pipeline.spawn(convs[128:], val)
+    print(f"started: {call.object_id}")
+
+
+@app.local_entrypoint()
+def fetch() -> None:
+    """Copy the threshold chosen in the cloud into eval/results."""
+    meta = json.loads(b"".join(volume.read_file("sentinel-meta.json")))
     out = Path(__file__).resolve().parent.parent / "eval" / "results" / "sentinel_threshold.json"
     out.write_text(json.dumps(meta, indent=2), encoding="utf-8")
     print(meta)
