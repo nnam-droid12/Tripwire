@@ -8,7 +8,8 @@
 * ``protect``: the call is forwarded to the protected person's real phone
   (``PROTECTED_PHONE_NUMBER``) while both sides stream to ``/twilio/listen``
   (see :mod:`backend.phone.guard_line`). ``/twilio/whisper`` is what the protected
-  person hears before the call connects.
+  person hears before the call connects. After a stop, the scammer's leg is
+  connected to ``/twilio/decoy`` (see :mod:`backend.phone.decoy_line`).
 
 Security, since the URL is public:
 
@@ -41,6 +42,7 @@ from fastapi.responses import Response
 from backend.arena.session import voice_clip
 from backend.phone import usage
 from backend.phone.call import PhoneLine
+from backend.phone.decoy_line import DecoyCall
 from backend.phone.guard_line import GuardCall, whisper_text
 from backend.phone.margaret_line import PhoneGame
 
@@ -152,7 +154,8 @@ def make_router(games: asyncio.Semaphore) -> APIRouter:
                         await ws.close()
                         return
                     guard = GuardCall(details["call_sid"] or msg["start"].get("callSid", ""), details["from"],
-                                      os.environ.get("PROTECTED_PHONE_NUMBER", ""), os.environ.get("PROTECTED_NAME", ""))
+                                      os.environ.get("PROTECTED_PHONE_NUMBER", ""), os.environ.get("PROTECTED_NAME", ""),
+                                      decoy_twiml=_decoy_twiml)
                     await asyncio.to_thread(guard.start)
                 elif guard is not None and event == "media":
                     guard.audio(msg["media"].get("track", "inbound"), base64.b64decode(msg["media"]["payload"]))
@@ -163,6 +166,44 @@ def make_router(games: asyncio.Semaphore) -> APIRouter:
         finally:
             if guard:
                 guard.end()
+
+    def _decoy_twiml(details: dict) -> str:
+        token = _mint(details)
+        return (f'<Response><Connect><Stream url={quoteattr(_ws_url("/twilio/decoy"))}>'
+                f'<Parameter name="k" value={quoteattr(token)}/></Stream></Connect></Response>')
+
+    @router.websocket("/twilio/decoy")
+    async def decoy(ws: WebSocket) -> None:
+        """The scammer's leg of a stopped protected call, now talking to the decoy (bidirectional)."""
+        await ws.accept()
+        loop = asyncio.get_running_loop()
+        call: DecoyCall | None = None
+        try:
+            while True:
+                msg = json.loads(await ws.receive_text())
+                event = msg.get("event")
+                if event == "start":
+                    details = _redeem(msg["start"].get("customParameters", {}).get("k", ""))
+                    if details is None:
+                        await ws.close()
+                        return
+                    sid = msg["start"]["streamSid"]
+                    call = DecoyCall(details, lambda on_turn, sid=sid: PhoneLine(ws.send_text, loop, sid, on_turn),
+                                     lambda: asyncio.run_coroutine_threadsafe(ws.close(), loop))
+                    await asyncio.to_thread(call.start)
+                elif call is None:
+                    continue
+                elif event == "media" and msg["media"].get("track", "inbound") == "inbound":
+                    call.line.caller_audio(msg["media"]["payload"])
+                elif event == "mark":
+                    call.line.played(msg["mark"]["name"])
+                elif event == "stop":
+                    break
+        except (WebSocketDisconnect, RuntimeError):
+            pass
+        finally:
+            if call:
+                call.caller_hung_up()
 
     @router.websocket("/twilio/stream")
     async def stream(ws: WebSocket) -> None:
