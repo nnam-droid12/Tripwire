@@ -66,23 +66,80 @@ def test_each_utterance_gets_its_own_asr_session(monkeypatch):
     assert len(sessions) == 2
 
 
-def test_guard_stop_takes_the_protected_person_out_of_the_call(monkeypatch):
-    from backend.phone import guard_line, twilio_api
+class FakeLine:
+    """Stands in for the Twilio conference: records what Tripwire did to each side."""
 
-    redirected, incidents = [], []
-    monkeypatch.setattr(twilio_api, "child_calls", lambda parent: ["CAchild"] if parent == "CAparent" else [])
-    monkeypatch.setattr(twilio_api, "redirect", lambda sid, twiml: redirected.append((sid, twiml)))
+    def __init__(self):
+        self.actions = []
+
+    def connect(self, whisper):
+        self.actions.append(("whisper", whisper))
+
+    def whisper(self, text):
+        self.actions.append(("whisper", text))
+
+    def mute_protected(self):
+        self.actions.append(("mute",))
+
+    def take_protected_out(self, twiml):
+        self.actions.append(("out", twiml))
+
+    def redirect_caller(self, twiml):
+        self.actions.append(("caller", twiml))
+
+
+def _guard(monkeypatch, sms=None):
+    from backend.phone import guard_line
+
+    incidents = []
     monkeypatch.setattr(guard_line, "voice_clip", lambda who, text: "clip")
     monkeypatch.setattr(guard_line, "create_incident", lambda *a, **k: incidents.append(k) or ("id", "link"))
     monkeypatch.setattr(guard_line.sentinel_client, "shared", lambda: None)
-    guard = guard_line.GuardCall("CAparent", "+15550134477", "+1 (555) 000-1111", "Dorothy")
+    monkeypatch.setattr(guard_line, "send_sms", lambda text: (sms if sms is not None else []).append(text))
+    line = FakeLine()
+    guard = guard_line.GuardCall("CAparent", "+15550134477", "+1 (555) 000-1111", "Dorothy",
+                                 decoy_twiml=lambda details: "<Response>decoy</Response>", line=line)
+    return guard, line, incidents
+
+
+def test_guard_stop_takes_the_protected_person_out_and_hands_the_caller_to_the_decoy(monkeypatch):
+    guard, line, incidents = _guard(monkeypatch)
     guard._stop({"reasons": []})
     guard._stop({"reasons": []})  # a second hard stop does nothing
-    assert len(redirected) == 1
-    sid, twiml = redirected[0]
-    assert sid == "CAchild" and "/arena/voice/clip.mp3" in twiml and twiml.endswith("<Hangup/></Response>")
+    kinds = [a[0] for a in line.actions]
+    assert kinds == ["out", "caller"]  # the protected person leaves first, then the caller goes to the decoy
+    assert "/arena/voice/clip.mp3" in line.actions[0][1] and line.actions[0][1].endswith("<Hangup/></Response>")
     assert incidents[0]["protected_ids"] == {"5550001111"} and incidents[0]["source"] == "phone"
-    assert guard.audio("inbound", b"\xff" * 160) is None  # nothing is analysed after the stop
+    assert guard.audio("inbound", bytes([0xFF]) * 160) is None  # nothing is analysed after the stop
+
+
+def test_bank_voice_shield_mutes_before_anything_else(monkeypatch):
+    guard, line, _ = _guard(monkeypatch)
+    guard._protected_side("hello this is an automated call from")  # not yet a code announcement
+    assert line.actions == []
+    guard._protected_side("hello this is an automated call from Riverbend Bank your one-time passcode")
+    assert [a[0] for a in line.actions] == ["mute", "out", "caller"]
+    assert any(s["name"] == "bank_code_overheard" for s in guard.case.snapshot()["signals"])
+
+
+def test_line_lock_rules_on_the_callers_words(monkeypatch):
+    import time
+
+    sms = []
+    guard, line, _ = _guard(monkeypatch, sms)
+    guard._said("A", "Please dial star seven two and then this number to secure your line.")
+    for _ in range(50):
+        if line.actions:
+            break
+        time.sleep(0.05)
+    assert [a[0] for a in line.actions][:1] == ["out"] and "star seven three" in sms[0]
+    guard2, line2, _ = _guard(monkeypatch)
+    guard2._said("A", "Another department will call you now, just tap merge.")
+    for _ in range(50):
+        if line2.actions:
+            break
+        time.sleep(0.05)
+    assert line2.actions and line2.actions[0][0] == "out"
 
 
 def test_daily_minutes_cap(monkeypatch, tmp_path):

@@ -47,8 +47,9 @@ MAX_FRAMES = 1000  # 20 s: a monologue is cut into turns
 class Utterances:
     """One side of a call, as text: detects each utterance in the audio and transcribes it on its own."""
 
-    def __init__(self, on_text: Callable[[str], None], on_error: Callable[[str], None] = lambda _: None) -> None:
-        self.on_text, self.on_error = on_text, on_error
+    def __init__(self, on_text: Callable[[str], None], on_error: Callable[[str], None] = lambda _: None,
+                 on_partial: Callable[[str], None] | None = None) -> None:
+        self.on_text, self.on_error, self.on_partial = on_text, on_error, on_partial
         self._asr: MuseTranscriber | None = None  # the open utterance, if this side is speaking
         self._recent: deque[bytes] = deque(maxlen=PRE_ROLL)
         self._loud = self._quiet = self._frames = 0
@@ -60,7 +61,8 @@ class Utterances:
             self._recent.append(mulaw)
             self._loud = self._loud + 1 if level > SPEECH_RMS else 0
             if self._loud >= START_FRAMES:
-                self._asr = MuseTranscriber(self._heard, mode="PUSH_TO_TALK", paced=True, on_error=self.on_error)
+                self._asr = MuseTranscriber(self._heard, mode="PUSH_TO_TALK", paced=True, on_error=self.on_error,
+                                            on_partial=self.on_partial)
                 self._asr.start()
                 self._asr.feed(phone_to_asr(b"".join(self._recent)))
                 self._recent.clear()

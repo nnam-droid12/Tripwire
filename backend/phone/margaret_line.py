@@ -18,7 +18,7 @@ from typing import Callable
 from backend.arena.session import ArenaSession
 from backend.phone.call import PhoneLine
 
-SPOKEN_BY_TRIPWIRE = ("nudge", "resist", "verify", "hold", "family_check", "family_check_result")
+SPOKEN_BY_TRIPWIRE = ("nudge", "resist", "verify", "hold", "family_check", "family_check_result", "advice")
 
 
 class PhoneGame:

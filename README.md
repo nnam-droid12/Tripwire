@@ -28,12 +28,13 @@ What the cases have in common is time. The victims aren't fooled in one moment. 
 
 **Tripwire listens to the call itself, and acts while the scam is still a conversation.** It hears what the caller says, understands which stage of the scam they've reached, and steps in before the money moves: a calm word first, then a hard stop. Then it secures the accounts and tells the family. Every decision it makes must quote what was actually said, and a second, independent model checks it, so it can't act on a hallucination.
 
-Three defences go straight at the scams in those stories:
+Four defences go straight at the scams in those stories:
 
 | The scam | Tripwire's answer |
 |---|---|
 | **"Read me the code we just texted you."** | **Code Shield.** The moment a caller asks for a one-time code, Tripwire stops the call by rule, before the code can be read out. No real bank ever asks for it. |
 | **"Grandma, it's me. I'm in jail. Don't tell Mom."** (a cloned voice) | **Call Tom.** Nobody can hear a voice clone, but anyone can ask the real person. Tripwire texts the real grandchild: "Someone on the phone with Grandma says they're you. Are you OK?" A "That's not me" ends the call, whatever the voice sounded like. |
+| **"The verification department will call. Just tap merge."** / **"Dial star seven two and this number to secure your line."** | **Line Lock.** These tricks get the code without the victim ever saying it: the bank's own automated code call is merged in where the scammer can hear it, or the victim's line is forwarded so the bank's calls ring the scammer. Tripwire stops both on the caller's words. On the phone line it goes further: it hears what the scammer hears, and the moment a bank's automated voice starts announcing a code there, it **mutes the victim's side before the digits are read**. |
 | **"Our courier will come to your house tomorrow at 3 pm."** | **Swap in Margaret.** When Tripwire is sure, it takes the real person off the call and puts an AI decoy in their place, played by **Muse Wonder**. The decoy keeps the scammer talking to learn how they get paid: the courier's time and description, the callback number, the wallet, the account. Every detail is checked against the scammer's own words. The family is told about the pickup live, every Tripwire home learns the scammer's number, and Muse Wonder writes a case file for the police. |
 
 Tripwire works in two places:
@@ -75,6 +76,29 @@ A courier pickup is texted to the family at once. When the decoy is done:
 
 In one live scam test, the decoy got the claimed agent and badge, the amount, a courier "tomorrow at 3 pm, Kevin, a white Toyota" and the callback number; the case file passed 8 of 8 checks. In a simulated phone call, Code Shield stopped the call, the decoy took the scammer's leg, and it came back with a cash pickup "tonight at 7 pm" by a courier named Mike.
 
+## Line Lock: when the phone line itself is the weapon
+
+"Never read a code to anyone" doesn't help against two telephone tricks:
+- **Call merging.** The scammer triggers the bank's automated voice code call, then tells the victim to merge "the verification department" into the call. The bank's own voice reads the code, and the scammer hears it. India's payments body and the Mumbai cyber police have both warned about it ([Deccan Chronicle](https://www.deccanchronicle.com/news/npci-warns-users-of-call-merging-scam-targeting-otps-1862613), [Free Press Journal](https://www.freepressjournal.in/mumbai/dont-merge-calls-dont-share-otps-cyber-police-warn-of-rising-insurance-and-call-merging-scams)).
+- **Call forwarding.** The victim is talked into dialling a "security code" that is really a carrier forwarding code (`*72` + a number, `**21*`…). From then on the bank's verification calls ring the scammer's phone, and the victim's phone never rings. US banks warned about this in 2026 ([Vision Bank](https://www.visionbank.bank/resources/blog/call-forwarding-scam), [WKYC](https://www.wkyc.com/article/news/verify/call-forwarding-scams-can-be-used-to-try-to-scam-you-out-of-your-money-verify-star-72-star-star-21/95-c58f4169-7c93-4525-b937-f963a7d6744f), [Royal Bank](https://www.royalbank-usa.com/resources/banking-resources/call-forwarding-scam)).
+
+Tripwire answers at three levels (`core/line_guard.py`):
+
+| | What it catches | What Tripwire does |
+|---|---|---|
+| **Merge Guard** | The caller asks to merge, add or conference another call in | Stops the call by rule, before the merge. In the live scam test, the bank's incoming code call shows on Margaret's phone, marked as kept out of the conversation. |
+| **Forward Guard** | The caller asks for a forwarding code (`*72`, `**21*`, `*61/62/67`…) to be dialled, or for calls to be forwarded | Stops the call by rule. Tells the person how to undo it (`*73`, or `##002#`). Warns the family that bank calls to that number may be reaching the scammer, and to call on another number. |
+| **Bank Voice Shield** | An automated bank voice starts announcing a code **in what the caller can hear**: a code call merged in on the handset, even if the caller never said "merge" | Watches the protected side's words *as they are spoken* (partial transcripts). On the opening words ("an automated call from … Bank", "your one-time passcode is"), it **mutes the protected person's side of the conference**. The caller then hears nothing more from that phone. Tripwire then explains privately, ends the call and hands the caller to the decoy. |
+
+All three are rules, not model judgements: no legitimate caller asks for any of these. On the 640 legitimate calls in the dataset's training split, none of the three matched.
+
+**Measured.** A synthesized bank voice ("Hello, this is an automated call from Riverbend Bank. Your one-time passcode is 4 8 2 9 1 3…") was played into the protected side of a simulated protected call, with Muse Voice Transcribe running live:
+- Tripwire muted that side **5.8 s** into the bank's call;
+- the first digit is spoken about **7.4 s** in;
+- so the caller heard none of the code.
+
+In the live scam test, "just tap merge" and "dial star seven two and then…" each stopped the call the moment they were said.
+
 ## "This is what the scam looked like": the family's explainer card
 
 After a stop, the family's incident page opens with a picture they can understand at a glance and show their parent. Muse Image (`muse-image-1.0`, image editing) takes the real scam screen, already redacted, and turns it into a large-print card:
@@ -112,11 +136,11 @@ Phone apps can't hear calls: iPhone and Android both block it. So the phone vers
 
 **Protecting a person** (`backend/phone/guard_line.py`). Calls reach Tripwire's number first. In practice, unknown callers are forwarded to it, for example with iPhone's "Silence Unknown Callers" plus carrier no-answer forwarding. Then:
 
-1. **Before it rings:** the caller's number is checked against [Community Shield](#community-shield). The caller hears "This call is protected by Tripwire, and may be monitored to prevent fraud." The protected person picks up and hears a private whisper before the call connects: a warning if the number was reported in other homes' stopped scams, otherwise "Tripwire is listening to protect you."
-2. **During the call:** both sides stream to Tripwire (`both_tracks`). Each side is cut into utterances on the telephone audio and transcribed by Muse Voice Transcribe, the caller as speaker A and the protected person as B. The lines run through the same pipeline as the computer: CallAnalyst, kill-chain CaseFile, Sentinel, CaseJudge, verification, policy.
-3. **On a hard stop:** Tripwire redirects the protected person's leg of the call (Twilio REST) to a spoken explanation in its own voice, then hangs up, leaving the scammer on a dead line. The family gets the incident page, and Community Shield learns the scammer's number from the caller ID.
+1. **Before it rings:** the caller's number is checked against [Community Shield](#community-shield), and the caller hears "This call is protected by Tripwire, and may be monitored to prevent fraud." Tripwire joins the caller and the protected person's real phone in a conference it controls (`backend/phone/conference.py`). When the protected person picks up, the caller is put on hold while they hear a private whisper: a warning if the number was reported in other homes' stopped scams, otherwise "Tripwire is listening to protect you."
+2. **During the call:** both sides stream to Tripwire (`both_tracks`). Each side is cut into utterances on the telephone audio and transcribed by Muse Voice Transcribe, the caller as speaker A and the protected person as B. The lines run through the same pipeline as the computer: CallAnalyst, kill-chain CaseFile, Sentinel, CaseJudge, verification, policy. A nudge is whispered to the protected person only; the caller never hears it.
+3. **On a hard stop:** Tripwire takes the protected person out of the call to a spoken explanation in its own voice, then hands the caller's leg to the [decoy](#three-defences-against-the-scams-draining-savings-now). The family gets the incident page, and Community Shield learns the scammer's number from the caller ID.
 
-There are no spoken nudges on this line: Twilio can't speak into a connected two-way call without breaking the bridge, so on the phone Tripwire only steps in when it is sure.
+A conference is what makes the [Line Lock](#line-lock-when-the-phone-line-itself-is-the-weapon) defences possible: Tripwire can mute the protected person's side so the caller stops hearing anything from their phone, and speak to them privately.
 
 **Call Margaret** (`backend/phone/margaret_line.py`). The live scam test below, over a real phone call: phone Tripwire's number and try to scam Margaret by voice. Margaret answers in her own voice, Tripwire listens, and when it stops you, its warning cuts in over Margaret mid-sentence. She says she's hanging up, and the line goes dead.
 

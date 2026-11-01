@@ -353,7 +353,15 @@ function handle(m) {
     case "started": enable(); break;
     case "laptop": showPage(m.page, m.hash); break;
     case "line": say(m.who, m.text); if (m.who === "margaret" || m.who === "decoy") play(m.audio); break;
+    case "line_lock":
+      document.querySelector("#sms .from").textContent = m.title;
+      $("sms-text").textContent = m.text; $("sms").classList.add("on");
+      setTimeout(() => $("sms").classList.remove("on"), 14000);
+      say("system", m.kind === "merge" ? "Line Lock: the bank's automated code call was kept out of the conversation." : "Line Lock: the call-forwarding request was blocked.");
+      break;
+    case "advice": say("tripwire", "Tripwire (spoken): " + m.text); play(m.audio); break;
     case "sms":
+      document.querySelector("#sms .from").textContent = "Messages · Riverbend Bank";
       $("sms-text").textContent = m.text; $("sms").classList.add("on");
       setTimeout(() => $("sms").classList.remove("on"), 12000);
       say("system", "A text from the bank just arrived on Margaret's phone, with a one-time code.");

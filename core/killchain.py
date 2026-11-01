@@ -62,6 +62,9 @@ SIGNALS: dict[str, SignalSpec] = {
     "login_instruction": SignalSpec(Stage.ACCESS, 0.35, "Caller tells the user to log in to their bank, email or other account"),
     "bank_open_during_remote": SignalSpec(Stage.ACCESS, 0.55, "A banking site is open while a remote session is active"),
     "card_number_copied": SignalSpec(Stage.ACCESS, 0.25, "A payment card number was copied to the clipboard"),
+    "merge_request": SignalSpec(Stage.ACCESS, 0.85, "The caller asks to merge, add or conference another call into this one (how a bank's automated code call is overheard)"),
+    "forwarding_instruction": SignalSpec(Stage.CONTROL, 0.85, "The caller asks the person to dial a call-forwarding code (*72, **21*...) or to forward their calls"),
+    "bank_code_overheard": SignalSpec(Stage.ACCESS, 0.90, "An automated bank voice began reading a one-time code where the caller could hear it (Line Lock)"),
     "code_request": SignalSpec(Stage.ACCESS, 0.85, "The caller asks for a one-time, verification or security code that was texted or emailed to the person (Code Shield)"),
     "code_received_during_call": SignalSpec(Stage.ACCESS, 0.40, "A text message carrying a one-time code arrived while the person was on a call with an unknown caller"),
     "personal_info_request": SignalSpec(Stage.ACCESS, 0.45, "An unsolicited caller asks for a Social Security number, bank account or routing number, password, PIN or one-time code, or for card details to 'verify', 'refund' or 'release' something"),
@@ -87,7 +90,7 @@ CHAIN_MULTIPLIER = {0: 0.0, 1: 0.35, 2: 0.6, 3: 0.85, 4: 0.95, 5: 1.0}
 # answer), never by a model reading the screen or the call: a fooled analyst must not be able to claim them.
 SYSTEM_ONLY = {
     "cross_modal_brand_match", "bank_open_during_remote", "known_scam_indicator", "sentinel_flag",
-    "family_denied_call", "code_received_during_call", "remote_control_input",
+    "family_denied_call", "code_received_during_call", "remote_control_input", "bank_code_overheard",
 }
 
 

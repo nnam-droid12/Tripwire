@@ -12,6 +12,9 @@ Three defences act on the call itself:
 
 * **Code Shield**: the moment the caller asks for a one-time code, a
   deterministic rule stops the call before Margaret can read it out;
+* **Line Lock**: the same for the telephone tricks that get the code without
+  her saying it: merging the bank's automated code call into this one, or
+  dialling a call-forwarding code that sends the bank's calls to the scammer;
 * **Call Tom**: when a caller claims to be a relative in trouble, the real
   relative is asked through a link ("someone says they're you, are you OK?");
   "that's not me" ends the call, whatever the voice sounded like;
@@ -48,6 +51,7 @@ from backend.investigator import write_case_file
 from backend.sms import send_sms
 from core import sentinel_client
 from core.code_shield import code_request
+from core.line_guard import UNDO_FORWARDING, forwarding_instruction, merge_request
 from core.casefile import CaseFile, CaseUpdate
 from core.config import LOGS_DIR, RUNTIME_DIR
 from core.events import Event, EventBus
@@ -87,6 +91,7 @@ DECOY_ON = os.environ.get("TRIPWIRE_DECOY", "1") != "0"
 DECOY_MAX_TURNS = 10  # then the decoy says goodbye
 CHECK_WAIT_S = 120  # how long Tripwire waits for the relative's answer in a game
 RELATIVE = "Tom"  # Margaret's grandson (fictional), the relative scammers most often impersonate
+FORWARD_ADVICE = f"If you dialled anything, {UNDO_FORWARDING}. Then call your bank on the number on your card."
 OTP_TEXT = "Riverbend Bank: 482913 is your verification code. We will never call you to ask for this code."
 MAX_REJECTIONS = 2  # per tool: after this, the output is delivered with anything unverifiable removed
 
@@ -99,6 +104,11 @@ def prewarm_voices() -> None:
         voice_clip("tripwire", text)
     for brand in ("Riverbend Community Bank", "The Irs", "Amazon"):
         voice_clip("tripwire", hard_stop_speech(brand))
+    voice_clip("tripwire", FORWARD_ADVICE)
+    from backend.phone.guard_line import CODE_HEARD_SPEECH, FORWARD_SPEECH, STOP_SPEECH
+
+    for text in (STOP_SPEECH, CODE_HEARD_SPEECH, FORWARD_SPEECH):  # the phone line's explanations after a stop
+        voice_clip("tripwire", text)
 
 
 def voice_clip(who: str, text: str) -> str | None:
@@ -190,6 +200,9 @@ class ArenaSession:
             self.bus.publish(Event("audio", "transcript", {"speaker": "A", "text": text, "summary": f'Caller: "{text}"'}))
             if not self.warning_active and code_request(text):
                 self._code_shield(text)  # Margaret never gets the chance to read the code out
+                return
+            if not self.warning_active and (merge_request(text) or forwarding_instruction(text)):
+                self._line_lock("merge" if merge_request(text) else "forward", text)
                 return
             turn = self.margaret.respond(text, self.page)
             if self.warning_active and DECOY_ON:
@@ -379,6 +392,26 @@ class ArenaSession:
         reason = {"reason": "Code Shield: the caller asked for the one-time code the bank just texted. No real bank ever asks for it.",
                   "evidence": text}
         threading.Thread(target=self._hard_stop, args=({"reasons": [reason], "code_shield": True},), daemon=True).start()
+
+    # -- Line Lock --------------------------------------------------------------------------
+
+    def _line_lock(self, kind: str, text: str) -> None:
+        """A telephone trick to get the bank's code without Margaret saying it: stop now, by rule."""
+        if kind == "merge":
+            self.send({"type": "line_lock", "kind": "merge", "title": "Incoming call · Riverbend Bank (automated)",
+                       "text": "Tripwire kept this call out of the conversation: it carries your one-time code, and the caller wanted it merged in."})
+            self.case.add_signals("call", [("merge_request", text)])
+            reason = "Line Lock: the caller asked Margaret to merge in another call. That is how a bank's automated code call is overheard."
+        else:
+            self.send({"type": "line_lock", "kind": "forward", "title": "Call forwarding blocked",
+                       "text": "The caller wanted Margaret to dial a call-forwarding code. Her bank's calls would have gone to the scammer."})
+            self.case.add_signals("call", [("forwarding_instruction", text)])
+            reason = "Line Lock: the caller asked Margaret to dial a call-forwarding code, which sends her bank's verification calls to the scammer."
+            self._alert_family("TRIPWIRE: a caller told Margaret to dial a call-forwarding code. If she did, calls to her number, "
+                               f"including her bank's, may reach the scammer. Call her on another number, and have her {UNDO_FORWARDING}.")
+        threading.Thread(target=self._hard_stop, args=({"reasons": [{"reason": reason, "evidence": text}], "line_lock": kind},), daemon=True).start()
+        if kind == "forward":
+            self.send({"type": "advice", "text": FORWARD_ADVICE, "audio": voice_clip("tripwire", FORWARD_ADVICE)})
 
     # -- Call Tom ------------------------------------------------------------------------------
 

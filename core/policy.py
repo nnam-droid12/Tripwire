@@ -70,6 +70,7 @@ EARLY_SIGNS = {
     "remote_access_code_shared", "remote_session_active", "disable_protection", "ai_directed_text",
     "login_instruction", "secrecy_instruction", "prize_or_reward_claim", "personal_info_request", "advance_fee_request", "known_scam_indicator", "sentinel_flag",
     "family_emergency_claim", "family_denied_call", "code_request", "code_received_during_call",
+    "merge_request", "forwarding_instruction", "bank_code_overheard",
 }
 
 

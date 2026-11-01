@@ -64,8 +64,10 @@ class MuseTranscriber:
         keywords: list[str] | None = None,
         on_error: Callable[[str], None] | None = None,
         paced: bool = False,
+        on_partial: Callable[[str], None] | None = None,
     ) -> None:
         self.on_turn = on_turn
+        self.on_partial = on_partial  # push-to-talk: the words so far, about a second behind the audio
         self.paced = paced  # audio arriving over a network: release it at a steady real-time pace
         self.on_error = on_error or (lambda msg: None)
         self.api_key = api_key or os.environ["META_API_KEY"]
@@ -173,6 +175,8 @@ class MuseTranscriber:
                     if text:
                         self.on_turn(TranscriptTurn(self.session_id, msg.get("turnId", -1), speaker, text, msg.get("audioProcessedMs", 0)))
                     speaker = None
+                elif kind == "transcript" and not msg.get("final") and self.on_partial and msg.get("transcript"):
+                    self.on_partial(msg["transcript"])
                 elif kind == "transcript" and msg.get("final") and self.mode == "PUSH_TO_TALK":
                     # push-to-talk (the web arena): one final transcript per utterance, no turn events
                     text = (msg.get("transcript") or "").strip()

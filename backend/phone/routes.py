@@ -7,8 +7,8 @@
   bidirectional Media Stream, and the caller plays the scammer against Margaret;
 * ``protect``: the call is forwarded to the protected person's real phone
   (``PROTECTED_PHONE_NUMBER``) while both sides stream to ``/twilio/listen``
-  (see :mod:`backend.phone.guard_line`). ``/twilio/whisper`` is what the protected
-  person hears before the call connects. After a stop, the scammer's leg is
+  (see :mod:`backend.phone.guard_line`). The two are joined in a conference
+  Tripwire controls (whisper, hold, mute). After a stop, the scammer's leg is
   connected to ``/twilio/decoy`` (see :mod:`backend.phone.decoy_line`).
 
 Security, since the URL is public:
@@ -42,8 +42,9 @@ from fastapi.responses import Response
 from backend.arena.session import voice_clip
 from backend.phone import usage
 from backend.phone.call import PhoneLine
+from backend.phone.conference import ConferenceLine
 from backend.phone.decoy_line import DecoyCall
-from backend.phone.guard_line import GuardCall, whisper_text
+from backend.phone.guard_line import GuardCall
 from backend.phone.margaret_line import PhoneGame
 
 TOKEN_TTL = 120.0
@@ -120,24 +121,21 @@ def make_router(games: asyncio.Semaphore) -> APIRouter:
         protected = os.environ.get("PROTECTED_PHONE_NUMBER", "")
         if not protected:
             return twiml("<Say>This line is not set up yet.</Say><Hangup/>")
-        caller = params.get("From", "")
-        token = _mint({"call_sid": params.get("CallSid", ""), "from": caller})
-        # its own token: the stream starts (and redeems its token) before the protected person picks up
-        whisper = public_url() + "/twilio/whisper?k=" + _mint({"whisper": whisper_text(caller)})
+        caller, call_sid = params.get("From", ""), params.get("CallSid", "")
+        token = _mint({"call_sid": call_sid, "from": caller, "to": params.get("To", "")})
+        # the caller waits in a conference Tripwire controls; the protected phone is dialled in once the stream is up
+        room = f"tripwire-{call_sid}"
         return twiml(
             spoken(ANNOUNCEMENT)
             + f'<Start><Stream url={quoteattr(_ws_url("/twilio/listen"))} track="both_tracks"><Parameter name="k" value={quoteattr(token)}/></Stream></Start>'
-            + f'<Dial callerId={quoteattr(params.get("To", ""))} timeout="25"><Number url={quoteattr(whisper)}>{escape(protected)}</Number></Dial>'
+            + f'<Dial><Conference beep="false" waitUrl="" startConferenceOnEnter="false" endConferenceOnExit="true" '
+            + f'participantLabel="caller">{escape(room)}</Conference></Dial>'
             + spoken(ENDED) + "<Hangup/>"
         )
 
-    @router.post("/twilio/whisper")
-    async def whisper(request: Request, k: str = "") -> Response:
-        """Played to the protected person when they pick up, before the caller is connected."""
-        await _signed_params(request)
-        details = _redeem(k) or {}
-        text = details.get("whisper") or "Tripwire is listening to protect you on this call."
-        return twiml(await asyncio.to_thread(spoken, text))
+    def _clip_url(text: str) -> str | None:
+        clip = voice_clip("tripwire", text)
+        return f"{public_url()}/arena/voice/{clip}.mp3" if clip else None
 
     @router.websocket("/twilio/listen")
     async def listen(ws: WebSocket) -> None:
@@ -153,9 +151,11 @@ def make_router(games: asyncio.Semaphore) -> APIRouter:
                     if details is None:
                         await ws.close()
                         return
-                    guard = GuardCall(details["call_sid"] or msg["start"].get("callSid", ""), details["from"],
-                                      os.environ.get("PROTECTED_PHONE_NUMBER", ""), os.environ.get("PROTECTED_NAME", ""),
-                                      decoy_twiml=_decoy_twiml)
+                    call_sid = details["call_sid"] or msg["start"].get("callSid", "")
+                    protected = os.environ.get("PROTECTED_PHONE_NUMBER", "")
+                    line = ConferenceLine(f"tripwire-{call_sid}", call_sid, details.get("to", ""), protected, _clip_url)
+                    guard = GuardCall(call_sid, details["from"], protected, os.environ.get("PROTECTED_NAME", ""),
+                                      decoy_twiml=_decoy_twiml, line=line)
                     await asyncio.to_thread(guard.start)
                 elif guard is not None and event == "media":
                     guard.audio(msg["media"].get("track", "inbound"), base64.b64decode(msg["media"]["payload"]))
