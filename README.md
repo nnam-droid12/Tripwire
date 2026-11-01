@@ -75,6 +75,25 @@ A courier pickup is texted to the family at once. When the decoy is done:
 
 In one arena test, the decoy got the claimed agent and badge, the amount, a courier "tomorrow at 3 pm, Kevin, a white Toyota" and the callback number; the case file passed 8 of 8 checks. In a simulated phone call, Code Shield stopped the call, the decoy took the scammer's leg, and it came back with a cash pickup "tonight at 7 pm" by a courier named Mike.
 
+## "This is what the scam looked like": the family's explainer card
+
+After a stop, the family's incident page opens with a picture they can understand at a glance and show their parent. Muse Image (`muse-image-1.0`, image editing) takes the real scam screen, already redacted, and turns it into a large-print card:
+- the scammer's number, or the gift-card total, or the remote-access window, is circled;
+- a banner says what it is ("THIS WARNING IS FAKE.");
+- one sentence says what real companies never do ("Microsoft never puts a phone number in a warning. Don't call it.").
+
+Muse Image paints, but it doesn't decide what the card says (`backend/explainer.py`):
+
+1. **The wording is chosen, not generated.** A small set of reviewed banners and captions, picked by what SAM 3.1 outlined on the screen and which scam signals fired.
+2. **The screen must fit.** Before any edit, Muse Spark reads the original screen and must confirm it really shows that kind of scam. In testing, a card about a "fake warning" was first made from a screen that only showed Margaret's photo gallery, and it passed the other checks. That's why this check exists.
+3. **The card is read back.** Muse Spark reads the finished card:
+   - the banner and caption must match exactly;
+   - every phone number on it must be one that was on the original screen, so an edit can never change the scammer's number;
+   - no other text may have been added. Muse Image once added its own "NOTE: …" box.
+4. **One retry with the problem named, then discard.** If no card passes, the family sees the plain outlined screenshot instead.
+
+Tested on four of Margaret's screens: the fake pop-up, the remote-access app and the gift-card checkout each produced a correct card. The photo-gallery desktop correctly produced none, refused in 1.9 s before any editing.
+
 ## Meta tools, and what each one does here
 
 | Tool | Job in Tripwire |
@@ -84,7 +103,7 @@ In one arena test, the decoy got the claimed agent and badge, the amount, a cour
 | **Muse Voice Transcribe** | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode), and push-to-talk transcription of the scammer in the arena |
 | **SAM 3.1** | Outlines the threat (the fake warning, the scammer's number) on already-redacted screenshots for the family |
 | **Muse Wonder** (`muse-wonder-1.0`) | The decoy that keeps the scammer talking after a stop, and the investigator that writes the police case file |
-| **Muse Image** | Generated the synthetic scam and look-alike screens used to evaluate the screen analyst |
+| **Muse Image** | Turns the scam screen into a verified large-print "this is what the scam looked like" card for the family; also generated the synthetic screens used to evaluate the screen analyst |
 | **Llama 3.2 1B** (fine-tuned on Modal) | Tripwire Sentinel, a small model of our own that gives the judge a second opinion |
 
 ## On any phone: the Tripwire phone line

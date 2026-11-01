@@ -2,7 +2,8 @@
 
 An incident is created synchronously (frames stored, text redacted, a private
 link minted). Then, on background threads, the family is texted, the threat
-is outlined with SAM 3.1 and Muse Spark writes the plain-language story.
+is outlined with SAM 3.1, Muse Image turns the scam screen into a verified
+large-print explainer card, and Muse Spark writes the plain-language story.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ from PIL import Image
 
 from agent.redact import RedactionError, redact_image, redact_text
 from analysts.common import SAFETY_RULES
-from backend import shield
+from backend import explainer, shield
 from backend.highlight import highlight
 from backend.sms import send_sms
 from backend.storage import IncidentStore
@@ -125,8 +126,36 @@ def _enrich(incident_id: str) -> None:
             out = name.replace("frame_", "highlight_")
             STORE.put_image(incident_id, out, png)
             highlights.append({"image": out, "frame": name, "labels": sorted({b.label for b in boxes})})
+    card = make_explainer(incident_id, incident, highlights)
     narration = check_narration(narrate(incident), incident)
-    STORE.update(incident_id, lambda i: i.update(highlights=highlights, narration=narration))
+    STORE.update(incident_id, lambda i: i.update(highlights=highlights, narration=narration, explainer=card))
+
+
+def make_explainer(incident_id: str, incident: dict[str, Any], highlights: list[dict]) -> dict[str, Any] | None:
+    """"This is what the scam looked like": Muse Image edits the scam screen into a verified explainer card."""
+    if not incident["frames"]:
+        return None
+    signals = {s["name"] for s in incident.get("signals", [])}
+    brands = set().union(*map(set, incident.get("brands", {}).values())) if incident.get("brands") else set()
+    labels = {h["frame"]: set(h["labels"]) for h in highlights}
+    seen = [t["text"] for t in incident["timeline"]] + [s.get("evidence", "") for s in incident.get("signals", [])]
+    # screens SAM outlined first, newest last; each must still be confirmed to show the scam before it is edited
+    frames = sorted(incident["frames"], key=lambda f: f not in labels)[:3]
+    card = None
+    for frame in frames:
+        template = explainer.choose(labels.get(frame, set()), signals, brands)
+        if not template:
+            continue
+        try:
+            card = explainer.make_card(STORE.get_image(incident_id, frame), template, explainer.phone_numbers(seen))
+        except Exception:
+            card = None
+        if card:
+            break
+    if not card:
+        return None
+    STORE.put_image(incident_id, "explainer.png", card.pop("png"))
+    return {**card, "image": "explainer.png", "frame": frame, "model": "Muse Image"}
 
 
 NARRATE_PROMPT = f"""{SAFETY_RULES}

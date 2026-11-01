@@ -74,3 +74,38 @@ def test_redaction_keeps_a_callers_phone_number_but_not_secrets():
     assert redact_text("call me back on 1-888-555-0199") == "call me back on 1-888-555-0199"
     assert "1111" not in redact_text("card 4111 1111 1111 1111")
     assert "113" not in redact_text("remote id 482 113 907")
+
+
+def test_explainer_wording_is_chosen_not_generated():
+    from backend.explainer import choose
+
+    assert choose({"Scammer's phone number"}, set(), {"microsoft"}).caption == "Microsoft never puts a phone number in a warning. Don't call it."
+    assert choose(set(), {"scareware_phone_number"}, set()).caption.startswith("Real companies never put")
+    assert choose({"Gift card order"}, set(), set()).kind == "gift_cards"
+    assert choose(set(), {"remote_session_active"}, set()).kind == "remote"
+    assert choose(set(), {"urgency_pressure"}, set()) is None  # nothing on screen worth a card
+
+
+def test_explainer_card_is_read_back_before_anyone_sees_it(monkeypatch):
+    import json
+    from backend import explainer
+
+    t = explainer.choose({"Scammer's phone number"}, set(), {"microsoft"})
+    original = {"shows": True, "lines": ["Call PC SafeGuard Certified Microsoft Technicians immediately:", "+1 (555) 013-4477"],
+                "phone_numbers": ["+1 (555) 013-4477"]}
+    good = {"banner": t.banner, "caption": t.caption, "lines": original["lines"], "phone_numbers": ["+1 (555) 013-4477"]}
+    bad = {**good, "phone_numbers": ["+1 (555) 013-9999"], "lines": [*original["lines"], "NOTE: this screenshot has no phone number"]}
+
+    class Reader:
+        def __init__(self, replies):
+            self.replies = replies
+
+        def describe_image(self, png, prompt, **_):
+            return json.dumps(self.replies.pop(0))
+
+    edits = []
+    monkeypatch.setattr(explainer, "_edit", lambda png, prompt: edits.append(prompt) or b"card")
+    card = explainer.make_card(b"png", t, set(), Reader([original, bad, good]))
+    assert card["attempts"] == 2 and "not the one on the original screen" in edits[1] and "added text" in edits[1]
+    assert explainer.make_card(b"png", t, set(), Reader([{**original, "shows": False}])) is None  # wrong screen: no card
+    assert explainer.make_card(b"png", t, set(), Reader([original, bad, bad])) is None  # never passes: discarded

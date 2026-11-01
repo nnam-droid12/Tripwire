@@ -50,6 +50,9 @@
     <div id="message"></div>
     <div class="muted" id="when"></div>
   </section>
+  <section class="card" id="explainer-card" hidden><h2>This is what the scam looked like</h2>
+    <img id="explainer" alt="The scam screen, with the scammer's number circled and a plain explanation">
+    <p class="muted" id="explainer-note"></p></section>
   <section class="card" id="next-card" hidden><h2>What to do now</h2><ul id="next"></ul></section>
   <section class="card"><h2>What was on the screen</h2><div id="shots" class="muted">Preparing screenshots…</div>
     <p class="muted">Account and card numbers were blacked out on the computer before anything was sent.</p></section>
@@ -91,6 +94,12 @@ async function load() {
   document.getElementById("message").textContent = i.verdict.family_message || "";
   document.getElementById("when").textContent = `${new Date(i.created * 1000).toLocaleString()} · furthest stage: ${i.stage_name.toLowerCase()}`;
 
+  const ex = i.explainer;
+  if (ex && ex.image) {
+    document.getElementById("explainer-card").hidden = false;
+    document.getElementById("explainer").src = img(ex.image);
+    document.getElementById("explainer-note").textContent = `Made by Muse Image from the real screen, with private numbers already blacked out. Before it was shown here, it was read back and checked: the wording is exactly what Tripwire asked for, and the only phone number on it is the one that was really on the scam screen${ex.attempts > 1 ? " (the first try failed this check and was redone)" : ""}. You can show it to your parent.`;
+  }
   const shots = i.frames.map(f => {
     const h = i.highlights.find(x => x.frame === f);
     return h

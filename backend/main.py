@@ -51,7 +51,7 @@ PROGRESS_KEY = "site/progress.json"
 PUBLIC_DASHBOARD = os.environ.get("TRIPWIRE_PUBLIC_DASHBOARD") == "1"
 MAX_ARENA_GAMES = int(os.environ.get("TRIPWIRE_MAX_ARENA_GAMES", "4"))
 _ID = re.compile(r"^[a-f0-9]{16}$")
-_IMAGE = re.compile(r"^(frame|highlight)_\d+\.png$")
+_IMAGE = re.compile(r"^(?:(?:frame|highlight)_\d+|explainer)\.png$")
 _CLIP = re.compile(r"^[a-f0-9]{24}$")
 
 
