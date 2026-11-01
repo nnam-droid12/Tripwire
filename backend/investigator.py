@@ -48,8 +48,10 @@ Reply with one JSON object:
   "next_steps": ["<2-4 concrete steps for the family: report, bank, police if a pickup is scheduled>"]}}"""
 
 
-def write_case_file(record: list[str], intel: list[dict], client: ModelClient | None = None) -> dict[str, Any]:
-    client = client or ModelClient.wonder(reasoning_effort="low")
+def write_case_file(record: list[str], intel: list[dict], client: ModelClient | None = None, observer=None) -> dict[str, Any]:
+    if client is None:
+        client = ModelClient.wonder(reasoning_effort="low")
+        client.purpose, client.observer = "Muse Wonder · write the case file for the police", observer
     intel_text = "\n".join(f"- {i['kind']}: {i['value']} (caller said: \"{i['quote']}\")" for i in intel) or "(none)"
     messages = [
         {"role": "system", "content": PROMPT},

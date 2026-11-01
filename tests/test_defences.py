@@ -104,7 +104,7 @@ def test_explainer_card_is_read_back_before_anyone_sees_it(monkeypatch):
             return json.dumps(self.replies.pop(0))
 
     edits = []
-    monkeypatch.setattr(explainer, "_edit", lambda png, prompt: edits.append(prompt) or b"card")
+    monkeypatch.setattr(explainer, "_edit", lambda png, prompt, observer=None: edits.append(prompt) or b"card")
     card = explainer.make_card(b"png", t, set(), Reader([original, bad, good]))
     assert card["attempts"] == 2 and "not the one on the original screen" in edits[1] and "added text" in edits[1]
     assert explainer.make_card(b"png", t, set(), Reader([{**original, "shows": False}])) is None  # wrong screen: no card

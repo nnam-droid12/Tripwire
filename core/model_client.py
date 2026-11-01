@@ -18,10 +18,13 @@ import base64
 import json
 import os
 import re
+import time
 from dataclasses import dataclass
 from typing import Any
 
 from openai import OpenAI
+
+from core import model_log
 
 import core.config  # noqa: F401  (loads .env)
 
@@ -58,6 +61,8 @@ class ModelClient:
         # max_retries: rate limits (HTTP 429) happen when several games or eval runs share a provider;
         # the SDK retries them with exponential backoff instead of dropping that turn's analysis
         self._client = OpenAI(api_key=config.api_key, base_url=config.base_url, timeout=timeout, max_retries=6)
+        self.purpose = ""  # which part of Tripwire this client works for, shown with every call
+        self.observer: model_log.Observer | None = None  # e.g. the live scam test's "Meta model calls" console
 
     @classmethod
     def for_provider(cls, name: str) -> "ModelClient":
@@ -80,14 +85,26 @@ class ModelClient:
         """
         if self.config.reasoning_effort and "reasoning_effort" not in kwargs:
             kwargs["reasoning_effort"] = self.config.reasoning_effort
-        resp = self._client.chat.completions.create(
-            model=self.config.model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs,
-        )
-        return resp.choices[0].message.content or ""
+        started, text, ok = time.time(), "", False
+        try:
+            resp = self._client.chat.completions.create(
+                model=self.config.model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs,
+            )
+            text, ok = resp.choices[0].message.content or "", True
+            return text
+        except Exception as exc:
+            text = f"{type(exc).__name__}"
+            raise
+        finally:
+            self.log(started, model_log.text_of(messages), text, ok)
+
+    def log(self, started: float, request: str, response: str, ok: bool = True) -> None:
+        """Report one call (also used by callers that call the SDK directly, like the recovery agent's tool calls)."""
+        model_log.emit(self.observer, self.config.model, self.purpose, started, request, response, ok, self.config.name)
 
     def chat_json(self, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
         """Like :meth:`chat`, but parse the reply as a JSON object.

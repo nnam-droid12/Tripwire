@@ -27,12 +27,14 @@ import io
 import json
 import os
 import re
+import time
 from dataclasses import dataclass
 from typing import Any
 
 import requests
 from PIL import Image
 
+from core import model_log
 from core.grounding import normalize, supported
 from core.model_client import ModelClient
 
@@ -96,16 +98,19 @@ def _prompt(t: Template, feedback: str = "") -> str:
     )
 
 
-def _edit(png: bytes, prompt: str) -> bytes:
+def _edit(png: bytes, prompt: str, observer=None) -> bytes:
     image = Image.open(io.BytesIO(png)).convert("RGB")
     image.thumbnail((1280, 1280))
     buf = io.BytesIO()
     image.save(buf, format="WEBP", quality=85)
+    started = time.time()
     resp = requests.post(EDIT_URL, timeout=180, headers={"Authorization": f"Bearer {os.environ['META_API_KEY']}"}, json={
         "model": "muse-image-1.0", "prompt": prompt, "n": 1,
         "images": [{"image_url": "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()}],
     })
     resp.raise_for_status()
+    model_log.emit(observer, "muse-image-1.0", "Muse Image · turn the scam screen into the family's card", started,
+                   "[image] " + prompt, "edited image returned", provider="meta")
     item = resp.json()["data"][0]
     raw = base64.b64decode(item["b64_json"]) if item.get("b64_json") else requests.get(item["url"], timeout=60).content
     out = io.BytesIO()
@@ -160,9 +165,12 @@ def check(card: bytes, t: Template, allowed_numbers: set[str], original_lines: l
     return problems
 
 
-def make_card(png: bytes, t: Template, allowed_numbers: set[str], reader: ModelClient | None = None) -> dict[str, Any] | None:
+def make_card(png: bytes, t: Template, allowed_numbers: set[str], reader: ModelClient | None = None,
+              observer=None) -> dict[str, Any] | None:
     """Edit, read back, verify; retry once with the problems named. None if no card passes."""
-    reader = reader or ModelClient.for_provider("meta")
+    if reader is None:
+        reader = ModelClient.for_provider("meta")
+        reader.purpose, reader.observer = "Muse Spark · read the scam screen and check the card", observer
     original = _read(png, READ_ORIGINAL.format(what=SHOWS[t.kind]), reader)
     if not original or original.get("shows") is not True:
         return None  # the screen doesn't show this kind of scam: no card, rather than a misleading one
@@ -171,7 +179,7 @@ def make_card(png: bytes, t: Template, allowed_numbers: set[str], reader: ModelC
     feedback, log = "", []
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
-            card = _edit(png, _prompt(t, feedback))
+            card = _edit(png, _prompt(t, feedback), observer)
             problems = check(card, t, allowed_numbers, lines, reader)
         except Exception as exc:  # the card is a bonus; the outlined screenshot still stands
             log.append({"attempt": attempt, "problems": [type(exc).__name__]})

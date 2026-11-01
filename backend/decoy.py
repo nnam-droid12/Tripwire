@@ -128,7 +128,9 @@ class Decoy:
     rejected: list[dict] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        self.client = self.client or ModelClient.wonder(reasoning_effort="minimal")
+        if self.client is None:
+            self.client = ModelClient.wonder(reasoning_effort="minimal")
+            self.client.purpose = "Muse Wonder · the decoy keeping the scammer talking"
 
     def opening(self, context: str) -> str:
         """The first decoy line: picks up as if the phone had been fumbled."""

@@ -122,13 +122,24 @@ Tested on four of Margaret's screens: the fake pop-up, the remote-access app and
 
 | Tool | Job in Tripwire |
 |---|---|
-| **Muse Spark Open** (Baseten) | Always-on Tier-1 narrator: reads every changed screenshot and every call line, and tags kill-chain signals |
+| **Muse Spark Open** (`meta-models/muse-spark-open-1026`, on Baseten) | Always-on Tier-1 narrator: reads every changed screenshot and every call line, and tags kill-chain signals |
 | **Muse Spark** (`muse-spark-1.3`, Meta Model API) | The CaseJudge: reasons over the whole session and is the only component that can authorize a hard stop. Also plays Margaret in the live scam test, runs the tool-calling recovery agent, and writes the family's plain-language incident story |
-| **Muse Voice Transcribe** | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode), and push-to-talk transcription of the scammer in the live scam test |
-| **SAM 3.1** | Outlines the threat (the fake warning, the scammer's number) on already-redacted screenshots for the family |
+| **Muse Voice Transcribe** (`muse-voice-transcribe-1.0`) | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode), and push-to-talk transcription of the scammer in the live scam test |
+| **SAM 3.1** (`sam-3.1`) | Outlines the threat (the fake warning, the scammer's number) on already-redacted screenshots for the family |
 | **Muse Wonder** (`muse-wonder-1.0`) | The decoy that keeps the scammer talking after a stop, and the investigator that writes the police case file |
-| **Muse Image** | Turns the scam screen into a verified large-print "this is what the scam looked like" card for the family; also generated the synthetic screens used to evaluate the screen analyst |
-| **Llama 3.2 1B** (fine-tuned on Modal) | Tripwire Sentinel, a small model of our own that gives the judge a second opinion |
+| **Muse Image** (`muse-image-1.0`) | Turns the scam screen into a verified large-print "this is what the scam looked like" card for the family; also generated the synthetic screens used to evaluate the screen analyst |
+| **Llama 3.2 1B** (`Llama-3.2-1B-Instruct` + our LoRA, fine-tuned and served on Modal) | Tripwire Sentinel, a small model of our own that gives the judge a second opinion |
+
+**Seeing the calls.** Every Meta model call is logged as it happens, with its exact model ID, which part of Tripwire made it, how long it took, and the start of the request and the response (`core/model_log.py`):
+- the [live scam test](#try-it-now-the-live-scam-test-can-you-scam-margaret) shows them in a **"Meta model calls, live"** console; click a row for the full request and response;
+- the family's incident page lists the calls made for it (SAM 3.1 outlines, the Muse Image card and its read-back, the Muse Spark story);
+- the server prints each one as a `META_MODEL_CALL {...}` log line (kept in Cloud Run logs).
+
+In one test call (a fake tech-support pop-up, then a cash pickup), the console showed 19 calls:
+- 7 to Muse Spark Open (screen and call analysts, independent reviewer);
+- 6 to Muse Spark 1.3 (Margaret, the CaseJudge, the recovery agent's tool calls);
+- 5 to Muse Wonder (the decoy and the case file);
+- 1 to Sentinel.
 
 ## On any phone: the Tripwire phone line
 

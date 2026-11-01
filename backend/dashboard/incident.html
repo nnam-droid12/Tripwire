@@ -40,6 +40,8 @@
   .lead:first-child { border-top:0; }
   .kicker { font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); }
   .update { background:var(--alertbg); border-radius:10px; padding:10px 14px; margin:8px 0; font-size:16px; }
+  table.calls { width:100%; border-collapse:collapse; font:13px/1.4 Consolas, monospace; margin-top:10px; }
+  table.calls td { border-top:1px solid var(--line); padding:6px 4px; vertical-align:top; }
   .log { font:13px/1.5 Consolas, monospace; white-space:pre-wrap; overflow-wrap:anywhere; margin-top:10px; }
 </style>
 </head>
@@ -76,6 +78,8 @@
     <p class="muted" id="report-note">Nothing is filed until you sign off. File it at reportfraud.ftc.gov and with the bank.</p></section>
   <section class="card" id="sms-card" hidden><h2>Text message to the family <span class="badge" id="sms-badge"></span></h2>
     <div class="sms" id="sms-body"></div></section>
+  <section class="card" id="calls-card" hidden><details><summary>Meta model calls made for this page</summary>
+    <table class="calls" id="calls"></table></details></section>
   <section class="card"><details><summary>Full record</summary><div class="log" id="log"></div></details></section>
 </main>
 <script>
@@ -161,6 +165,10 @@ Money lost: ${rep.money_lost || ""}`;
     document.getElementById("report-badge").textContent = signed ? "Signed off" : `Verified draft${rep.coverage ? " · " + rep.coverage + " of key facts" : ""}`;
     document.getElementById("signoff").hidden = signed;
     if (signed) document.getElementById("report-note").textContent = `Signed off ${new Date(rep.signed_off_at * 1000).toLocaleString()}. Ready to file at reportfraud.ftc.gov and with the bank.`;
+  }
+  if ((i.model_calls || []).length) {
+    document.getElementById("calls-card").hidden = false;
+    document.getElementById("calls").innerHTML = i.model_calls.map(c => `<tr><td>${hhmm(c.ts)}</td><td><b>${esc(c.model)}</b><br>${esc(c.purpose)}</td><td>${(c.seconds || 0).toFixed(1)}s</td><td>${esc(c.response)}</td></tr>`).join("");
   }
   if (i.sms) {
     document.getElementById("sms-card").hidden = false;

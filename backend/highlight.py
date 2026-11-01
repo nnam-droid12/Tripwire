@@ -18,12 +18,14 @@ import io
 import json
 import os
 import re
+import time
 import urllib.request
 from dataclasses import dataclass
 
 from PIL import Image, ImageDraw, ImageFont
 
 import core.config  # noqa: F401  (loads .env)
+from core import model_log
 
 SAM_URL = "https://api.meta.ai/v1/responses"
 # prompt -> label shown to the family; earlier prompts win when boxes overlap
@@ -50,7 +52,7 @@ def parse_boxes(text: str, label: str) -> list[Box]:
     return [Box(label, int(a), int(b), int(c), int(d), float(conf or 1.0)) for a, b, c, d, _w, _h, conf in _BOX.findall(text)]
 
 
-def segment(png: bytes, prompt: str, timeout: float = 60) -> list[Box]:
+def segment(png: bytes, prompt: str, timeout: float = 60, observer=None) -> list[Box]:
     body = {
         "model": "sam-3.1",
         "input": [{"type": "message", "role": "user", "content": [
@@ -63,10 +65,14 @@ def segment(png: bytes, prompt: str, timeout: float = 60) -> list[Box]:
         SAM_URL, data=json.dumps(body).encode(),
         headers={"Authorization": f"Bearer {os.environ['META_API_KEY']}", "Content-Type": "application/json"},
     )
+    started = time.time()
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         data = json.loads(resp.read())
     text = "".join(c.get("text", "") for o in data.get("output", []) for c in o.get("content", []) if c.get("type") == "output_text")
-    return parse_boxes(text, prompt)
+    boxes = parse_boxes(text, prompt)
+    model_log.emit(observer, "sam-3.1", "SAM 3.1 · outline the threat for the family", started, f"[image] {prompt}",
+                   f"{len(boxes)} box(es) {text[:120]}", provider="meta")
+    return boxes
 
 
 def _iou(a: Box, b: Box) -> float:
@@ -77,13 +83,14 @@ def _iou(a: Box, b: Box) -> float:
     return inter / union if union else 0.0
 
 
-def highlight(redacted_png: bytes, prompts: dict[str, str] | None = None, min_confidence: float = 0.5) -> tuple[bytes, list[Box]]:
+def highlight(redacted_png: bytes, prompts: dict[str, str] | None = None, min_confidence: float = 0.5,
+              observer=None) -> tuple[bytes, list[Box]]:
     """Draw SAM boxes for each prompt onto an already-redacted frame."""
     boxes: list[Box] = []
     image_size = Image.open(io.BytesIO(redacted_png)).size
     for prompt, label in (prompts or PROMPTS).items():
         try:
-            found = [b for b in segment(redacted_png, prompt) if b.confidence >= min_confidence]
+            found = [b for b in segment(redacted_png, prompt, observer=observer) if b.confidence >= min_confidence]
         except OSError:
             continue  # highlighting is a nicety; the alert goes out regardless
         for b in found:

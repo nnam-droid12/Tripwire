@@ -17,6 +17,7 @@ money and never contacts anyone but the family.
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass
 from typing import Callable
 
@@ -73,10 +74,14 @@ class RecoveryAgent:
         steps: list[Step] = []
         used: set[str] = set()
         for _ in range(self.max_steps):
+            started = time.time()
             resp = self.client._client.chat.completions.create(
                 model=self.client.config.model, messages=messages, tools=TOOLS, max_tokens=3000, reasoning_effort="low",
             )
             msg = resp.choices[0].message
+            if hasattr(self.client, "log"):
+                chosen = [f"{c.function.name}({c.function.arguments[:80]})" for c in (msg.tool_calls or [])]
+                self.client.log(started, str(messages[-1].get("content", ""))[:600], "tool calls: " + ", ".join(chosen) if chosen else (msg.content or ""))
             calls = [c for c in (msg.tool_calls or []) if c.function.name not in used]
             if not calls:
                 return steps, (msg.content or "").strip()

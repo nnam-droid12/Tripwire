@@ -13,6 +13,7 @@ and hangs up, and the family alert is created as usual.
 from __future__ import annotations
 
 import threading
+import time
 from typing import Callable
 
 from backend.arena.session import ArenaSession
@@ -24,10 +25,14 @@ SPOKEN_BY_TRIPWIRE = ("nudge", "resist", "verify", "hold", "family_check", "fami
 class PhoneGame:
     def __init__(self, line_factory: Callable[[Callable[[str], None]], PhoneLine], hang_up: Callable[[], None]) -> None:
         self.session = ArenaSession(self._on_game, situation="call")
-        self.line = line_factory(self.session.scammer_says)
+        self.line = line_factory(self._heard)
         self._hang_up = hang_up
         self._ending = False
         self.events: list[dict] = []  # what happened, for logs and tests
+
+    def _heard(self, text: str) -> None:
+        self.session.heard(text, time.time())
+        self.session.scammer_says(text)
 
     def start(self) -> None:
         self.line.start()

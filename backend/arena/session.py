@@ -49,7 +49,7 @@ from backend.decoy import Decoy
 from backend.incidents import STORE, create_incident
 from backend.investigator import write_case_file
 from backend.sms import send_sms
-from core import sentinel_client
+from core import model_log, sentinel_client
 from core.code_shield import code_request
 from core.line_guard import UNDO_FORWARDING, forwarding_instruction, merge_request
 from core.casefile import CaseFile, CaseUpdate
@@ -128,10 +128,21 @@ class ArenaSession:
         self.case = CaseFile()
         self.sentinel = sentinel_client.shared()
         self.orchestrator = Orchestrator(self.bus, self.case, screen=ScreenAnalyst(redact=lambda png: png), log=lambda _: None,
-                                         shield=shield.lookup, sentinel=self.sentinel.score if self.sentinel else None,
+                                         shield=shield.lookup, sentinel=self._sentinel_score if self.sentinel else None,
                                          sentinel_threshold=sentinel_client.threshold())
         self.margaret = Margaret()
         self.recovery = RecoveryAgent()
+        # every Meta model call this test call makes is shown live in the page's "Meta model calls" console
+        jobs = [(self.orchestrator.screen, "ScreenAnalyst · read Margaret's screen"),
+                (self.orchestrator.call, "CallAnalyst · tag the newest line of the call"),
+                (self.orchestrator.judge, "CaseJudge · weigh the whole call"),
+                (getattr(self.orchestrator.judge, "reviewer", None), "Reviewer · independently check the judge's reasons"),
+                (self.margaret, "Margaret · the simulated older person"),
+                (self.recovery, "Recovery agent · choose and call tools")]
+        for component, job in jobs:
+            client = getattr(component, "client", None)
+            if client is not None:
+                client.purpose, client.observer = job, self._model_call
         self._warning_lock = threading.Lock()
         self.page = "fake_alert" if self.situation == "popup" else "desktop"
         self.pages_seen: list[str] = []
@@ -144,6 +155,7 @@ class ArenaSession:
         self.over = False
         self._turn_lock = threading.Lock()
         self._asr: MuseTranscriber | None = None
+        self._ptt_started: float | None = None
         self.rules = FamilyRules()
         self.remote_control = False  # someone other than Margaret is driving her mouse and keyboard
         self.guarded: set[str] = set()  # sensitive pages already put through the family rules
@@ -216,6 +228,7 @@ class ArenaSession:
                 self._end("hung_up", "Margaret hung up.")
 
     def ptt_start(self) -> None:
+        self._ptt_started = time.time()
         if self._asr is None and not self.over:
             self._asr = MuseTranscriber(self._on_ptt_turn, mode="PUSH_TO_TALK", paced=True,
                                         on_error=lambda m: self.send({"type": "error", "text": m}))
@@ -230,7 +243,24 @@ class ArenaSession:
         if asr:
             asr.close()  # blocks until the final transcript arrives; called off the event loop
 
+    def _model_call(self, call: dict) -> None:
+        self.send({"type": "model_call", **call})
+
+    def _sentinel_score(self, turns: list) -> float | None:
+        started = time.time()
+        p = self.sentinel.score(turns)
+        if p is not None:
+            model_log.emit(self._model_call, "llama-3.2-1b-instruct + Tripwire Sentinel LoRA", "Sentinel · second opinion (fine-tuned on Modal)",
+                           started, turns[-1][1] if turns else "", f"P(scam) = {p:.2f}", provider="modal")
+        return p
+
+    def heard(self, text: str, started: float) -> None:
+        """A finished utterance from Muse Voice Transcribe (the web push-to-talk or the phone line)."""
+        model_log.emit(self._model_call, "muse-voice-transcribe-1.0", "Muse Voice Transcribe · the caller's words", started,
+                       "[audio]", text, provider="meta")
+
     def _on_ptt_turn(self, turn: TranscriptTurn) -> None:
+        self.heard(turn.text, self._ptt_started or time.time())
         threading.Thread(target=self.scammer_says, args=(turn.text,), daemon=True).start()
 
     def hang_up(self) -> None:
@@ -455,6 +485,7 @@ class ArenaSession:
         record = [line for line in observed(self.case.snapshot())]
         try:
             decoy = Decoy()
+            decoy.client.observer = self._model_call
             decoy.caller_lines += [t["text"] for t in self.case.snapshot()["timeline"] if t["source"] == "call"]
             self.send({"type": "swap", "text": "Tripwire took Margaret off the call. The caller is now talking to Tripwire's decoy "
                        "(Muse Wonder), which is trying to learn how they get paid."})
@@ -517,7 +548,7 @@ class ArenaSession:
         record = observed(self.case.snapshot()) + self.decoy_lines
         self.send({"type": "case_file_start", "intel": len(intel)})
         try:
-            case_file = write_case_file(record, intel)
+            case_file = write_case_file(record, intel, observer=self._model_call)
         except Exception as exc:
             case_file = {"title": "Case file unavailable", "error": type(exc).__name__, "timeline": [], "leads": []}
         # Community Shield learns the scammer's identifiers, only from the caller's own verified words

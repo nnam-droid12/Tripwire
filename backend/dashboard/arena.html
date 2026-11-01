@@ -74,6 +74,21 @@
   .verdict ul { margin:4px 0 0; padding-left:18px; }
   .steps div { padding:8px 0; border-top:1px solid var(--line); font-size:14px; }
   .steps .t { font-weight:600; }
+  .calls { font:12px/1.45 ui-monospace, Consolas, "Cascadia Mono", monospace; max-height:340px; overflow:auto; background:#0e1116; color:#d7dde4; border-radius:10px; padding:6px 8px; }
+  .calls details { border-bottom:1px solid #222a33; padding:4px 0; }
+  .calls summary { cursor:pointer; list-style:none; display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:baseline; }
+  .calls summary::-webkit-details-marker { display:none; }
+  .calls .t { color:#7d8894; }
+  .calls .m { font-weight:700; }
+  .calls .m.spark { color:#7ea2ff; } .calls .m.open { color:#9ad1ff; } .calls .m.wonder { color:#f0a6ff; } .calls .m.voice { color:#7fe3b0; }
+  .calls .m.sam { color:#ffd27a; } .calls .m.image { color:#ff9d7a; } .calls .m.llama { color:#c3e88d; }
+  .calls .s { color:#7d8894; }
+  .calls .p { grid-column:1 / -1; color:#aab4bf; }
+  .calls .r { grid-column:1 / -1; color:#d7dde4; }
+  .calls .r b { color:#7d8894; font-weight:400; }
+  .calls pre { white-space:pre-wrap; word-break:break-word; margin:4px 0 2px; color:#c9d1d9; background:#161b22; padding:6px; border-radius:6px; }
+  .calls .err .m { text-decoration:line-through; }
+  .calls-sum { font-size:12px; color:var(--muted); margin:6px 0 0; }
   .msg.decoy { align-self:flex-start; background:var(--her); border:2px dashed var(--tw); border-bottom-left-radius:4px; }
   .sms { position:absolute; top:3%; right:3%; width:min(46%, 330px); background:#1c1c1e; color:#fff; border-radius:14px; padding:10px 12px; font-size:clamp(11px,1.15vw,14px); box-shadow:0 10px 30px #0008; display:none; }
   .sms.on { display:block; animation: pop .25s ease-out; }
@@ -192,6 +207,11 @@
       <div class="small" id="conf-text">Kill-chain confidence 0%</div>
       <div class="feed" id="feed"></div>
       <div id="verdicts"></div>
+    </div>
+    <div class="panel">
+      <h2>Meta model calls, live</h2>
+      <div class="calls" id="calls"><div class="t" id="calls-empty">Calls appear here as Tripwire makes them.</div></div>
+      <p class="calls-sum" id="calls-sum"></p>
     </div>
     <div class="panel intel" id="intel" hidden>
       <h2>Scammer intelligence</h2>
@@ -320,6 +340,26 @@ function onVerdict(m) {
   if (!stopped && m.action === "log") setState("Watching", "--tw");
 }
 
+// ---- live Meta model calls ----------------------------------------------------------
+const callCounts = {};
+function modelClass(id) {
+  return /wonder/.test(id) ? "wonder" : /spark-open/.test(id) ? "open" : /spark/.test(id) ? "spark" : /voice/.test(id) ? "voice"
+    : /sam/.test(id) ? "sam" : /image/.test(id) ? "image" : /llama/.test(id) ? "llama" : "";
+}
+function onModelCall(c) {
+  $("calls-empty")?.remove();
+  const d = document.createElement("details");
+  if (!c.ok) d.className = "err";
+  const time = new Date(c.ts * 1000).toLocaleTimeString([], { hour12: false });
+  d.innerHTML = `<summary><span class="t">${time}</span><span class="m ${modelClass(c.model)}">${esc(c.model)}</span><span class="s">${c.seconds.toFixed(1)}s</span>`
+    + `<span class="p">${esc(c.purpose)}</span><span class="r"><b>→</b> ${esc(c.response)}</span></summary>`
+    + `<pre><b>request</b>\n${esc(c.request_full)}</pre><pre><b>response</b>\n${esc(c.response_full)}</pre>`;
+  $("calls").prepend(d);
+  callCounts[c.model] = (callCounts[c.model] || 0) + 1;
+  const total = Object.values(callCounts).reduce((a, b) => a + b, 0);
+  $("calls-sum").textContent = `${total} call${total === 1 ? "" : "s"} · ` + Object.entries(callCounts).map(([m, n]) => `${m} ×${n}`).join(" · ");
+}
+
 // the verification receipt: what was checked before Tripwire was allowed to act
 function receipt(v) {
   if (!v.quotes_checked) return "";
@@ -353,6 +393,7 @@ function handle(m) {
     case "started": enable(); break;
     case "laptop": showPage(m.page, m.hash); break;
     case "line": say(m.who, m.text); if (m.who === "margaret" || m.who === "decoy") play(m.audio); break;
+    case "model_call": onModelCall(m); break;
     case "line_lock":
       document.querySelector("#sms .from").textContent = m.title;
       $("sms-text").textContent = m.text; $("sms").classList.add("on");

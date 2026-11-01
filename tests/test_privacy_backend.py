@@ -55,8 +55,8 @@ def backend(tmp_path, monkeypatch):
     importlib.reload(backend.sms)
     importlib.reload(backend.storage)
     incidents = importlib.reload(backend.incidents)
-    monkeypatch.setattr(incidents, "highlight", lambda png, prompts=None: (png, []))
-    monkeypatch.setattr(incidents, "narrate", lambda incident: {"title": "Test", "steps": [], "next": []})
+    monkeypatch.setattr(incidents, "highlight", lambda png, prompts=None, observer=None: (png, []))
+    monkeypatch.setattr(incidents, "narrate", lambda incident, observer=None: {"title": "Test", "steps": [], "next": []})
     monkeypatch.setattr(incidents, "redact_image", lambda img: (img.convert("RGB"), 0))  # OCR covered separately
     main = importlib.reload(backend.main)
     from fastapi.testclient import TestClient

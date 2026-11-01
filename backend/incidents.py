@@ -119,19 +119,25 @@ def _alert_family(incident_id: str, link: str) -> None:
 
 def _enrich(incident_id: str) -> None:
     incident = STORE.load(incident_id)
+    calls: list[dict] = []  # every Meta model call made for this incident, shown on its page
+
+    def seen(call: dict) -> None:
+        calls.append({k: v for k, v in call.items() if not k.endswith("_full")})
+
     highlights = []
     for name in incident["frames"]:
-        png, boxes = highlight(STORE.get_image(incident_id, name))
+        png, boxes = highlight(STORE.get_image(incident_id, name), observer=seen)
         if boxes:
             out = name.replace("frame_", "highlight_")
             STORE.put_image(incident_id, out, png)
             highlights.append({"image": out, "frame": name, "labels": sorted({b.label for b in boxes})})
-    card = make_explainer(incident_id, incident, highlights)
-    narration = check_narration(narrate(incident), incident)
-    STORE.update(incident_id, lambda i: i.update(highlights=highlights, narration=narration, explainer=card))
+    card = make_explainer(incident_id, incident, highlights, observer=seen)
+    narration = check_narration(narrate(incident, observer=seen), incident)
+    STORE.update(incident_id, lambda i: i.update(highlights=highlights, narration=narration, explainer=card,
+                                                 model_calls=i.get("model_calls", []) + calls))
 
 
-def make_explainer(incident_id: str, incident: dict[str, Any], highlights: list[dict]) -> dict[str, Any] | None:
+def make_explainer(incident_id: str, incident: dict[str, Any], highlights: list[dict], observer=None) -> dict[str, Any] | None:
     """"This is what the scam looked like": Muse Image edits the scam screen into a verified explainer card."""
     if not incident["frames"]:
         return None
@@ -147,7 +153,7 @@ def make_explainer(incident_id: str, incident: dict[str, Any], highlights: list[
         if not template:
             continue
         try:
-            card = explainer.make_card(STORE.get_image(incident_id, frame), template, explainer.phone_numbers(seen))
+            card = explainer.make_card(STORE.get_image(incident_id, frame), template, explainer.phone_numbers(seen), observer=observer)
         except Exception:
             card = None
         if card:
@@ -177,7 +183,7 @@ def check_narration(narration: dict[str, Any] | None, incident: dict[str, Any]) 
     return narration
 
 
-def narrate(incident: dict[str, Any]) -> dict[str, Any] | None:
+def narrate(incident: dict[str, Any], observer=None) -> dict[str, Any] | None:
     lines = "\n".join(
         f"{time.strftime('%H:%M:%S', time.localtime(t['ts']))} [{t['source']}] {t['text']}" for t in incident["timeline"]
     )
@@ -189,7 +195,9 @@ def narrate(incident: dict[str, Any]) -> dict[str, Any] | None:
     error = ""
     for _attempt in range(2):  # a reply can come back empty if reasoning uses the whole budget
         try:
-            return ModelClient.for_provider("meta").chat_json(messages, max_tokens=8000, reasoning_effort="low")
+            client = ModelClient.for_provider("meta")
+            client.purpose, client.observer = "Muse Spark · write the family's plain-language story", observer
+            return client.chat_json(messages, max_tokens=8000, reasoning_effort="low")
         except Exception as exc:  # narration is optional; the incident page works without it
             error = type(exc).__name__
     return {"title": "Tripwire stopped a likely scam", "steps": [], "next": [], "error": error}
