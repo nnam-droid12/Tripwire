@@ -171,7 +171,7 @@ class ArenaSession:
             return
         with self._turn_lock:
             if self.lines >= MAX_LINES or self.expired():
-                self._end("time", "This game has reached its time limit.")
+                self._end("time", "This test call has reached its time limit.")
                 return
             self.lines += 1
             self.first_line_at = self.first_line_at or time.time()

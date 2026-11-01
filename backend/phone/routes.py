@@ -50,7 +50,7 @@ TOKEN_TTL = 120.0
 _tokens: dict[str, tuple[float, dict]] = {}  # one-time stream token -> (expiry, call details from the signed webhook)
 ANNOUNCEMENT = "This call is protected by Tripwire, and may be monitored to prevent fraud."
 ENDED = "This call has ended."
-BUSY = "Margaret can't take another call right now. Please try again later, or play on Tripwire's website."
+BUSY = "Margaret can't take another call right now. Please try again later, or take the live scam test on Tripwire's website."
 
 
 def public_url() -> str:

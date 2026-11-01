@@ -52,14 +52,14 @@ See [Results](#results).
 
 ## Three defences against the scams draining savings now
 
-All three run in the web arena and on the phone line.
+All three run in the live scam test and on the phone line.
 
-**Code Shield** (`core/code_shield.py`). A deterministic rule on the caller's own words, not a model's judgement, so it fires in milliseconds, before the person can answer. It was written to recognise requests for a code ("read me the code we just sent", "what's the six-digit code") and not offers ("let me give you our confirmation number"). On the 640 legitimate calls in the dataset's training split, it matched **none**. In the arena, the bank's code text appears on Margaret's phone, and the stop comes in the same instant the caller asks for it.
+**Code Shield** (`core/code_shield.py`). A deterministic rule on the caller's own words, not a model's judgement, so it fires in milliseconds, before the person can answer. It was written to recognise requests for a code ("read me the code we just sent", "what's the six-digit code") and not offers ("let me give you our confirmation number"). On the 640 legitimate calls in the dataset's training split, it matched **none**. In the live scam test, the bank's code text appears on Margaret's phone, and the stop comes in the same instant the caller asks for it.
 
 **Call Tom** (`backend/family_check.py`, `/check/<id>`). When a caller claims to be a relative in trouble (the `family_emergency_claim` signal), Tripwire tells the person it's checking, and texts the real relative a link with the caller's exact words and two buttons. "That's not me. I'm safe" becomes a fact in the record (`family_denied_call`) and stops the call. In testing, the stop came half a second after the answer. An unanswered check never counts as a yes.
 
 **Swap in Margaret** (`backend/decoy.py`, `backend/investigator.py`). On a hard stop, the real person is taken off the call:
-- **In the arena,** Margaret leaves and the decoy takes the line.
+- **In the live scam test,** Margaret leaves and the decoy takes the line.
 - **On the phone line,** the protected person's leg is redirected to a spoken warning, and the scammer's leg to the decoy's audio stream.
 
 The decoy is **Muse Wonder** (`muse-wonder-1.0`), Meta's agentic model, given one goal: keep the caller talking until they reveal how they get paid. Muse Wonder is built to keep pursuing a goal when it gets hard, which is what a decoy needs when a scammer dodges a question. It never gives real information: no codes, no numbers, no money.
@@ -73,7 +73,7 @@ A courier pickup is texted to the family at once. When the decoy is done:
 - the scammer's identifiers go to Community Shield;
 - Muse Wonder writes an IC3/FTC-style case file (scheme, timeline, leads), in which every statement must quote the record and every number must be in it.
 
-In one arena test, the decoy got the claimed agent and badge, the amount, a courier "tomorrow at 3 pm, Kevin, a white Toyota" and the callback number; the case file passed 8 of 8 checks. In a simulated phone call, Code Shield stopped the call, the decoy took the scammer's leg, and it came back with a cash pickup "tonight at 7 pm" by a courier named Mike.
+In one live scam test, the decoy got the claimed agent and badge, the amount, a courier "tomorrow at 3 pm, Kevin, a white Toyota" and the callback number; the case file passed 8 of 8 checks. In a simulated phone call, Code Shield stopped the call, the decoy took the scammer's leg, and it came back with a cash pickup "tonight at 7 pm" by a courier named Mike.
 
 ## "This is what the scam looked like": the family's explainer card
 
@@ -99,8 +99,8 @@ Tested on four of Margaret's screens: the fake pop-up, the remote-access app and
 | Tool | Job in Tripwire |
 |---|---|
 | **Muse Spark Open** (Baseten) | Always-on Tier-1 narrator: reads every changed screenshot and every call line, and tags kill-chain signals |
-| **Muse Spark** (`muse-spark-1.3`, Meta Model API) | The CaseJudge: reasons over the whole session and is the only component that can authorize a hard stop. Also plays Margaret in the arena, runs the tool-calling recovery agent, and writes the family's plain-language incident story |
-| **Muse Voice Transcribe** | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode), and push-to-talk transcription of the scammer in the arena |
+| **Muse Spark** (`muse-spark-1.3`, Meta Model API) | The CaseJudge: reasons over the whole session and is the only component that can authorize a hard stop. Also plays Margaret in the live scam test, runs the tool-calling recovery agent, and writes the family's plain-language incident story |
+| **Muse Voice Transcribe** | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode), and push-to-talk transcription of the scammer in the live scam test |
 | **SAM 3.1** | Outlines the threat (the fake warning, the scammer's number) on already-redacted screenshots for the family |
 | **Muse Wonder** (`muse-wonder-1.0`) | The decoy that keeps the scammer talking after a stop, and the investigator that writes the police case file |
 | **Muse Image** | Turns the scam screen into a verified large-print "this is what the scam looked like" card for the family; also generated the synthetic screens used to evaluate the screen analyst |
@@ -118,7 +118,7 @@ Phone apps can't hear calls: iPhone and Android both block it. So the phone vers
 
 There are no spoken nudges on this line: Twilio can't speak into a connected two-way call without breaking the bridge, so on the phone Tripwire only steps in when it is sure.
 
-**Call Margaret** (`backend/phone/margaret_line.py`). The arena game below, over a real phone call: phone Tripwire's number and try to scam Margaret by voice. Margaret answers in her own voice, Tripwire listens, and when it stops you, its warning cuts in over Margaret mid-sentence. She says she's hanging up, and the line goes dead.
+**Call Margaret** (`backend/phone/margaret_line.py`). The live scam test below, over a real phone call: phone Tripwire's number and try to scam Margaret by voice. Margaret answers in her own voice, Tripwire listens, and when it stops you, its warning cuts in over Margaret mid-sentence. She says she's hanging up, and the line goes dead.
 
 **How the line is built:**
 
@@ -126,16 +126,16 @@ There are no spoken nudges on this line: Twilio can't speak into a connected two
 |---|---|
 | Telephone audio | 8 kHz G.711 mu-law in both directions. Decoded and upsampled to 24 kHz PCM for the ASR; voices synthesized directly as 8 kHz mu-law (Chirp 3 HD) |
 | Turn-taking | Speech is detected on the phone audio, and each utterance gets its own push-to-talk ASR session. The text arrives about 1 s after the caller stops; a continuous session waited about 10 s for a long silence. |
-| Security | Every webhook checks Twilio's `X-Twilio-Signature`. Media streams need a one-time token that only a signed webhook hands out. In the Margaret game, the caller's own number is never stored or added to Community Shield. |
-| Cost control | Demo calls share the arena's limit of 4 games at once and 8 minutes each, plus a daily cap on minutes. A protected person's line is never capped. |
+| Security | Every webhook checks Twilio's `X-Twilio-Signature`. Media streams need a one-time token that only a signed webhook hands out. In Call Margaret test calls, the caller's own number is never stored or added to Community Shield. |
+| Cost control | Test calls share the live scam test's limit of 4 at once and 8 minutes each, plus a daily cap on minutes. A protected person's line is never capped. |
 
 Both modes were tested end to end with simulated Twilio streams (synthesized voices in, audio out, Twilio REST stubbed). The live number is the last step: Twilio's 2026 trial accounts can't own a number or use Media Streams, and buying one needs an identity check.
 
-## Try it now: "Can you scam Margaret?"
+## Try it now: the live scam test ("Can you scam Margaret?")
 
 **[tripwire-4j2p5vomta-ue.a.run.app/arena](https://tripwire-4j2p5vomta-ue.a.run.app/arena)**: no login, works in Chrome or Edge.
 
-You play the scammer. Hold the button and speak, or type. Margaret, 78, answers out loud and does what you tell her on her laptop: she installs a remote-access app, logs in to her bank, opens a gift-card page. The real Tripwire pipeline watches her screen and the call the whole time:
+You're the scammer. Hold the button and speak, or type. Margaret, 78, answers out loud and does what you tell her on her laptop: she installs a remote-access app, logs in to her bank, opens a gift-card page. The real Tripwire pipeline watches her screen and the call the whole time:
 
 - the kill-chain meter lights up as you move through the scam;
 - the CaseJudge explains its reasoning;
@@ -157,7 +157,7 @@ Things to try:
 | Tripwire | The real pipeline: Muse Spark Open analysts, the kill-chain CaseFile, the Muse Spark CaseJudge |
 | Recovery agent | Muse Spark with tool calling |
 
-Everything in the arena is fictional. The on-device agent below is the real product; the arena runs the same detection pipeline in the cloud so anyone can test it. A desktop demo is also available: `python -m scripts.demo` stages a scam in a window ([docs/DEMO.md](docs/DEMO.md)).
+Everything in the live scam test is fictional. The on-device agent below is the real product; the live scam test runs the same detection pipeline in the cloud so anyone can test it. A desktop demo is also available: `python -m scripts.demo` stages a scam in a window ([docs/DEMO.md](docs/DEMO.md)).
 
 ## How it works
 
@@ -284,7 +284,7 @@ Tripwire Sentinel is **Llama 3.2 1B, fine-tuned with LoRA** on the training spli
 
 Alone, Sentinel would be a poor product: one in ten legitimate calls flagged. Combined, it's the opposite. Sentinel raises a `sentinel_flag` signal that the CaseJudge weighs as an independent second opinion. It can never be quoted as a reason, so a stop still needs words actually said and the independent reviewer's confirmation. The judge filters out Sentinel's false alarms (0 of its 17 telemarketing flags led to a stop), and Sentinel stops the judge from hesitating (real calls 55% → 95%).
 
-Live, Sentinel runs as a deployed Modal service (`SentinelService`, 8 CPUs, ~1.6 s per turn when warm, ~27 s cold start; scores identical to the batch export). The arena and the desktop agent warm a container when a call starts. If Modal is slow or down, Tripwire runs as it would without Sentinel.
+Live, Sentinel runs as a deployed Modal service (`SentinelService`, 8 CPUs, ~1.6 s per turn when warm, ~27 s cold start; scores identical to the batch export). The live scam test and the desktop agent warm a container when a call starts. If Modal is slow or down, Tripwire runs as it would without Sentinel.
 
 ### Screen analyst on single screens
 
@@ -351,7 +351,7 @@ A model that stops a phone call, freezes a card or writes a fraud report must no
 
 If the reviewer is unreachable, the deterministic layer still applies and the receipt says so. Every incident page shows a **verification receipt**: each reason with the exact words it rests on, the reviewer's note, what was dropped, retries, and the checks on the report and message.
 
-Measured on 80 development conversations (the train split): 104 reasons behind stops were re-checked by the reviewer and 103 were confirmed. Detection was unchanged (98% stopped, 0% false alarms). In a live arena run, the recovery agent wrote a phone number into the fraud report that wasn't in the record. The check rejected it before delivery, and the agent fixed the draft. That test also showed numbers read off the screen must count as observed: they now do.
+Measured on 80 development conversations (the train split): 104 reasons behind stops were re-checked by the reviewer and 103 were confirmed. Detection was unchanged (98% stopped, 0% false alarms). In a live scam test, the recovery agent wrote a phone number into the fraud report that wasn't in the record. The check rejected it before delivery, and the agent fixed the draft. That test also showed numbers read off the screen must count as observed: they now do.
 
 ## Interventions
 
