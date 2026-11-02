@@ -67,6 +67,7 @@ VOICE_DIR = RUNTIME_DIR / "arena_voice"
 VOICES = {
     "margaret": GoogleVoice(voice="en-US-Chirp3-HD-Gacrux", rate=0.95, cache_dir=VOICE_DIR, encoding="MP3"),
     "tripwire": GoogleVoice(voice="en-US-Chirp3-HD-Vindemiatrix", rate=0.95, cache_dir=VOICE_DIR, encoding="MP3"),
+    "scammer": GoogleVoice(voice="en-US-Chirp3-HD-Charon", rate=1.05, cache_dir=VOICE_DIR, encoding="MP3"),  # one-click scenarios
 }
 MAX_LINES = 40
 VERIFY_QUESTION = "Margaret, a quick check before you pay: did you call them, or did they call you?"
@@ -105,6 +106,10 @@ def prewarm_voices() -> None:
     for brand in ("Riverbend Community Bank", "The Irs", "Amazon"):
         voice_clip("tripwire", hard_stop_speech(brand))
     voice_clip("tripwire", FORWARD_ADVICE)
+    from backend.arena.scenarios import all_lines
+
+    for line in all_lines():  # the one-click scenarios' scammer lines
+        voice_clip("scammer", line)
     from backend.phone.guard_line import CODE_HEARD_SPEECH, FORWARD_SPEECH, STOP_SPEECH
 
     for text in (STOP_SPEECH, CODE_HEARD_SPEECH, FORWARD_SPEECH):  # the phone line's explanations after a stop
@@ -186,8 +191,8 @@ class ArenaSession:
 
     # -- the scammer (visitor) -------------------------------------------------------
 
-    def scammer_says(self, text: str) -> None:
-        """One line from the visitor, typed or transcribed. Runs on a worker thread."""
+    def scammer_says(self, text: str, voiced: bool = False) -> None:
+        """One line from the visitor, typed or transcribed (or a one-click scenario's, voiced). Runs on a worker thread."""
         text = text.strip()[:500]
         if not text or self.over:
             return
@@ -197,7 +202,7 @@ class ArenaSession:
                 return
             self.lines += 1
             self.first_line_at = self.first_line_at or time.time()
-            self.send({"type": "line", "who": "scammer", "text": text})
+            self.send({"type": "line", "who": "scammer", "text": text, "audio": voice_clip("scammer", text) if voiced else None})
             if self.warning_active and is_disable_instruction(text) and self.decoy is None:
                 self._resist(text)
             if not self._swapped.is_set():  # Margaret is being taken off the call: this line goes to the decoy

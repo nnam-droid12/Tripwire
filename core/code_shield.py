@@ -25,14 +25,22 @@ _REQUEST = [
     re.compile(rf"\b{_ASK}\b[^.?!]{{0,40}}\bthe {_CODE_NOUN}\b[^.?!]{{0,40}}\b(?:sent|texted|received|got|on your (?:phone|screen)|we (?:just )?sent)", re.I),
     re.compile(rf"\b{_CODE_NOUN}\b[^.?!]{{0,40}}\b(?:we|i|the bank) (?:just )?(?:sent|texted)\b", re.I),
     re.compile(r"\b(?:digits|numbers) (?:we|i) (?:just )?(?:sent|texted)\b", re.I),
-    re.compile(rf"\b(?:sent|texted|sending|texting) you (?:a|the|an)\b[^.?!]{{0,25}}\b{_CODE_NOUN}\b[^.?!]{{0,40}}(?:\bwhat\b|\bread\b|\btell\b|\bgive\b|\?)", re.I),
+    re.compile(rf"\b(?:sent|texted|sending|texting) you (?:a|the|an)\b[^.?!]{{0,25}}\b{_CODE_NOUN}\b[^.?!]{{0,40}}(?:\bwhat\b|\bread\b|\btell me\b|\bgive me\b|\?)", re.I),
 ]
 _MESSAGE = re.compile(rf"\b(?:{_CODE_NOUN}|code is|verification)\b[^\n]{{0,60}}\b\d{{4,8}}\b|\b\d{{4,8}}\b[^\n]{{0,40}}\b(?:is your|code)\b", re.I)
 
 
+_SENT_CODE = re.compile(rf"\b(?:sent|texted|sending|texting)\b[^?!]{{0,40}}\b{_CODE_NOUN}\b", re.I)
+_READ_IT = re.compile(r"\b(?:read|repeat)\s+(?:it|them|that|those|the (?:code|numbers|digits))\b"
+                      r"|\b(?:tell|give|say|confirm)\s+(?:it|them|that|those|the (?:code|numbers|digits))\s+(?:to me|back|out)\b", re.I)
+
+
 def code_request(text: str) -> bool:
     """The caller is asking for a one-time / verification code."""
-    return any(p.search(text) for p in _REQUEST)
+    if any(p.search(text) for p in _REQUEST):
+        return True
+    # "I've just sent a code to your phone. Read it to me." (the request in the next sentence)
+    return bool(_SENT_CODE.search(text) and _READ_IT.search(text))
 
 
 def code_message(text: str) -> bool:

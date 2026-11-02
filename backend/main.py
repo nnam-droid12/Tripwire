@@ -38,6 +38,7 @@ from pydantic import BaseModel
 
 from backend import approvals, family_check, shield
 from backend.arena import laptop, scores
+from backend.arena.scenarios import SCENARIOS
 from backend.arena.session import VOICE_DIR, ArenaSession, prewarm_voices
 from backend.incidents import STORE, create_incident, decode_frames
 from backend.phone.routes import make_router as make_phone_router
@@ -347,6 +348,12 @@ def shield_check(body: ShieldCheckIn) -> dict[str, Any]:
     return {"hits": shield.lookup(body.text[:2000])}
 
 
+@app.get("/api/arena/scenarios")
+def arena_scenarios() -> list[dict[str, Any]]:
+    """The one-click scenarios: the 2026 scams, scripted on the scammer's side only."""
+    return SCENARIOS
+
+
 @app.get("/api/arena/board")
 def arena_board() -> dict[str, Any]:
     return scores.board()
@@ -396,7 +403,8 @@ async def arena_socket(ws: WebSocket) -> None:
                 elif session is None:
                     continue
                 elif kind == "say":
-                    asyncio.get_running_loop().run_in_executor(None, session.scammer_says, str(data.get("text", "")))
+                    asyncio.get_running_loop().run_in_executor(None, session.scammer_says, str(data.get("text", "")),
+                                                               data.get("voiced") is True)
                 elif kind == "ptt_start":
                     await asyncio.to_thread(session.ptt_start)
                 elif kind == "ptt_end":

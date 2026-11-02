@@ -109,3 +109,9 @@ def test_explainer_card_is_read_back_before_anyone_sees_it(monkeypatch):
     assert card["attempts"] == 2 and "not the one on the original screen" in edits[1] and "added text" in edits[1]
     assert explainer.make_card(b"png", t, set(), Reader([{**original, "shows": False}])) is None  # wrong screen: no card
     assert explainer.make_card(b"png", t, set(), Reader([original, bad, bad])) is None  # never passes: discarded
+
+
+def test_code_request_split_across_sentences():
+    assert code_request("I've just sent a six digit code to your phone. Read it to me, please.")
+    assert not code_request("I sent you the tracking code by email, please give it a look.")
+    assert not code_request("We texted a code. Do not tell anyone.")

@@ -121,6 +121,14 @@
   .dialog { position:fixed; inset:0; background:#000a; display:flex; align-items:center; justify-content:center; padding:16px; z-index:10; }
   .dialog[hidden] { display:none; }
   .dialog .box { background:var(--panel); color:var(--ink); max-width:620px; width:100%; border-radius:16px; padding:24px; }
+  .scen { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:6px 0 14px; }
+  .scen button { text-align:left; padding:10px 12px; font-size:14px; }
+  .scen button b { display:block; font-size:15px; }
+  .scen .d { display:block; font-size:12px; color:var(--accent); font-weight:600; margin-top:2px; }
+  .scen .s { display:block; font-size:12px; color:var(--muted); margin-top:4px; line-height:1.35; }
+  .autobar { display:none; margin:0 0 10px; padding:8px 12px; border-radius:10px; background:color-mix(in srgb, var(--accent) 12%, var(--panel)); border:1px solid var(--accent); font-size:14px; }
+  .autobar.on { display:flex; gap:10px; align-items:center; justify-content:space-between; }
+  @media (max-width:640px) { .scen { grid-template-columns:1fr; } }
   .choice { display:block; width:100%; text-align:left; margin:8px 0; padding:14px 16px; }
   .choice.sel { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset; }
   .choice b { display:block; }
@@ -186,6 +194,7 @@
 
     <div class="panel call">
       <h2>The call</h2>
+      <div class="autobar" id="autobar"><span id="autotext"></span><button id="autostop">Take over</button></div>
       <div class="swap" id="swap"></div>
       <div class="log" id="log"></div>
       <div class="controls">
@@ -235,7 +244,10 @@
 
 <div class="dialog" id="start">
   <div class="box">
-    <h2 style="font-size:22px;text-transform:none;letter-spacing:0;color:var(--ink)">Pick your scam</h2>
+    <h2 style="font-size:22px;text-transform:none;letter-spacing:0;color:var(--ink)">Watch a real 2026 scam, in one click</h2>
+    <p class="small" style="margin:2px 0 6px">The scammer's lines are scripted from this year's news. Everything else is live: Margaret, Tripwire and every Meta model call.</p>
+    <div class="scen" id="scenarios"></div>
+    <h2 style="font-size:18px;text-transform:none;letter-spacing:0;color:var(--ink);margin-top:6px">Or be the scammer yourself</h2>
     <button class="choice sel" data-situation="popup"><b>Fake tech support</b><span class="small">A fake "PC SafeGuard" virus pop-up is on her screen. She has just called the number on it, and you answer.</span></button>
     <button class="choice" data-situation="call"><b>Cold call</b><span class="small">You phone her. Be her bank's fraud team, the IRS, Amazon refunds… Or be her grandson Tom and see whether Tripwire stays calm.</span></button>
     <p class="small">Hold the blue button (or Space) and speak, or type. Margaret answers out loud, so turn your sound on. A test call lasts up to 8 minutes.</p>
@@ -313,7 +325,7 @@ function next() {
 function say(who, text) {
   const d = document.createElement("div");
   d.className = `msg ${who}`;
-  const name = { scammer: "You", margaret: "Margaret", tripwire: "Tripwire", decoy: "“Margaret” (Tripwire's decoy)" }[who];
+  const name = { scammer: auto ? "Scammer (scripted)" : "You", margaret: "Margaret", tripwire: "Tripwire", decoy: "“Margaret” (Tripwire's decoy)" }[who];
   d.innerHTML = (name && who !== "tripwire" ? `<span class="who">${name}</span>` : "") + esc(text);
   $("log").appendChild(d); $("log").scrollTop = 1e9;
 }
@@ -392,7 +404,11 @@ function handle(m) {
     case "busy": say("system", m.text); break;
     case "started": enable(); break;
     case "laptop": showPage(m.page, m.hash); break;
-    case "line": say(m.who, m.text); if (m.who === "margaret" || m.who === "decoy") play(m.audio); break;
+    case "line":
+      say(m.who, m.text);
+      if (m.who === "margaret" || m.who === "decoy" || m.who === "scammer") play(m.audio);
+      if (m.who === "margaret" || m.who === "decoy") autoNext();
+      break;
     case "model_call": onModelCall(m); break;
     case "line_lock":
       document.querySelector("#sms .from").textContent = m.title;
@@ -416,6 +432,7 @@ function handle(m) {
       $("check").classList.add("on");
       say("tripwire", "Tripwire (spoken): " + m.text); setState(`Checking with ${m.relative}`, "--warn"); play(m.audio, true); break;
     case "family_check_result":
+      if (auto && auto.wait_for_family) { auto.waiting = false; autoNext(); }
       $("check-status").textContent = m.status === "safe" ? `${m.relative}: “That's not me. I'm safe.”` : m.status === "me" ? `${m.relative}: “Yes, it's really me.”` : `${m.relative} hasn't answered yet.`;
       setTimeout(() => $("check").classList.remove("on"), m.status === "safe" ? 1500 : 6000);
       if (m.text) { say("tripwire", "Tripwire (spoken): " + m.text); play(m.audio, true); }
@@ -560,6 +577,40 @@ Promise.all([fetch("/api/arena/board").then(r => r.json()), fetch("/api/shield")
   if (s.indicators) parts.push(`Community Shield has learned ${s.indicators} scammer number${s.indicators === 1 ? "" : "s"} and IDs from them, so reusing one gets you caught faster.`);
   $("record").textContent = parts.join(" ");
 }).catch(() => {});
+
+// ---- one-click scenarios: the scammer's side is scripted, everything else is live ----
+let auto = null;  // {lines, i, wait_for_family, hint}
+fetch("/api/arena/scenarios").then(r => r.json()).then(list => {
+  $("scenarios").innerHTML = list.map((s, k) => `<button data-k="${k}"><b>${esc(s.title)}</b><span class="d">${esc(s.defence)}</span><span class="s">${esc(s.story)}</span></button>`).join("");
+  $("scenarios").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const s = list[+b.dataset.k];
+    auto = { ...s, i: 0, waiting: false };
+    situation = s.situation;
+    $("autotext").textContent = `Scripted scammer: ${s.title}. Watch what Tripwire does.`;
+    $("autobar").classList.add("on");
+    $("go").click();
+  });
+}).catch(() => {});
+function audioIdle() { return !playing && queue.length === 0; }
+function autoNext() {
+  if (!auto || !ws) return;
+  const send = () => {
+    if (!auto) return;
+    if (!audioIdle()) { setTimeout(send, 300); return; }  // let Margaret finish speaking first
+    if (auto.i < auto.lines.length) {
+      ws.send(JSON.stringify({ type: "say", text: auto.lines[auto.i++], voiced: true }));
+    } else if (auto.wait_for_family && !auto.waiting && !stopped) {
+      auto.waiting = true;
+      $("autotext").textContent = auto.hint;
+    } else if (!auto.waiting) {
+      ws.send(JSON.stringify({ type: "hang_up" }));
+      auto = null;
+      $("autobar").classList.remove("on");
+    }
+  };
+  setTimeout(send, 900);
+}
+$("autostop").onclick = () => { auto = null; $("autobar").classList.remove("on"); $("text").focus(); };
 
 // ---- typing --------------------------------------------------------------------------
 function sendText() {
