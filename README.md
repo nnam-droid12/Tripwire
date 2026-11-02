@@ -51,6 +51,8 @@ Built for the Meta Global AI Developer Hackathon (indie track). Everything in th
 
 See [Results](#results).
 
+**Try it:** [the live scam test](https://tripwire-4j2p5vomta-ue.a.run.app/arena) needs no install. To run it on your own computer with just a Meta API key, see **[Run it yourself](#run-it-yourself)**.
+
 ## Three defences against the scams draining savings now
 
 All three run in the live scam test and on the phone line.
@@ -216,18 +218,118 @@ Detection runs in three tiers:
 | 1 | Muse Spark Open on Baseten | Always-on narrator: per-frame and per-chunk risk tags |
 | 2 | Muse Spark (Meta Model API) | CaseJudge: reasons over the whole session, issues the verdict |
 
-## Setup
+## Run it yourself
+
+Three ways, from no setup at all to the full project. Only a **Meta Model API key** is needed.
+
+### 1. No install: the live site
+
+Open **https://tripwire-4j2p5vomta-ue.a.run.app/arena** in Chrome or Edge, turn your sound on, and click one of the six scams (for example **"Read me the code"**). Keep the **"Meta model calls, live"** panel in view. When it's over, open the replay link on the result screen.
+
+### 2. Run the web app on your computer (Windows, macOS or Linux, about 5 minutes)
+
+This runs the live scam test, the family incident pages and the replays: the same code as the live site.
+
+**You need:** Python 3.12, git, and a Meta Model API key from [dev.meta.ai](https://dev.meta.ai).
+
+**Step 1: get the code.**
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env   # then fill in your keys
-python -m scripts.hello_models   # checks both model providers respond
-python -m pytest -q tests        # unit tests
+git clone https://github.com/nnam-droid12/Tripwire.git
+cd Tripwire
 ```
 
+**Step 2: create a virtual environment and install** (the web app's packages only; the desktop agent's Windows packages are not needed):
+
+```bash
+# macOS / Linux
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-backend.txt
+```
+
+```bat
+:: Windows (Command Prompt)
+py -3.12 -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements-backend.txt
+```
+
+(In Windows PowerShell, activate with `.venv\Scripts\Activate.ps1`. If PowerShell refuses to run it, first run `Set-ExecutionPolicy -Scope Process Bypass`.)
+
+**Step 3: add your key.** Copy the example settings file, then put your key on the `META_API_KEY=` line:
+
+```bash
+cp .env.example .env        # Windows: copy .env.example .env
+```
+
+```
+META_API_KEY=your-key-here
+```
+
+That's the only required setting. The `.env` file is git-ignored, so it never leaves your machine.
+
+**Step 4: start the server.**
+
+```bash
+python -m uvicorn backend.main:app --port 8765
+```
+
+Wait for `Uvicorn running on http://127.0.0.1:8765`.
+
+**Step 5: open the live scam test** at **http://127.0.0.1:8765/arena** and click a scam, for example **"Read me the code"**. You should see:
+- the scripted scammer's lines and Margaret's answers in the call panel;
+- signals and the CaseJudge's verdicts in the Tripwire panel;
+- every Meta model call appearing in the **"Meta model calls, live"** panel;
+- a banner such as **"CODE SHIELD · Stopped 0.0 s after the caller's line"**;
+- the decoy taking over;
+- a result screen with links to the family's incident page and the **full replay** of the test call.
+
+Other pages: **http://127.0.0.1:8765/** (the product page) and **http://127.0.0.1:8765/family** (the family dashboard).
+
+**What changes without the optional keys.** Everything works with only `META_API_KEY`. The optional settings in `.env.example` each add one thing:
+
+| Optional | Without it | With it |
+|---|---|---|
+| `BASETEN_API_KEY` | The always-on analysts and the reviewer use Muse Spark (`muse-spark-1.3`) on the Meta Model API | They use Muse Spark Open on Baseten (faster, as on the live site) |
+| A Modal login (`modal setup`) | Tripwire Sentinel is skipped; the CaseJudge decides alone | Sentinel adds its second opinion (needs the `tripwire-sentinel` app deployed to your Modal account, see `modal_app/sentinel.py`) |
+| Google Cloud credentials (`gcloud auth application-default login`) and `TRIPWIRE_GCP_PROJECT` | The live scam test is **text only**: no spoken voices | Margaret, the scammer and Tripwire speak (Chirp 3 HD) |
+| Twilio settings | Family texts appear on the incident page as "Demo mode: not sent"; no phone line | Real texts, and the phone line (needs a Twilio number) |
+
+The push-to-talk microphone uses Muse Voice Transcribe through your Meta key, so it works too (in Chrome or Edge).
+
+### 3. Run the tests (no API key needed)
+
+```bash
+pip install -r requirements-backend.txt -r requirements-dev.txt
+python -m pytest -q tests
+```
+
+Expected results:
+- **Windows:** `59 passed`.
+- **macOS / Linux:** `57 passed, 2 skipped`. The two skipped tests cover the Windows-only desktop agent (Windows input hooks, closing a remote-access tool).
+
+The tests never call a model. They were run from a fresh clone, with no `.env`, on Windows and in a clean Linux container (`python:3.12-slim`).
+
+### Optional: the evaluation, the desktop agent, Sentinel
+
+- **Evaluation** (uses your API credits, about 10–30 minutes each): `python -m eval.run_eval` (12 scripted scenarios), `python -m eval.run_external --split val` (128 third-party calls). Results are written to `eval/results/`.
+- **The desktop agent** (Windows 10/11 only): `pip install -r requirements.txt`, then see [Running the on-device capture](#running-the-on-device-capture-tier-0) and [Replaying a scripted scam](#replaying-a-scripted-scam).
+- **Training Sentinel** (Modal, CPU only): see the usage notes at the top of `modal_app/sentinel.py`.
+
+### If something goes wrong
+
+| You see | Do this |
+|---|---|
+| `Provider 'meta' is missing env vars: META_API_KEY` | The `.env` file must be in the repository's root folder (next to `README.md`) and contain `META_API_KEY=…` |
+| `Address already in use` | Another program uses port 8765: start with `--port 8766` and open that port instead |
+| No voices in the live scam test | Expected without Google Cloud credentials; the text shows everything |
+| Margaret takes a few seconds to answer | Normal: every turn is several live model calls (you can watch them in the model-calls panel) |
+| The microphone button does nothing | Use Chrome or Edge, allow microphone access, or type instead |
+
 ## Running the on-device capture (Tier 0)
+
+Windows 10/11 only. Install the desktop agent's packages first: `pip install -r requirements.txt` (with `META_API_KEY` in `.env`).
 
 ```bash
 python -m scripts.run_capture                  # live screen + microphone + watchers, Ctrl+C to stop

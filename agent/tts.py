@@ -33,7 +33,7 @@ from core.config import RUNTIME_DIR
 
 VOICE = os.environ.get("TRIPWIRE_VOICE", "en-US-Chirp3-HD-Vindemiatrix")
 SPEAKING_RATE = float(os.environ.get("TRIPWIRE_SPEAKING_RATE", "0.92"))
-GCP_PROJECT = os.environ.get("TRIPWIRE_GCP_PROJECT", "nixora-project")
+GCP_PROJECT = os.environ.get("TRIPWIRE_GCP_PROJECT", "")  # the Google Cloud project billed for speech (your own)
 CACHE_DIR = RUNTIME_DIR / "tts_cache"  # not purged with the 24h buffer: contains no personal data
 TTS_URL = "https://texttospeech.googleapis.com/v1/text:synthesize"
 
@@ -85,7 +85,10 @@ class GoogleVoice:
             self._creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
         if not self._creds.valid:
             self._creds.refresh(google.auth.transport.requests.Request())
-        return {"Authorization": f"Bearer {self._creds.token}", "x-goog-user-project": GCP_PROJECT}
+        headers = {"Authorization": f"Bearer {self._creds.token}"}
+        if GCP_PROJECT:
+            headers["x-goog-user-project"] = GCP_PROJECT
+        return headers
 
 
 def wav_seconds(path: Path) -> float:
