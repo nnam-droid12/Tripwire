@@ -1,0 +1,5 @@
+# Running the tests (any OS): pip install -r requirements-backend.txt -r requirements-dev.txt
+pytest>=8
+httpx>=0.27
+imagehash>=4.3
+mss>=9

@@ -92,6 +92,7 @@ def _guard(monkeypatch, sms=None):
     from backend.phone import guard_line
 
     incidents = []
+    monkeypatch.setenv("META_API_KEY", "test-key-never-used")  # clients are built, never called: no real key needed
     monkeypatch.setattr(guard_line, "voice_clip", lambda who, text: "clip")
     monkeypatch.setattr(guard_line, "create_incident", lambda *a, **k: incidents.append(k) or ("id", "link"))
     monkeypatch.setattr(guard_line.sentinel_client, "shared", lambda: None)
