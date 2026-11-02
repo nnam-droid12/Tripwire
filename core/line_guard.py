@@ -16,6 +16,8 @@ so they fire on the words themselves:
 * ``merge_request``: the caller asks to merge, add or conference in a call;
 * ``forwarding_instruction``: the caller asks to dial a forwarding code or to
   forward calls;
+* ``relative_in_trouble``: the caller claims to be a grandchild or relative in
+  trouble. It doesn't stop anything; it starts the check with the real relative;
 * ``bank_code_voice``: an automated bank voice starts announcing a code. It is
   checked on partial transcripts of what the *scammer can hear*, so it fires on
   the opening words, before the digits are read.
@@ -62,3 +64,14 @@ def bank_code_voice(text: str) -> bool:
 
 
 UNDO_FORWARDING = "dial star seven three, or pound pound zero zero two pound, to switch call forwarding off"
+
+
+_RELATIVE = re.compile(r"\b(?:grandma|grandmother|granny|nana|grandpa|grandfather|gramps|auntie|aunt|uncle)\b[^.!]{0,40}\b(?:it'?s me|this is)\b"
+                       r"|\b(?:it'?s me|this is)\b[^.!]{0,20}\byour (?:grandson|granddaughter|grandchild|nephew|niece)\b"
+                       r"|\byour (?:grandson|granddaughter|grandchild|nephew|niece)\b", re.I)
+_TROUBLE = re.compile(r"\b(?:arrested|jail|bail|police|accident|hospital|lawyer|attorney|in trouble|stranded|kidnapp?ed)\b", re.I)
+
+
+def relative_in_trouble(text: str) -> bool:
+    """The caller says they're a grandchild or relative, and that they're in trouble (the voice-clone script)."""
+    return bool(_RELATIVE.search(text) and _TROUBLE.search(text))

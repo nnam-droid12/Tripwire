@@ -115,3 +115,11 @@ def test_code_request_split_across_sentences():
     assert code_request("I've just sent a six digit code to your phone. Read it to me, please.")
     assert not code_request("I sent you the tracking code by email, please give it a look.")
     assert not code_request("We texted a code. Do not tell anyone.")
+
+
+def test_relative_in_trouble_starts_the_check():
+    from core.line_guard import relative_in_trouble
+
+    assert relative_in_trouble("Grandma? It's me, Tom. I'm in trouble. I was in a car accident and the police arrested me.")
+    assert relative_in_trouble("This is your grandson, I need bail money.")
+    assert not relative_in_trouble("Hi Grandma, it's me, just calling to say happy birthday!")

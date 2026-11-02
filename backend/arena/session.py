@@ -52,7 +52,7 @@ from backend.investigator import write_case_file
 from backend.sms import send_sms
 from core import model_log, sentinel_client
 from core.code_shield import code_request
-from core.line_guard import UNDO_FORWARDING, forwarding_instruction, merge_request
+from core.line_guard import UNDO_FORWARDING, forwarding_instruction, merge_request, relative_in_trouble
 from core.casefile import CaseFile, CaseUpdate
 from core.config import LOGS_DIR, RUNTIME_DIR
 from core.events import Event, EventBus
@@ -237,6 +237,9 @@ class ArenaSession:
             if not self.warning_active and code_request(text):
                 self._code_shield(text)  # Margaret never gets the chance to read the code out
                 return
+            if not self.warning_active and not self.family_checked and relative_in_trouble(text):
+                self.family_checked = True  # Call Tom: ask the real relative now, whatever the models make of the voice
+                threading.Thread(target=self._call_tom, args=(text,), daemon=True).start()
             if not self.warning_active and (merge_request(text) or forwarding_instruction(text)):
                 self._line_lock("merge" if merge_request(text) else "forward", text)
                 return

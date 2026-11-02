@@ -17,8 +17,8 @@ SCENARIOS = [
         "story": "A fake bank fraud team asks for the one-time code the bank just texted. An Orlando couple lost $7,500 this way in October 2026.",
         "situation": "call",
         "lines": [
-            "Hello Margaret, this is James from the Riverbend Bank fraud department. We just stopped a suspicious charge of nine hundred dollars on your card.",
-            "To cancel it I need to verify it's really you. I've just sent a six digit code to your phone. Read it to me, please.",
+            "Hello Margaret, this is James from the Riverbend Bank fraud department. We just stopped a nine hundred dollar charge on your card. I've just sent a six digit code to your phone to verify it's you. Read it to me, please.",
+            "We need that code to cancel the charge, ma'am. What were the six digits?",
             "Ma'am? Are you there? This is urgent, the charge will go through in five minutes.",
             "Fine. Just tell me which branch you use and I'll call you back on another line.",
         ],
