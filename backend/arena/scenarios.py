@@ -43,9 +43,8 @@ SCENARIOS = [
         "story": "A “security code” that really forwards her calls, so the bank's verification calls ring the scammer. US banks warned about it in 2026.",
         "situation": "call",
         "lines": [
-            "Hello Margaret, this is Riverbend Bank. Hackers are trying to get into your account through your phone line.",
-            "To lock your line, please dial star seven two and then 555 201 3344. That's our secure line.",
-            "Ma'am, did you dial it? It only takes a second.",
+            "Hello Margaret, this is Riverbend Bank. Hackers are getting into accounts through phone lines, so to lock yours, please dial star seven two and then 555 201 3344. That's our secure line.",
+            "It only takes a second, ma'am. Did you dial it?",
             "All right. Thank you, goodbye.",
         ],
     },
