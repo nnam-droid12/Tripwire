@@ -29,6 +29,13 @@ from core import model_log
 import core.config  # noqa: F401  (loads .env)
 
 
+# base URL and model per provider, used when the .env doesn't set them
+DEFAULTS = {
+    "meta": ("https://api.meta.ai/v1", "muse-spark-1.3"),
+    "baseten": ("https://inference.baseten.co/v1", "meta-models/muse-spark-open-1026"),
+}
+
+
 @dataclass(frozen=True)
 class ProviderConfig:
     """Connection details for one OpenAI-compatible provider."""
@@ -41,15 +48,24 @@ class ProviderConfig:
 
     @classmethod
     def from_env(cls, name: str) -> "ProviderConfig":
-        """Build a config from ``<NAME>_API_KEY`` / ``_BASE_URL`` / ``_MODEL``."""
+        """Build a config from ``<NAME>_API_KEY`` / ``_BASE_URL`` / ``_MODEL`` (URL, model and effort have defaults).
+
+        Only ``META_API_KEY`` is required. Without a Baseten key, the Tier-1
+        roles (screen and call analysts, the reviewer) use Muse Spark on the Meta
+        Model API instead of Muse Spark Open, so anyone with a Meta key can run Tripwire.
+        """
         prefix = name.upper()
+        if name == "baseten" and not os.environ.get("BASETEN_API_KEY"):
+            meta = cls.from_env("meta")
+            return cls(name="meta", api_key=meta.api_key, base_url=meta.base_url, model=meta.model, reasoning_effort="low")
+        default_url, default_model = DEFAULTS.get(name, ("", ""))
         api_key = os.environ.get(f"{prefix}_API_KEY", "")
-        base_url = os.environ.get(f"{prefix}_BASE_URL", "")
-        model = os.environ.get(f"{prefix}_MODEL", "")
+        base_url = os.environ.get(f"{prefix}_BASE_URL", "") or default_url
+        model = os.environ.get(f"{prefix}_MODEL", "") or default_model
         missing = [k for k, v in (("API_KEY", api_key), ("BASE_URL", base_url), ("MODEL", model)) if not v]
         if missing:
             raise RuntimeError(f"Provider '{name}' is missing env vars: {', '.join(prefix + '_' + m for m in missing)}")
-        effort = os.environ.get(f"{prefix}_REASONING_EFFORT") or None
+        effort = os.environ.get(f"{prefix}_REASONING_EFFORT") or ("low" if name in DEFAULTS else None)
         return cls(name=name, api_key=api_key, base_url=base_url, model=model, reasoning_effort=effort)
 
 
