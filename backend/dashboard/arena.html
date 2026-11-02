@@ -31,6 +31,14 @@
   .screen iframe { position:absolute; top:0; left:0; width:1280px; height:720px; border:0; transform-origin:0 0; background:#fff; }
   .base { height:12px; background:#3a4047; margin:0 -8px; border-radius:0 0 12px 12px; }
   body { overflow-x:hidden; }
+  .fired { position:absolute; left:3%; right:3%; top:3%; z-index:6; background:#0d1117; color:#fff; border-left:8px solid #2ea043; border-radius:12px; padding:1.2% 2%; box-shadow:0 12px 40px #000a; display:none; }
+  .fired.on { display:block; animation: pop .25s ease-out; }
+  .fired .fn { font-weight:800; letter-spacing:.5px; text-transform:uppercase; font-size:clamp(14px,2.1vw,28px); }
+  .fired .fa { color:#7ee787; font-weight:700; font-size:clamp(12px,1.5vw,20px); margin-top:.15em; }
+  .fired .fh { color:#c9d1d9; font-size:clamp(11px,1.2vw,15px); margin-top:.2em; }
+  .fired.decoy { border-left-color:#d2a8ff; } .fired.decoy .fa { color:#d2a8ff; }
+  .fired.lead { border-left-color:#ffa657; } .fired.lead .fa { color:#ffa657; }
+  .fired.small { top:auto; bottom:3%; padding:.8% 1.6%; } .fired.small .fh { display:none; }
   .warning { position:absolute; inset:0; background:var(--stopbg); color:#fff; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:4% 6%; }
   .warning.on { display:flex; animation: pop .25s ease-out; }
   @keyframes pop { from { transform:scale(1.04); opacity:.4; } to { transform:none; opacity:1; } }
@@ -167,6 +175,7 @@
       <div class="screen" id="screen">
         <iframe id="page" title="Margaret's screen" src="/arena/pages/desktop"></iframe>
         <div class="nudge" id="nudge"></div>
+        <div class="fired" id="fired"><div class="fn" id="fired-name"></div><div class="fa" id="fired-after"></div><div class="fh" id="fired-how"></div></div>
         <div class="hold" id="hold">
           <div class="hold-tag">Payment on hold</div>
           <div class="hold-what" id="hold-what"></div>
@@ -438,6 +447,7 @@ function handle(m) {
       if (m.text) { say("tripwire", "Tripwire (spoken): " + m.text); play(m.audio, true); }
       break;
     case "swap":
+      setTimeout(() => showFired("decoy", "Decoy on the line \u00b7 muse-wonder-1.0", "Margaret is safe. The scammer is now talking to Tripwire's decoy.", "It keeps them talking to learn how they get paid: every detail is checked against their own words."), 6500);
       $("swap").innerHTML = `<b>Margaret is safe.</b> ${esc(m.text)} Keep going: see what it learns about you.`;
       $("swap").classList.add("on"); $("intel").hidden = false;
       setState("Decoy on the line", "--tw");
@@ -450,6 +460,7 @@ function handle(m) {
       break;
     }
     case "family_alert": {
+      if (/collect money/.test(m.text)) showFired("lead", "Lead for the family", "A pickup was arranged \u00b7 family alerted", m.text.replace(/^TRIPWIRE: /, ""));
       const d = document.createElement("div");
       d.className = "falert";
       d.innerHTML = `<b>Family alerted live</b> ${m.sent ? "" : "(demo mode: text not sent)"}<br>${esc(m.text)}`;
@@ -472,6 +483,7 @@ function handle(m) {
       setTimeout(() => $("nudge").classList.remove("on"), 9000);
       say("tripwire", "Tripwire (spoken): " + m.text); setState("Nudged Margaret", "--warn"); play(m.audio, true); break;
     case "hard_stop":
+      showFired("", m.defence, m.after != null ? `Stopped ${m.after.toFixed(1)} s after the caller's line \u00b7 before Margaret could act on it` : "", m.how);
       stopped = true; stopScore = m.score;
       $("warn-reasons").innerHTML = m.reasons.map(r => `<li>${esc(r)}</li>`).join("");
       $("warning").classList.add("on"); $("nudge").classList.remove("on");
@@ -577,6 +589,16 @@ Promise.all([fetch("/api/arena/board").then(r => r.json()), fetch("/api/shield")
   if (s.indicators) parts.push(`Community Shield has learned ${s.indicators} scammer number${s.indicators === 1 ? "" : "s"} and IDs from them, so reusing one gets you caught faster.`);
   $("record").textContent = parts.join(" ");
 }).catch(() => {});
+
+// ---- the "defence fired" banner over Margaret's screen ----------------------------
+let firedTimer = null;
+function showFired(kind, name, after, how) {
+  const f = $("fired");
+  f.className = `fired on ${kind}`;
+  $("fired-name").textContent = name; $("fired-after").textContent = after || ""; $("fired-how").textContent = how || "";
+  clearTimeout(firedTimer);
+  firedTimer = setTimeout(() => f.classList.add("small"), 9000);  // then it shrinks to a badge at the bottom
+}
 
 // ---- one-click scenarios: the scammer's side is scripted, everything else is live ----
 let auto = null;  // {lines, i, wait_for_family, hint}

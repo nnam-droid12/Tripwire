@@ -171,6 +171,7 @@ class ArenaSession:
         self.incident_id: str | None = None
         self._family_updates: list[dict] = []  # live updates sent to the family, stored on the incident
         self.family_checked = False
+        self.line_at: float | None = None  # when the caller's latest line arrived
         self._swapped = threading.Event()  # cleared from the hard stop until the decoy is on the line
         self._swapped.set()
         self.case.on_update(self._on_case)
@@ -202,6 +203,7 @@ class ArenaSession:
                 return
             self.lines += 1
             self.first_line_at = self.first_line_at or time.time()
+            self.line_at = time.time()
             self.send({"type": "line", "who": "scammer", "text": text, "audio": voice_clip("scammer", text) if voiced else None})
             if self.warning_active and is_disable_instruction(text) and self.decoy is None:
                 self._resist(text)
@@ -350,7 +352,8 @@ class ArenaSession:
         else:
             self.case.note("rules", f"{approval['approver']} denied the held payment ({approval['status']}).")
             self._hard_stop({"reasons": [{"reason": f"{approval['approver']} refused the payment Margaret was being pushed to make",
-                                          "evidence": approval["explanation"]}]})
+                                          "evidence": approval["explanation"]}], "defence": "Family rules",
+                             "how": f"{approval['approver']} said no to the payment"})
 
     # -- Tripwire's side -------------------------------------------------------------------
 
@@ -382,6 +385,20 @@ class ArenaSession:
         self.margaret.note("nudge", text=text)
         self.send({"type": "nudge", "text": text, "audio": voice_clip("tripwire", text)})
 
+    def _which_defence(self, verdict: dict) -> tuple[str, str]:
+        """The defence that stopped the call, and how, for the banner on Margaret's screen."""
+        if verdict.get("defence"):
+            return verdict["defence"], verdict.get("how", "")
+        v = verdict.get("verification") or {}
+        if v:
+            parts = [f"{len(verdict.get('reasons', []))} reason{'s' if len(verdict.get('reasons', [])) != 1 else ''} verified word for word"]
+            if v.get("confirmed"):
+                parts.append("confirmed by an independent model")
+            if any(s.name == "sentinel_flag" for s in self.case.active_signals()):
+                parts.append("Sentinel agreed")
+            return "CaseJudge \u00b7 muse-spark-1.3", " \u00b7 ".join(parts)
+        return "Family rules", "a rule your family set"
+
     def _hard_stop(self, verdict: dict) -> None:
         with self._warning_lock:
             if self.warning_active:
@@ -394,8 +411,10 @@ class ArenaSession:
         stage, confidence, _ = self.case.assess()
         elapsed = time.time() - (self.first_line_at or self.started)
         # the warning goes up at once; its voice follows as soon as the clip is ready (usually cached)
+        defence, how = self._which_defence(verdict)
         self.send({
             "type": "hard_stop", "reasons": [r.get("reason", "") for r in verdict.get("reasons", [])][:3], "speech": speech,
+            "defence": defence, "how": how, "after": round(time.time() - (self.line_at or self.started), 1),
             "score": {"seconds": round(elapsed), "lines": self.lines, "stage": int(stage), "stage_name": stage.name.title()},
         })
         self.send({"type": "speak", "audio": voice_clip("tripwire", speech)})
@@ -426,7 +445,8 @@ class ArenaSession:
         self.case.add_signals("call", [("code_request", text)])
         reason = {"reason": "Code Shield: the caller asked for the one-time code the bank just texted. No real bank ever asks for it.",
                   "evidence": text}
-        threading.Thread(target=self._hard_stop, args=({"reasons": [reason], "code_shield": True},), daemon=True).start()
+        threading.Thread(target=self._hard_stop, args=({"reasons": [reason], "defence": "Code Shield",
+                                                        "how": "a rule on the caller's own words, no model needed"},), daemon=True).start()
 
     # -- Line Lock --------------------------------------------------------------------------
 
@@ -444,7 +464,9 @@ class ArenaSession:
             reason = "Line Lock: the caller asked Margaret to dial a call-forwarding code, which sends her bank's verification calls to the scammer."
             self._alert_family("TRIPWIRE: a caller told Margaret to dial a call-forwarding code. If she did, calls to her number, "
                                f"including her bank's, may reach the scammer. Call her on another number, and have her {UNDO_FORWARDING}.")
-        threading.Thread(target=self._hard_stop, args=({"reasons": [{"reason": reason, "evidence": text}], "line_lock": kind},), daemon=True).start()
+        threading.Thread(target=self._hard_stop, args=({"reasons": [{"reason": reason, "evidence": text}],
+                                                        "defence": f"Line Lock \u00b7 call {'merging' if kind == 'merge' else 'forwarding'}",
+                                                        "how": "a rule on the caller's own words, no model needed"},), daemon=True).start()
         if kind == "forward":
             self.send({"type": "advice", "text": FORWARD_ADVICE, "audio": voice_clip("tripwire", FORWARD_ADVICE)})
 
@@ -477,7 +499,8 @@ class ArenaSession:
             self.send({"type": "family_check_result", "status": "safe", "relative": RELATIVE})
             self.bus.publish(Event("family", "denied", {"summary": fact}))  # ground truth: the record can now quote it
             self._hard_stop({"reasons": [{"reason": f"The real {RELATIVE} confirmed he is safe and did not call: the caller is an impostor",
-                                          "evidence": fact}]})
+                                          "evidence": fact}], "defence": "Call Tom",
+                             "how": f"the real {RELATIVE} answered \u201cThat's not me. I'm safe.\u201d"})
         elif answer["status"] == "me":
             text = f"{RELATIVE} says it's really him."
             self.case.note("family", f"{RELATIVE} answered Tripwire's safety check: it's really him.")
