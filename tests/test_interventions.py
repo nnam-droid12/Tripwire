@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 import time
 from datetime import datetime
 
 import psutil
+import pytest
 
 from agent.allowlist import parse_anydesk_trace
 from agent.remote_kill import terminate_remote_tools
@@ -51,6 +53,7 @@ def test_anydesk_trace_parsing_and_trust() -> None:
     assert mask_id("123456789") == "******789"
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="the desktop agent is Windows-only")
 def test_terminate_only_named_stand_in() -> None:
     proc = subprocess.Popen(["ping", "-n", "30", "127.0.0.1"], stdout=subprocess.DEVNULL)
     try:

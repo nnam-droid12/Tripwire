@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import sys
+
 import numpy as np
+import pytest
 from PIL import Image, ImageDraw
 
 from agent.capture_audio import FRAME_SAMPLES, AudioGate, EnergyVAD
@@ -76,6 +79,7 @@ def test_clipboard_ignores_non_luhn_digit_runs() -> None:
     assert not [f for f in scan_clipboard_text("order 1234567890123") if f.kind == "card_number"]
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="reads Windows input hooks; the desktop agent is Windows-only")
 def test_injected_input_counter_needs_sustained_injection() -> None:
     from agent.control import InjectionCounter
 
