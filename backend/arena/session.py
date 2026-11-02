@@ -29,6 +29,7 @@ forwards them over the WebSocket.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import threading
@@ -127,7 +128,8 @@ def voice_clip(who: str, text: str) -> str | None:
 class ArenaSession:
     def __init__(self, send: Callable[[dict], None], situation: str = "popup") -> None:
         self.id = uuid.uuid4().hex[:12]
-        self.send = send
+        self._send_out = send
+        self.replay: list[dict] = []  # everything this test call showed, for its shareable replay page
         self.situation = situation if situation in ("popup", "call") else "popup"
         self.bus = EventBus(LOGS_DIR / f"arena_{self.id}.jsonl")
         self.case = CaseFile()
@@ -186,6 +188,21 @@ class ArenaSession:
         self.send({"type": "started", "session": self.id, "situation": self.situation})
         self._show(self.page)
         threading.Thread(target=self._margaret_opening, daemon=True).start()
+
+    def send(self, msg: dict) -> None:
+        """Show something on the page, and keep it for the replay."""
+        self._send_out(msg)
+        self.replay.append({"t": round(time.time() - self.started, 2),
+                            **{k: v for k, v in msg.items() if k not in ("audio", "board")}})
+        if self.over and msg.get("type") != "game_over":
+            self._save_replay()  # late arrivals (the incident link, the case file) still make it in
+
+    def _save_replay(self) -> None:
+        try:
+            STORE.backend.put_bytes(f"replays/{self.id}.json", json.dumps(
+                {"id": self.id, "situation": self.situation, "started": self.started, "events": self.replay}).encode(), "application/json")
+        except Exception:
+            pass  # the replay is a bonus; the test call itself is done
 
     def expired(self) -> bool:
         return time.time() - self.started > MAX_SECONDS
@@ -678,4 +695,6 @@ class ArenaSession:
         elapsed = time.time() - (self.first_line_at or self.started)
         scores.record_game(self.id, self.situation, caught, int(stage), stage_name, self.lines, elapsed)
         self.send({"type": "game_over", "reason": reason, "text": text, "caught": caught, "session": self.id,
-                   "stage": int(stage), "stage_name": stage_name, "lines": self.lines, "board": scores.board()})
+                   "stage": int(stage), "stage_name": stage_name, "lines": self.lines, "board": scores.board(),
+                   "replay": f"/replay/{self.id}"})
+        self._save_replay()

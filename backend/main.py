@@ -197,6 +197,24 @@ class DecisionIn(BaseModel):
     approve: bool
 
 
+@app.get("/replay/{session_id}", response_class=HTMLResponse)
+def replay_page(session_id: str) -> HTMLResponse:
+    if not re.fullmatch(r"[0-9a-f]{12}", session_id):
+        raise HTTPException(404)
+    return HTMLResponse((DASHBOARD_DIR / "replay.html").read_text(encoding="utf-8"))
+
+
+@app.get("/api/replays/{session_id}")
+def get_replay(session_id: str) -> dict[str, Any]:
+    """A finished test call, step by step: every line, signal, model call, check and defence. Fictional by design."""
+    if not re.fullmatch(r"[0-9a-f]{12}", session_id):
+        raise HTTPException(404)
+    raw = STORE.backend.get_bytes(f"replays/{session_id}.json")
+    if not raw:
+        raise HTTPException(404)
+    return json.loads(raw)
+
+
 @app.get("/approve/{approval_id}", response_class=HTMLResponse)
 def approve_page(approval_id: str) -> HTMLResponse:
     if not approvals.get(approval_id):

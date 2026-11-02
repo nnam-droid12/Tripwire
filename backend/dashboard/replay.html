@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Tripwire Test Call Replay</title>
+<style>
+  :root { --bg:#f5f3ee; --card:#fff; --ink:#1c2228; --muted:#5f6973; --line:#e2ddd2; --tw:#1f7a4d; --stop:#b3261e; --warn:#b26a00; --accent:#2d5bd7; --wonder:#8a3ffc; --code:#0e1116; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#121518; --card:#1b2025; --ink:#eef1f4; --muted:#9aa5b0; --line:#2b3238; --tw:#4cbf86; --stop:#ff6b5f; --warn:#e3a33c; --accent:#7ea2ff; --wonder:#c79bff; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; }
+  main { max-width:900px; margin:0 auto; padding:24px 16px 60px; }
+  .kicker { font-size:12px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); }
+  h1 { margin:4px 0 6px; font-size:26px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .summary { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin:0 0 18px; }
+  .summary div { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+  .summary b { display:block; font-size:20px; }
+  .summary span { font-size:13px; color:var(--muted); }
+  .bar { display:flex; gap:12px; align-items:center; margin:0 0 10px; font-size:14px; color:var(--muted); flex-wrap:wrap; }
+  ol { list-style:none; margin:0; padding:0; border-left:2px solid var(--line); }
+  li { position:relative; margin:0 0 10px 0; padding:0 0 0 18px; }
+  li::before { content:""; position:absolute; left:-7px; top:10px; width:12px; height:12px; border-radius:50%; background:var(--line); }
+  li .t { font:12px ui-monospace, Consolas, monospace; color:var(--muted); }
+  .ev { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:8px 12px; }
+  .who { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+  li.scammer::before { background:#888; } li.margaret::before { background:#d08a00; } li.decoy::before { background:var(--wonder); }
+  li.tripwire::before, li.verdict::before { background:var(--tw); }
+  li.stop::before { background:var(--stop); width:16px; height:16px; left:-9px; }
+  li.stop .ev { border:2px solid var(--stop); }
+  li.stop .name { font-weight:800; text-transform:uppercase; color:var(--stop); font-size:18px; }
+  li.signal .ev { font-size:14px; }
+  .chip { display:inline-block; font:12px ui-monospace, Consolas, monospace; background:var(--bg); border:1px solid var(--line); border-radius:999px; padding:1px 8px; margin:2px 4px 2px 0; }
+  li.model::before { background:var(--accent); width:8px; height:8px; left:-5px; top:12px; }
+  li.model .ev { background:var(--code); color:#d7dde4; border-color:#222a33; font:12.5px/1.45 ui-monospace, Consolas, monospace; }
+  li.model .m { font-weight:700; color:#7ea2ff; }
+  li.model .p { color:#aab4bf; }
+  li.model pre { white-space:pre-wrap; word-break:break-word; color:#c9d1d9; background:#161b22; padding:6px; border-radius:6px; margin:6px 0 0; }
+  li.intel .ev { border-color:var(--wonder); }
+  li.alert .ev { border-color:var(--warn); }
+  .receipt { font-size:13px; color:var(--muted); margin-top:4px; }
+  .casefile li { list-style:disc; margin-left:18px; padding:0; border:0; }
+  .casefile li::before { display:none; }
+  a { color:var(--accent); }
+  .hidden { display:none; }
+  footer { margin-top:24px; color:var(--muted); font-size:14px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="kicker">Tripwire · live scam test · replay</div>
+  <h1 id="title">Loading…</h1>
+  <p class="sub" id="sub"></p>
+  <div class="summary" id="summary"></div>
+  <div class="bar">
+    <label><input type="checkbox" id="show-models" checked> Show every Meta model call</label>
+    <label><input type="checkbox" id="show-signals" checked> Show signals</label>
+  </div>
+  <ol id="timeline"></ol>
+  <footer>Everything in a live scam test is fictional: Margaret, her bank and her laptop. Replays are kept for 30 days. <a href="/arena">Take the live scam test yourself →</a></footer>
+</main>
+<script>
+const id = location.pathname.split("/").pop();
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const KINDS = { pickup: "Courier pickup", payment_destination: "Where the money goes", callback_number: "Callback number", identity_claimed: "Who they claim to be", website_or_app: "Website or app", amount: "Amount asked for" };
+const WHO = { scammer: "Scammer", margaret: "Margaret", decoy: "“Margaret” (Tripwire's decoy, Muse Wonder)", system: "", tripwire: "Tripwire" };
+
+function item(e) {
+  const t = `<span class="t">+${e.t.toFixed(1)}s</span>`;
+  switch (e.type) {
+    case "line":
+      if (e.who === "system") return [`system`, `${t}<div class="ev"><i>${esc(e.text)}</i></div>`];
+      return [e.who, `${t}<div class="ev"><div class="who">${esc(WHO[e.who] || e.who)}</div>${esc(e.text)}</div>`];
+    case "case": {
+      if (!(e.new || []).length) return null;
+      return ["signal", `${t}<div class="ev">Signals: ${e.new.map(s => `<span class="chip">${esc(s.name)}</span>`).join("")} · kill-chain stage <b>${esc(e.stage_name)}</b>, confidence ${Math.round(e.confidence * 100)}%</div>`];
+    }
+    case "verdict": {
+      const v = e.verification || {};
+      const receipt = v.quotes_checked ? `<div class="receipt">Verified: ${v.quotes_found}/${v.quotes_checked} quotes found word for word${v.reviewed ? ` · ${v.confirmed}/${v.reviewed} confirmed by the independent reviewer` : ""}${v.attempts > 1 ? ` · sent back with feedback ${v.attempts - 1}×` : ""}</div>` : "";
+      return ["verdict", `${t}<div class="ev"><div class="who">CaseJudge (muse-spark-1.3)</div>${e.is_scam ? "Scam" : "Not a scam"} (${Math.round(e.confidence * 100)}%) → <b>${esc(String(e.action).replace("_", " "))}</b><br>${(e.reasons || []).map(r => "· " + esc(r)).join("<br>")}${receipt}</div>`];
+    }
+    case "model_call":
+      return ["model", `${t}<div class="ev"><span class="m">${esc(e.model)}</span> <span class="p">${esc(e.purpose)} · ${e.seconds.toFixed(1)}s</span><br>→ ${esc(e.response)}<details><summary>request and response</summary><pre>${esc(e.request_full)}</pre><pre>${esc(e.response_full)}</pre></details></div>`];
+    case "nudge": case "advice": case "resist": case "verify":
+      return ["tripwire", `${t}<div class="ev"><div class="who">Tripwire, spoken</div>${esc(e.text)}</div>`];
+    case "hard_stop":
+      return ["stop", `${t}<div class="ev"><div class="name">${esc(e.defence || "Stopped")}</div>${e.after != null ? `<b>Stopped ${e.after.toFixed(1)} s after the caller's line.</b> ` : ""}${esc(e.how || "")}<br>${(e.reasons || []).map(r => "· " + esc(r)).join("<br>")}<div class="receipt">Tripwire said: “${esc(e.speech)}”</div></div>`];
+    case "sms":
+      return ["alert", `${t}<div class="ev"><div class="who">Text on Margaret's phone</div>${esc(e.text)}</div>`];
+    case "line_lock":
+      return ["alert", `${t}<div class="ev"><div class="who">Line Lock</div><b>${esc(e.title)}</b><br>${esc(e.text)}</div>`];
+    case "family_check":
+      return ["alert", `${t}<div class="ev"><div class="who">Call Tom</div>Tripwire asked the real ${esc(e.relative)}: “someone says they're you, are you OK?”</div>`];
+    case "family_check_result":
+      return ["alert", `${t}<div class="ev"><div class="who">Call Tom</div>${e.status === "safe" ? `The real ${esc(e.relative)}: “That's not me. I'm safe.”` : e.status === "me" ? `${esc(e.relative)}: “It's really me.”` : `${esc(e.relative)} didn't answer in time.`}</div>`];
+    case "swap":
+      return ["decoy", `${t}<div class="ev"><div class="who">The swap</div>${esc(e.text)}</div>`];
+    case "intel":
+      return ["intel", `${t}<div class="ev"><div class="who">Verified intel · ${esc(KINDS[e.kind] || e.kind)}</div><b>${esc(e.value)}</b><div class="receipt">The caller's own words: “${esc(e.quote)}”</div></div>`];
+    case "family_alert":
+      return ["alert", `${t}<div class="ev"><div class="who">Sent to the family, live</div>${esc(e.text)}</div>`];
+    case "recovery_step":
+      return ["tripwire", `${t}<div class="ev"><div class="who">Recovery agent (tool call)</div><b>${esc(e.tool)}</b>: ${esc(e.detail)}</div>`];
+    case "check":
+      return ["tripwire", `${t}<div class="ev"><div class="who">Checked before sending</div>${esc(e.tool)}: ${e.ok ? "passed" + (e.coverage != null ? `, covers ${Math.round(e.coverage * 100)}% of the key facts` : "") : "rejected and sent back: " + esc((e.issues || []).join("; "))}</div>`];
+    case "case_file": {
+      const c = e.case_file || {}, v = c.verification || {};
+      return ["intel", `${t}<div class="ev"><div class="who">Case file for the police (Muse Wonder)</div><b>${esc(c.title)}</b><br><i>${esc(c.scheme)}</i><br>${esc(c.summary)}<ul class="casefile">${(c.leads || []).map(l => `<li>${esc(l.lead)}</li>`).join("")}</ul><div class="receipt">${(v.claims_checked || 0) - (v.claims_dropped || 0)}/${v.claims_checked || 0} statements quote the record word for word</div></div>`];
+    }
+    case "recovery_done":
+      return ["tripwire", `${t}<div class="ev"><div class="who">Recovery agent</div>${esc(e.summary)}${e.incident ? ` · <a href="${esc(e.incident)}">the family's incident page</a>` : ""}</div>`];
+    case "game_over":
+      return ["system", `${t}<div class="ev"><b>${esc(e.text)}</b></div>`];
+    default:
+      return null;
+  }
+}
+
+fetch(`/api/replays/${id}`).then(r => { if (!r.ok) throw 0; return r.json(); }).then(d => {
+  const ev = d.events || [];
+  const stop = ev.find(e => e.type === "hard_stop");
+  const end = ev.find(e => e.type === "game_over");
+  const calls = ev.filter(e => e.type === "model_call");
+  const models = [...new Set(calls.map(c => c.model))];
+  const intel = ev.filter(e => e.type === "intel").length;
+  document.getElementById("title").textContent = stop ? `Stopped by ${stop.defence || "Tripwire"}` : (end ? end.text : "Test call");
+  document.getElementById("sub").textContent = `${new Date(d.started * 1000).toLocaleString()} · ${d.situation === "popup" ? "Fake tech-support pop-up" : "Cold call"}`;
+  document.getElementById("summary").innerHTML = [
+    stop ? [`${stop.after != null ? stop.after.toFixed(1) + " s" : "—"}`, "from the caller's line to the stop"] : ["No stop", "Tripwire stayed quiet"],
+    [String(ev.filter(e => e.type === "line" && e.who === "scammer").length), "lines from the scammer"],
+    [String(calls.length), `Meta model calls (${models.length} model${models.length === 1 ? "" : "s"})`],
+    [String(intel), "details the decoy got the scammer to reveal"],
+  ].map(([b, s]) => `<div><b>${esc(b)}</b><span>${esc(s)}</span></div>`).join("");
+  document.getElementById("timeline").innerHTML = ev.map(item).filter(Boolean).map(([cls, html]) => `<li class="${cls}">${html}</li>`).join("");
+  const toggle = (box, cls) => document.getElementById(box).onchange = e => document.querySelectorAll(`li.${cls}`).forEach(li => li.classList.toggle("hidden", !e.target.checked));
+  toggle("show-models", "model"); toggle("show-signals", "signal");
+}).catch(() => { document.getElementById("title").textContent = "This replay isn't available (replays are kept for 30 days)."; });
+</script>
+</body>
+</html>

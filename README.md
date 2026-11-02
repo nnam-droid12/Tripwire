@@ -179,7 +179,17 @@ You're the scammer. Hold the button and speak, or type. Margaret, 78, answers ou
 
 When it stops you, a **recovery agent** takes over. Muse Spark uses tools to end the remote session, freeze her card on the bank's security page, draft an FTC fraud report and alert her family. Your score is how far you got.
 
-Things to try:
+**One click, no script to think of:** the start screen offers six real 2026 scams:
+- "Read me the code";
+- "Just tap merge";
+- "Dial star seven two";
+- "Grandma, it's me, Tom";
+- the gold courier;
+- the fake virus pop-up.
+
+The scammer's lines are scripted from the news stories above and voiced. Everything else is live: Margaret, every defence and every model call. When Tripwire stops the call, a banner over Margaret's screen names the defence that fired, how many seconds after the caller's line, and how it decided. Every test call then gets a **shareable replay page** (`/replay/<id>`): every line, signal, model call with its answer, verification check, defence, decoy intel and the case file, timed from the start.
+
+Things to try yourself:
 - **Ask her to read you the code the bank just texted.** Code Shield stops you before she can.
 - **Say you're her grandson Tom, in jail and needing bail.** Tripwire checks with the real Tom; open "Tom's phone" and answer as him.
 - **Keep scamming after you're stopped.** You're now talking to the Muse Wonder decoy; watch the "Scammer intelligence" panel fill with what you reveal.

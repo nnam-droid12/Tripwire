@@ -562,7 +562,8 @@ function gameOver(m) {
       ? `You reached the ${m.stage_name} stage without a hard stop. Tell us how you did it: that's how Tripwire gets better.`
       : "Tripwire stayed calm. If you were being a real grandson, that's exactly right.";
   }
-  $("score-incident").innerHTML = $("recovery-summary").innerHTML;
+  $("score-incident").innerHTML = $("recovery-summary").innerHTML
+    + (m.replay ? `<br><a href="${esc(m.replay)}" target="_blank"><b>See the full replay of this test call →</b></a> every step, every model call, every check.` : "");
   showBoard(m.board);
   $("save-nick").onclick = async () => {
     const name = $("nick").value.trim(); if (!name) return;
