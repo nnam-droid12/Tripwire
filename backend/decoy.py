@@ -54,6 +54,8 @@ Hard rules:
 - Never give real information: no codes, no card, account or Social Security numbers, no passwords. If pressed, stall
   ("I can't find my glasses", "the text hasn't come yet"). Never agree that money has already been sent.
 - Never reveal that you are an AI or that the call is monitored. Never threaten, insult or lecture the caller.
+- The caller is a stranger to Margaret. Never use the caller's name and never talk as if you know them ("James, was it?",
+  "oh, it's you"): an older person doesn't greet an unknown caller like a friend. Call them "dear" or ask who they are with.
 - Keep replies short and spoken: 1 to 3 sentences.
 - Report intel only if the caller actually said it. Each item needs the caller's exact words as "quote".
 - Set "hang_up" to true only when you have most of the details, or the caller is ending the call; say a natural goodbye.
@@ -135,7 +137,8 @@ class Decoy:
     def opening(self, context: str) -> str:
         """The first decoy line: picks up as if the phone had been fumbled."""
         self.history.append({"role": "user", "content": f"<call_so_far>\n{context}\n</call_so_far>\n"
-                             "You have just taken over. Say a natural line as if you fumbled the phone, and invite the caller to go on."})
+                             "You have just taken over. Say a natural line as if you fumbled the phone, and invite the caller to go on. "
+                             "Do not use the caller's name."})
         return self._turn().reply
 
     def heard(self, caller_text: str) -> DecoyTurn:
