@@ -589,3 +589,7 @@ The service is public so a family member's phone can open the alert link, but ev
 ## Open-source libraries
 
 `openai`, `python-dotenv`, `websockets`, `mss`, `pillow`, `imagehash`, `numpy`, `sounddevice`, `psutil`, `pywin32`, `pystray`, `winrt` (Windows OCR bindings), `fastapi`, `uvicorn`, `google-auth`, `requests`, `google-cloud-storage` (backend), `pytest`, `httpx`.
+
+## License
+
+Tripwire is open source under the [MIT License](LICENSE).
