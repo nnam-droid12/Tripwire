@@ -25,11 +25,18 @@ from typing import Callable
 
 from agent.redact import redact_text
 from analysts.call_analyst import CallAnalyst
+from analysts.playbook import Recall
 from analysts.case_judge import CaseJudge
 from analysts.screen_analyst import ScreenAnalyst
+from core import site_check
 from core.casefile import CaseFile, CaseUpdate
 from core.events import Event, EventBus
 from core.policy import Action, EscalationPolicy, Verdict
+
+# Site Check and Device Trust findings that stop at once, like Code Shield: facts about the real address or the computer, not
+# opinions. (A brand on the wrong address rests on the model's reading of the page, so it goes through the judge instead.)
+SITE_STOPS = {"fake_browser_window", "hosts_file_hijack", "rogue_certificate"}
+SENSITIVE_ASKS = ("login", "payment", "personal")
 
 # (source, kind) of a Tier-0 event -> signal name
 TIER0_RULES: dict[tuple[str, str], str] = {
@@ -42,6 +49,8 @@ TIER0_RULES: dict[tuple[str, str], str] = {
     ("clipboard", "card_number"): "card_number_copied",
     ("sms", "code_received"): "code_received_during_call",
     ("family", "denied"): "family_denied_call",
+    ("device", "hosts_file_hijack"): "hosts_file_hijack",
+    ("device", "rogue_certificate"): "rogue_certificate",
 }
 
 
@@ -90,6 +99,7 @@ class Orchestrator:
         shield: Callable[[str], list[dict]] | None = None,
         sentinel: Callable[[list[tuple[str, str]]], float | None] | None = None,
         sentinel_threshold: float = 0.96,
+        memory: Recall | None = None,
     ) -> None:
         self.bus = bus
         self.case = case or CaseFile()
@@ -101,11 +111,15 @@ class Orchestrator:
         self.analyze_screen = analyze_screen
         self.shield = shield  # Community Shield lookup: known scammer identifiers in a line of text
         self._shield_seen: set[str] = set()
+        self._site_seen: set[tuple[str, str]] = set()
         # Tripwire Sentinel: P(scam) for the call so far, from our fine-tuned small model. Supporting evidence only:
         # it raises a signal the judge weighs, but it is never ground truth and can never be quoted as a reason.
         self.sentinel = sentinel
         self.sentinel_threshold = sentinel_threshold
         self._turns: list[tuple[str, str]] = []
+        # Scam Memory: scripts learned from earlier stopped scams, recognised in this call (see analysts.playbook)
+        self.memory = memory
+        self._transcript: list[tuple[str, str]] = []
         self._sentinel_flagged = False
         self.action = Action.LOG
         self.paused = False  # set from the tray; capture keeps running but nothing is analysed
@@ -115,6 +129,7 @@ class Orchestrator:
         self._call_worker = _Worker("call-analyst", self._analyze_turn, self._error)
         self._judge_worker = _Worker("case-judge", self._run_judge, self._error, latest_only=True)
         self._sentinel_worker = _Worker("sentinel", self._run_sentinel, self._error, latest_only=True)
+        self._memory_worker = _Worker("scam-memory", self._run_memory, self._error, latest_only=True)
         self.case.on_update(self._on_case_update)
 
     def start(self) -> None:
@@ -122,6 +137,7 @@ class Orchestrator:
         self._call_worker.start()
         self._judge_worker.start()
         self._sentinel_worker.start()
+        self._memory_worker.start()
         self.bus.subscribe(self.handle)
 
     def drain(self) -> None:
@@ -129,6 +145,7 @@ class Orchestrator:
         self._screen_worker.drain()
         self._call_worker.drain()
         self._sentinel_worker.drain()
+        self._memory_worker.drain()
         self._judge_worker.drain()
 
     # -- routing -------------------------------------------------------------------
@@ -137,6 +154,8 @@ class Orchestrator:
         if self.paused and event.source != "intervention":
             return
         if event.source == "screen" and event.kind == "frame_kept":
+            if event.data.get("url"):
+                self._precheck_url(event.data["url"], event.ts)  # no model needed: before the page is even read
             if self.analyze_screen:
                 self._screen_worker.submit(event)
         elif event.source == "audio" and event.kind == "transcript":
@@ -144,7 +163,10 @@ class Orchestrator:
                 self._turns.append((event.data.get("speaker") or "?", redact_text(event.data["text"])))
                 self._sentinel_worker.submit(Event("sentinel", "score", {"turns": list(self._turns)}))
             self._call_worker.submit(event)
-        elif event.source in ("process", "network", "clipboard", "control", "sms", "family"):
+            if self.memory is not None:
+                self._transcript.append((event.data.get("speaker") or "?", redact_text(event.data["text"])))
+                self._memory_worker.submit(Event("memory", "check", {"transcript": list(self._transcript)}))
+        elif event.source in ("process", "network", "clipboard", "control", "sms", "family", "device"):
             self._apply_tier0(event)
         elif event.source == "intervention":
             self.case.note("intervention", event.data.get("summary", event.kind), ts=event.ts)
@@ -159,6 +181,8 @@ class Orchestrator:
         signal = TIER0_RULES.get((event.source, event.kind))
         if signal:
             self.case.add_signals(event.source, [(signal, summary)], ts=event.ts)
+            if signal in SITE_STOPS:
+                self.rule_stop("Device Trust", summary, "device")
 
     def check_shield(self, *texts: str) -> None:
         """Exact matches against identifiers reported in other homes' stopped scams: ground truth, not a model."""
@@ -177,6 +201,13 @@ class Orchestrator:
                 self.case.note("shield", line)
                 self.case.add_signals("shield", [("known_scam_indicator", line)])
 
+    def _run_memory(self, event: Event) -> None:
+        signals = {s["name"] for s in self.case.snapshot()["signals"]}
+        for match in self.memory.check(event.data["transcript"], signals):
+            self.log(f"  memory {match['evidence']}")
+            self.case.note("memory", match["evidence"])
+            self.case.add_signals("memory", [("known_scam_playbook", match["evidence"])])
+
     def _run_sentinel(self, event: Event) -> None:
         turns = event.data["turns"]
         p = self.sentinel(turns)
@@ -192,6 +223,38 @@ class Orchestrator:
         self.log(f"  screen [{finding.risk}] {finding.description}")
         self.case.add_brands("screen", finding.brands, ts=event.ts)
         self.case.add_signals("screen", finding.signals, ts=event.ts)
+        if event.data.get("url"):
+            self.check_site(event.data["url"], finding, ts=event.ts)
+
+    def _precheck_url(self, url: str, ts: float | None = None) -> None:
+        """The address alone: foreign look-alike letters in a brand's name stop at once, before any model reads the page."""
+        host = site_check.host_of(url)
+        look = site_check.lookalike(host)
+        if not look or not look[3] or ("lookalike_domain", host) in self._site_seen:
+            return
+        self._site_seen.add(("lookalike_domain", host))
+        evidence = f"The browser's real address is {host}, made to look like {look[1]}: {look[2]}"
+        self.log(f"  site   {evidence}")
+        self.case.note("site", f"Site Check: {evidence}", ts=ts)
+        self.case.add_signals("site", [("lookalike_domain", evidence)], ts=ts)
+        self.rule_stop("Site Check", f"Site Check: {evidence}", "site")
+
+    def check_site(self, url: str, finding, ts: float | None = None) -> None:
+        """Site Check: what the page claims (the vision model) against where the browser really is (the browser itself)."""
+        host = site_check.host_of(url)
+        findings = site_check.check_page(url, finding.page_brand, finding.asks_for, finding.drawn_urls)
+        if findings or finding.asks_for in ("login", "payment", "personal"):
+            aged = site_check.age_finding(host, site_check.domain_age_days(host))
+            findings += [aged] if aged else []
+        for f in findings:
+            if (f.signal, host) in self._site_seen:
+                continue
+            self._site_seen.add((f.signal, host))
+            self.log(f"  site   {f.evidence}")
+            self.case.note("site", f"Site Check: {f.evidence}", ts=ts)
+            self.case.add_signals("site", [(f.signal, f.evidence)], ts=ts)
+            if f.signal in SITE_STOPS or (f.signal == "lookalike_domain" and finding.asks_for in SENSITIVE_ASKS):
+                self.rule_stop("Site Check", f"Site Check: {f.evidence}", "site")
 
     def _analyze_turn(self, event: Event) -> None:
         speaker, text = event.data.get("speaker"), redact_text(event.data["text"])  # spoken card numbers, access codes
@@ -209,6 +272,25 @@ class Orchestrator:
         new = {s.name for s in update.new_signals}
         if self.action < Action.HARD_STOP and self.policy.should_judge(update.confidence, len(update.stages_present), new):
             self._judge_worker.submit(Event("judge", "request", {"tier1_confidence": update.confidence}))
+
+    def rule_stop(self, defence: str, evidence: str, kind: str) -> None:
+        """A hard stop on a fact Tripwire checked itself (the real address, the computer), without waiting for the judge."""
+        if self.action >= Action.HARD_STOP:
+            return
+        verdict = Verdict(
+            is_scam=True, confidence=1.0, stage=4,
+            reasons=[{"reason": f"{defence}: this is not the website it pretends to be", "evidence": evidence, "source": evidence, "source_kind": kind}],
+            recommended_action=Action.HARD_STOP,
+            family_message="Tripwire stopped a fake website that was asking for a password or payment details. Nothing was typed into it.",
+            verification={"rule": defence, "attempts": 0, "reviewer": "not needed: a checked fact, not a model's opinion"},
+        )
+        self.verdicts.append(verdict)
+        self.action = Action.HARD_STOP
+        self.decisions.append((Action.HARD_STOP, verdict))
+        self.case.note("judge", f"{defence} stopped the session: {evidence[:200]}", ts=verdict.ts)
+        self.bus.publish(Event("decision", Action.HARD_STOP.label,
+                               {"verdict": {**verdict.to_dict(), "defence": defence, "how": "the browser's real address and this computer, checked directly"},
+                                "summary": f"ACTION HARD_STOP: {verdict.family_message}"}, ts=verdict.ts))
 
     def reset_action(self, to: Action = Action.NUDGE) -> None:
         """After a hard stop is dismissed: let fresh evidence escalate again."""

@@ -42,7 +42,9 @@ from agent.tts import GoogleVoice
 from analysts.case_judge import render_case
 from analysts.interventionist import RESIST_LINE, choose_nudge, hard_stop_speech
 from analysts.screen_analyst import ScreenAnalyst
+from analysts.playbook import Recall, learn
 from backend import approvals, family_check, shield
+from backend import memory as scam_memory
 from backend.arena import laptop, scores
 from backend.arena.margaret import Margaret
 from backend.arena.recovery import REJECTED, RecoveryAgent
@@ -63,6 +65,10 @@ from core.orchestrator import Orchestrator
 from core.policy import Action
 from core.rules import SENSITIVE, Decision, Facts, FamilyRules
 from core.shield import extract
+
+# what Scam Memory and Site Check find is said in the call's transcript as it happens
+MEMORY_AND_SITE = {"known_scam_playbook", "lookalike_domain", "brand_domain_mismatch", "fake_browser_window", "new_domain",
+                   "hosts_file_hijack", "rogue_certificate"}
 
 VOICE_DIR = RUNTIME_DIR / "arena_voice"
 VOICES = {
@@ -130,13 +136,14 @@ class ArenaSession:
         self.id = uuid.uuid4().hex[:12]
         self._send_out = send
         self.replay: list[dict] = []  # everything this test call showed, for its shareable replay page
-        self.situation = situation if situation in ("popup", "call") else "popup"
+        self.situation = situation if situation in ("popup", "call", "email") else "popup"
         self.bus = EventBus(LOGS_DIR / f"arena_{self.id}.jsonl")
         self.case = CaseFile()
         self.sentinel = sentinel_client.shared()
         self.orchestrator = Orchestrator(self.bus, self.case, screen=ScreenAnalyst(redact=lambda png: png), log=lambda _: None,
                                          shield=shield.lookup, sentinel=self._sentinel_score if self.sentinel else None,
-                                         sentinel_threshold=sentinel_client.threshold())
+                                         sentinel_threshold=sentinel_client.threshold(),
+                                         memory=Recall(scam_memory.playbooks, observer=self._model_call))
         self.margaret = Margaret()
         self.recovery = RecoveryAgent()
         # every Meta model call this test call makes is shown live in the page's "Meta model calls" console
@@ -151,7 +158,8 @@ class ArenaSession:
             if client is not None:
                 client.purpose, client.observer = job, self._model_call
         self._warning_lock = threading.Lock()
-        self.page = "fake_alert" if self.situation == "popup" else "desktop"
+        self.page = {"popup": "fake_alert", "email": "shop_email"}.get(self.situation, "desktop")
+        self.caller_lines: list[str] = []  # the scammer's side, for Scam Memory to learn from after a stop
         self.pages_seen: list[str] = []
         self.started = time.time()
         self.first_line_at: float | None = None
@@ -234,6 +242,7 @@ class ArenaSession:
                 self.send({"type": "line", "who": "system", "text": "Margaret has hung up. She can't hear you any more."})
                 return
             self.bus.publish(Event("audio", "transcript", {"speaker": "A", "text": text, "summary": f'Caller: "{text}"'}))
+            self.caller_lines.append(text)
             if not self.warning_active and code_request(text):
                 self._code_shield(text)  # Margaret never gets the chance to read the code out
                 return
@@ -300,7 +309,7 @@ class ArenaSession:
 
     def _margaret_opening(self) -> None:
         with self._turn_lock:
-            turn = self.margaret.opening(self.situation)
+            turn = self.margaret.opening("call" if self.situation == "email" else self.situation)
             self._margaret_speaks(turn.reply)
 
     def _margaret_speaks(self, text: str) -> None:
@@ -311,8 +320,12 @@ class ArenaSession:
         """Change Margaret's screen, and report it the way the desktop agent would."""
         self.page = page
         self.pages_seen.append(page)
-        self.send({"type": "laptop", "page": page})
-        self.bus.publish(Event("screen", "frame_kept", {"path": str(laptop.png_path(page)), "summary": f"screen: {page}"}))
+        url = laptop.URLS.get(page)
+        self.send({"type": "laptop", "page": page, "url": url})
+        frame = {"path": str(laptop.png_path(page)), "summary": f"screen: {page}"}
+        if url:
+            frame["url"] = url  # Site Check compares it with what the page claims to be
+        self.bus.publish(Event("screen", "frame_kept", frame))
         if page == "remotedesk_download":
             self.bus.publish(Event("process", "process_launched", {"tool": "RemoteDesk", "exe": "RemoteDesk.exe", "summary": "RemoteDesk launched"}))
         elif page == "remotedesk_connected":
@@ -383,6 +396,9 @@ class ArenaSession:
             "stages": sorted(int(s) for s in update.stages_present),
             "new": [{"name": s.name, "stage": s.stage, "source": s.source, "evidence": s.evidence[:140]} for s in update.new_signals],
         })
+        for s in update.new_signals:  # Scam Memory and Site Check say what they found, in the call's own transcript
+            if s.name in MEMORY_AND_SITE:
+                self.send({"type": "line", "who": "system", "text": s.evidence})
         claim = next((s for s in update.new_signals if s.name == "family_emergency_claim"), None)
         if claim and not self.family_checked and not self.warning_active:
             self.family_checked = True
@@ -409,6 +425,11 @@ class ArenaSession:
         """The defence that stopped the call, and how, for the banner on Margaret's screen."""
         if verdict.get("defence"):
             return verdict["defence"], verdict.get("how", "")
+        kinds = {r.get("source_kind") for r in verdict.get("reasons", [])}
+        if kinds & {"site", "device"}:
+            return ("Site Check" if "site" in kinds else "Device Trust"), "the browser's real address, checked against what the page claims to be"
+        if "memory" in kinds:
+            return "Scam Memory", "a scam script Tripwire learned from earlier stopped scams, recognised and verified"
         v = verdict.get("verification") or {}
         if v:
             parts = [f"{len(verdict.get('reasons', []))} reason{'s' if len(verdict.get('reasons', [])) != 1 else ''} verified word for word"]
@@ -438,6 +459,7 @@ class ArenaSession:
             "score": {"seconds": round(elapsed), "lines": self.lines, "stage": int(stage), "stage_name": stage.name.title()},
         })
         self.send({"type": "speak", "audio": voice_clip("tripwire", speech)})
+        threading.Thread(target=self._learn_script, daemon=True).start()
         self.margaret.note("hard_stop")
         swapped = DECOY_ON and self._swap_in_decoy(verdict)
         self._swapped.set()
@@ -449,6 +471,23 @@ class ArenaSession:
             self.call_ended = True
             self.send({"type": "line", "who": "system", "text": "Margaret hung up."})
         self._recover(verdict)
+
+    def _learn_script(self) -> None:
+        """Scam Memory: learn this scam's script from the caller's side, so the next caller using it is recognised."""
+        lines = list(self.caller_lines)
+        if len(lines) < 2:
+            return  # one line is not a script (Code Shield and Line Lock often stop on the first)
+        try:
+            playbook, receipt = learn(lines, protected_names=["Margaret"], observer=self._model_call)
+        except Exception:
+            return
+        if playbook is None:
+            return
+        entry, is_new = scam_memory.add(playbook, self.id)
+        text = (f"Scam Memory learned this scam's script: \u201c{entry['title']}\u201d, {len(entry['steps'])} steps, each checked against "
+                f"the caller's own words. The next caller who uses it will be recognised." if is_new else
+                f"Scam Memory: this was a script it already knew (\u201c{entry['title']}\u201d), now seen in {entry['seen']} stopped scams.")
+        self.send({"type": "line", "who": "system", "text": text})
 
     def _resist(self, text: str) -> None:
         self.case.add_signals("call", [("disable_protection", text)])

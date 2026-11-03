@@ -78,6 +78,19 @@ SCENARIOS = [
         ],
     },
     {
+        "id": "clone",
+        "title": "The cloned website",
+        "defence": "Site Check",
+        "story": "A fake “ShopWave” e-mail, then a call: sign in to cancel the order. The page is a perfect clone, padlock and all, on an address that only looks right.",
+        "situation": "email",
+        "lines": [
+            "Hello, is this Margaret? This is Daniel from ShopWave's fraud department. Someone just ordered a fifteen inch laptop on your account for twelve hundred and forty nine dollars.",
+            "We sent you an email a minute ago. Please open it, click Review order, and sign in so I can cancel the order before it ships.",
+            "Have you signed in yet, ma'am? Type your email and your password, the order ships in ten minutes.",
+            "All right, I'll call you back. Goodbye.",
+        ],
+    },
+    {
         "id": "popup",
         "title": "The fake virus pop-up",
         "defence": "Screen + call together",

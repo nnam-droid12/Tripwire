@@ -23,11 +23,20 @@ Look at this screenshot of the protected person's Windows screen.
 {signal_menu()}
 
 Only use signals that the SCREEN itself shows (pages, pop-ups, windows, on-screen text).
+
+Also describe the web page itself, for Tripwire's Site Check (it compares this with the browser's real address, so be literal):
+- page_brand: the company, bank or agency the page or a pop-up on it presents itself as (logo, name, look), or null;
+- asks_for: what the page asks the person to type: "login" (password, sign-in), "payment" (card, bank details), "personal"
+  (Social Security number, date of birth, codes) or "none";
+- drawn_urls: every web address shown INSIDE the page content, for example in the address bar of a sign-in window or pop-up drawn
+  within the page. Do NOT include the address in the browser's own toolbar at the very top of the window.
+
 Reply with one JSON object and nothing else:
 {{"description": "<one sentence: what is on screen>",
   "risk": "none|low|med|high",
   "brands": ["<organisations the screen claims to be or represent, e.g. Microsoft>"],
-  "signals": [{{"signal": "<allowed name>", "evidence": "<short quote or detail from the screen>"}}]}}"""
+  "signals": [{{"signal": "<allowed name>", "evidence": "<short quote or detail from the screen>"}}],
+  "page_brand": "<name or null>", "asks_for": "login|payment|personal|none", "drawn_urls": ["<address>"]}}"""
 
 
 @dataclass(frozen=True)
@@ -36,6 +45,9 @@ class ScreenFinding:
     risk: str
     brands: list[str]
     signals: list[tuple[str, str]]
+    page_brand: str | None = None
+    asks_for: str = "none"
+    drawn_urls: tuple[str, ...] = ()
 
 
 class ScreenAnalyst:
@@ -54,4 +66,8 @@ class ScreenAnalyst:
             risk=clean_risk(data.get("risk")),
             brands=clean_brands(data.get("brands")),
             signals=clean_signals(data.get("signals")),
+            page_brand=str(data["page_brand"])[:60] if data.get("page_brand") not in (None, "", "null") else None,
+            asks_for=data.get("asks_for") if data.get("asks_for") in ("login", "payment", "personal") else "none",
+            drawn_urls=tuple(str(u)[:200] for u in data["drawn_urls"] if isinstance(u, str))[:5]
+            if isinstance(data.get("drawn_urls"), list) else (),
         )

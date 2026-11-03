@@ -19,6 +19,7 @@ import time
 from functools import partial
 from pathlib import Path
 
+from agent.browser import DeviceTrustWatcher, current_url
 from agent.buffer import RetentionJanitor
 from agent.capture_audio import AudioWatcher, wav_frames
 from agent.capture_screen import ScreenWatcher
@@ -37,9 +38,11 @@ def add_capture_args(parser: argparse.ArgumentParser) -> None:
 
 def build_watchers(bus: EventBus, args: argparse.Namespace) -> list[threading.Thread]:
     """All Tier-0 watchers configured from command-line args."""
+    device = DeviceTrustWatcher(bus)  # hosts file and certificates: a tampered computer (agent/browser.py)
     watchers: list[threading.Thread] = [
         RetentionJanitor(),
-        ScreenWatcher(bus),
+        ScreenWatcher(bus, browser_url=current_url, on_url=device.check_url),
+        device,
         ProcessWatcher(bus, extra_tools={exe: f"{exe} (test)" for exe in args.watch}),
         ClipboardWatcher(bus),
         ControlWatcher(bus, extra_tools={exe: f"{exe} (test)" for exe in args.watch}),  # who is driving the mouse

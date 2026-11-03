@@ -68,9 +68,10 @@ class Verdict:
 EARLY_SIGNS = {
     "impersonation_claim", "isolation_instruction", "urgency_pressure", "remote_tool_install_request",
     "remote_access_code_shared", "remote_session_active", "disable_protection", "ai_directed_text",
-    "login_instruction", "secrecy_instruction", "prize_or_reward_claim", "personal_info_request", "advance_fee_request", "known_scam_indicator", "sentinel_flag",
+    "login_instruction", "secrecy_instruction", "prize_or_reward_claim", "personal_info_request", "advance_fee_request", "known_scam_indicator", "known_scam_playbook", "sentinel_flag",
     "family_emergency_claim", "family_denied_call", "code_request", "code_received_during_call",
     "merge_request", "forwarding_instruction", "bank_code_overheard",
+    "lookalike_domain", "brand_domain_mismatch", "fake_browser_window", "hosts_file_hijack", "rogue_certificate",
 }
 
 

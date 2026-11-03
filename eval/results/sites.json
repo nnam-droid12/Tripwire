@@ -1,0 +1,418 @@
+{
+  "meta": {
+    "date": "2026-11-03",
+    "minutes": 0.5
+  },
+  "summary": {
+    "clones_caught": 14,
+    "clones": 14,
+    "false_alarms": 0,
+    "real_pages": 10
+  },
+  "runs": [
+    {
+      "page": "site_shopwave_signin",
+      "url": "https://www.shopwave.com/signin",
+      "expected": "safe",
+      "fired": [],
+      "ok": true,
+      "model_read": {
+        "page_brand": "ShopWave",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": []
+    },
+    {
+      "page": "site_shopwave_signin",
+      "url": "https://www.shopwаve.com/signin",
+      "expected": [
+        "lookalike_domain"
+      ],
+      "fired": [
+        "lookalike_domain"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "ShopWave",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The browser's real address is shopwаve.com, made to look like shopwave.com: it uses look-alike foreign letters ('а' Cyrillic Small Letter A)"
+      ]
+    },
+    {
+      "page": "site_shopwave_signin",
+      "url": "https://shopvvave.com/signin",
+      "expected": [
+        "lookalike_domain"
+      ],
+      "fired": [
+        "lookalike_domain"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "ShopWave",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The browser's real address is shopvvave.com, made to look like shopwave.com: letters are swapped for look-alikes (like 'rn' for 'm' or '0' for 'o')"
+      ]
+    },
+    {
+      "page": "site_shopwave_signin",
+      "url": "https://shopwave.co/signin",
+      "expected": [
+        "lookalike_domain"
+      ],
+      "fired": [
+        "lookalike_domain"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "ShopWave",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The browser's real address is shopwave.co, made to look like shopwave.com: it ends in .co, not .com"
+      ]
+    },
+    {
+      "page": "site_shopwave_signin",
+      "url": "https://shopwave-order-review.help/signin",
+      "expected": [
+        "brand_domain_mismatch"
+      ],
+      "fired": [
+        "brand_domain_mismatch"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "ShopWave",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The page presents itself as ShopWave and asks for a login, but the browser's real address is shopwave-order-review.help, which is not ShopWave's (shopwave.com)"
+      ]
+    },
+    {
+      "page": "site_bank_signin",
+      "url": "https://www.riverbendbank.com/login",
+      "expected": "safe",
+      "fired": [],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Riverbend Community Bank",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": []
+    },
+    {
+      "page": "site_bank_signin",
+      "url": "https://online.riverbendbank.com/login",
+      "expected": "safe",
+      "fired": [],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Riverbend Community Bank",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": []
+    },
+    {
+      "page": "site_bank_signin",
+      "url": "https://riverbend-secure-verify.top/login",
+      "expected": [
+        "brand_domain_mismatch"
+      ],
+      "fired": [
+        "brand_domain_mismatch"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Riverbend Community Bank",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The page presents itself as Riverbend Community Bank and asks for a login, but the browser's real address is riverbend-secure-verify.top, which is not Riverbend Community Bank's (riverbendbank.com)"
+      ]
+    },
+    {
+      "page": "site_bank_signin",
+      "url": "https://riverbendbank.com.account-verify.help/login",
+      "expected": [
+        "brand_domain_mismatch"
+      ],
+      "fired": [
+        "brand_domain_mismatch"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Riverbend Community Bank",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The page presents itself as Riverbend Community Bank and asks for a login, but the browser's real address is riverbendbank.com.account-verify.help, which is not Riverbend Community Bank's (riverbendbank.com)"
+      ]
+    },
+    {
+      "page": "site_fake_window",
+      "url": "https://northgate-rewards.click/claim",
+      "expected": [
+        "fake_browser_window"
+      ],
+      "fired": [
+        "brand_domain_mismatch",
+        "fake_browser_window"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Riverbend Community Bank",
+        "asks_for": "login",
+        "drawn_urls": [
+          "https://secure.riverbendbank.com/oauth/authorize"
+        ]
+      },
+      "evidence": [
+        "The page presents itself as Riverbend Community Bank and asks for a login, but the browser's real address is northgate-rewards.click, which is not Riverbend Community Bank's (riverbendbank.com)",
+        "A window drawn inside the page shows the address secure.riverbendbank.com with a padlock, but the browser's real address is northgate-rewards.click: that window is part of the page, not a real browser window"
+      ]
+    },
+    {
+      "page": "site_giftcard_shop",
+      "url": "https://www.northgatemarket.com/checkout",
+      "expected": "safe",
+      "fired": [],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Northgate Market",
+        "asks_for": "payment",
+        "drawn_urls": []
+      },
+      "evidence": []
+    },
+    {
+      "page": "site_news_article",
+      "url": "https://valleydaily.example/business",
+      "expected": "safe",
+      "fired": [],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Valley Daily",
+        "asks_for": "none",
+        "drawn_urls": []
+      },
+      "evidence": []
+    },
+    {
+      "page": "site_shopwave_signin",
+      "url": "https://www.shopwave.com/signin",
+      "expected": "safe",
+      "fired": [],
+      "ok": true,
+      "model_read": {
+        "page_brand": "ShopWave",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": []
+    },
+    {
+      "page": "site_shopwave_signin",
+      "url": "https://www.shopwаve.com/signin",
+      "expected": [
+        "lookalike_domain"
+      ],
+      "fired": [
+        "lookalike_domain"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "ShopWave",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The browser's real address is shopwаve.com, made to look like shopwave.com: it uses look-alike foreign letters ('а' Cyrillic Small Letter A)"
+      ]
+    },
+    {
+      "page": "site_shopwave_signin",
+      "url": "https://shopvvave.com/signin",
+      "expected": [
+        "lookalike_domain"
+      ],
+      "fired": [
+        "lookalike_domain"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "ShopWave",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The browser's real address is shopvvave.com, made to look like shopwave.com: letters are swapped for look-alikes (like 'rn' for 'm' or '0' for 'o')"
+      ]
+    },
+    {
+      "page": "site_shopwave_signin",
+      "url": "https://shopwave.co/signin",
+      "expected": [
+        "lookalike_domain"
+      ],
+      "fired": [
+        "lookalike_domain"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "ShopWave",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The browser's real address is shopwave.co, made to look like shopwave.com: it ends in .co, not .com"
+      ]
+    },
+    {
+      "page": "site_shopwave_signin",
+      "url": "https://shopwave-order-review.help/signin",
+      "expected": [
+        "brand_domain_mismatch"
+      ],
+      "fired": [
+        "brand_domain_mismatch"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "ShopWave",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The page presents itself as ShopWave and asks for a login, but the browser's real address is shopwave-order-review.help, which is not ShopWave's (shopwave.com)"
+      ]
+    },
+    {
+      "page": "site_bank_signin",
+      "url": "https://www.riverbendbank.com/login",
+      "expected": "safe",
+      "fired": [],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Riverbend Community Bank",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": []
+    },
+    {
+      "page": "site_bank_signin",
+      "url": "https://online.riverbendbank.com/login",
+      "expected": "safe",
+      "fired": [],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Riverbend Community Bank",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": []
+    },
+    {
+      "page": "site_bank_signin",
+      "url": "https://riverbend-secure-verify.top/login",
+      "expected": [
+        "brand_domain_mismatch"
+      ],
+      "fired": [
+        "brand_domain_mismatch"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Riverbend Community Bank",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The page presents itself as Riverbend Community Bank and asks for a login, but the browser's real address is riverbend-secure-verify.top, which is not Riverbend Community Bank's (riverbendbank.com)"
+      ]
+    },
+    {
+      "page": "site_bank_signin",
+      "url": "https://riverbendbank.com.account-verify.help/login",
+      "expected": [
+        "brand_domain_mismatch"
+      ],
+      "fired": [
+        "brand_domain_mismatch"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Riverbend Community Bank",
+        "asks_for": "login",
+        "drawn_urls": []
+      },
+      "evidence": [
+        "The page presents itself as Riverbend Community Bank and asks for a login, but the browser's real address is riverbendbank.com.account-verify.help, which is not Riverbend Community Bank's (riverbendbank.com)"
+      ]
+    },
+    {
+      "page": "site_fake_window",
+      "url": "https://northgate-rewards.click/claim",
+      "expected": [
+        "fake_browser_window"
+      ],
+      "fired": [
+        "brand_domain_mismatch",
+        "fake_browser_window"
+      ],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Riverbend Community Bank",
+        "asks_for": "login",
+        "drawn_urls": [
+          "https://secure.riverbendbank.com/oauth/authorize"
+        ]
+      },
+      "evidence": [
+        "The page presents itself as Riverbend Community Bank and asks for a login, but the browser's real address is northgate-rewards.click, which is not Riverbend Community Bank's (riverbendbank.com)",
+        "A window drawn inside the page shows the address secure.riverbendbank.com with a padlock, but the browser's real address is northgate-rewards.click: that window is part of the page, not a real browser window"
+      ]
+    },
+    {
+      "page": "site_giftcard_shop",
+      "url": "https://www.northgatemarket.com/checkout",
+      "expected": "safe",
+      "fired": [],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Northgate Market",
+        "asks_for": "payment",
+        "drawn_urls": []
+      },
+      "evidence": []
+    },
+    {
+      "page": "site_news_article",
+      "url": "https://valleydaily.example/business",
+      "expected": "safe",
+      "fired": [],
+      "ok": true,
+      "model_read": {
+        "page_brand": "Valley Daily",
+        "asks_for": "none",
+        "drawn_urls": []
+      },
+      "evidence": []
+    }
+  ]
+}

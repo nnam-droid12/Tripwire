@@ -16,6 +16,7 @@ from __future__ import annotations
 import threading
 import time
 from pathlib import Path
+from typing import Callable
 
 import imagehash
 import mss
@@ -53,7 +54,8 @@ class FrameChangeDetector:
 class ScreenWatcher(threading.Thread):
     """Samples the screen and publishes ``frame_kept`` events."""
 
-    def __init__(self, bus: EventBus, fps: float = 1.5, out_dir: Path = FRAMES_DIR, threshold: int = 10, min_keep_interval_s: float = 2.0) -> None:
+    def __init__(self, bus: EventBus, fps: float = 1.5, out_dir: Path = FRAMES_DIR, threshold: int = 10, min_keep_interval_s: float = 2.0,
+                 browser_url: Callable[[], tuple[str, str] | None] | None = None, on_url: Callable[[str], None] | None = None) -> None:
         super().__init__(name="screen-watcher", daemon=True)
         self.bus = bus
         self.interval_s = 1.0 / fps
@@ -62,6 +64,10 @@ class ScreenWatcher(threading.Thread):
         self.min_keep_interval_s = min_keep_interval_s
         self._last_kept = 0.0
         self._halt = threading.Event()
+        # Site Check: the real address of the browser in front, read from the browser itself (agent/browser.py)
+        self.browser_url = browser_url
+        self.on_url = on_url
+        self._last_url: str | None = None
 
     def run(self) -> None:
         self.out_dir.mkdir(parents=True, exist_ok=True)
@@ -76,23 +82,36 @@ class ScreenWatcher(threading.Thread):
                     shot = sct.grab(monitor)
                     image = Image.frombytes("RGB", shot.size, shot.bgra, "raw", "BGRX")
                     keep, distance = self.detector.check(image)
+                    url = self._url()
+                    if url and url[0] != self._last_url:
+                        keep = True  # a new address is worth a look even if the page looks the same (a clone does)
+                        self._last_url = url[0]
+                        if self.on_url:
+                            self.on_url(url[0])
                     if keep:
                         self._last_kept = started
-                        self._save_and_publish(image, distance)
+                        self._save_and_publish(image, distance, url)
                 except Exception as exc:  # e.g. secure desktop / UAC prompt; keep watching
                     self.bus.publish(Event("screen", "capture_error", {"summary": repr(exc)}))
                 self._halt.wait(max(0.0, self.interval_s - (time.monotonic() - started)))
 
-    def _save_and_publish(self, image: Image.Image, distance: int) -> None:
+    def _url(self) -> tuple[str, str] | None:
+        try:
+            return self.browser_url() if self.browser_url else None
+        except Exception:
+            return None
+
+    def _save_and_publish(self, image: Image.Image, distance: int, url: tuple[str, str] | None = None) -> None:
         if image.width > STORE_MAX_WIDTH:
             image = image.resize((STORE_MAX_WIDTH, round(image.height * STORE_MAX_WIDTH / image.width)))
         ts = time.time()
         path = self.out_dir / f"frame_{int(ts * 1000)}.png"
         image.save(path, optimize=True)
         reason = "first frame" if distance < 0 else f"changed, distance {distance}"
-        self.bus.publish(
-            Event("screen", "frame_kept", {"path": str(path), "distance": distance, "summary": f"{path.name} ({reason})"}, ts=ts)
-        )
+        data = {"path": str(path), "distance": distance, "summary": f"{path.name} ({reason})"}
+        if url:
+            data.update(url=url[0], browser=url[1])
+        self.bus.publish(Event("screen", "frame_kept", data, ts=ts))
 
     def stop(self) -> None:
         self._halt.set()

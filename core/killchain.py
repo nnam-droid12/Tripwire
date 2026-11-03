@@ -45,6 +45,7 @@ SIGNALS: dict[str, SignalSpec] = {
     "refund_pretext": SignalSpec(Stage.CONTACT, 0.25, "Caller offers a refund, compensation or says a subscription renewal will be charged"),
     "cross_modal_brand_match": SignalSpec(Stage.CONTACT, 0.40, "The same claimed organisation appears both on screen and in the call"),
     "sentinel_flag": SignalSpec(Stage.CONTACT, 0.20, "Tripwire Sentinel, a small model trained on labelled scam and legitimate calls, rates the call so far as a likely scam"),
+    "known_scam_playbook": SignalSpec(Stage.CONTACT, 0.55, "Scam Memory: the caller is following, step by step, a scam script Tripwire learned from scams it stopped before"),
     "known_scam_indicator": SignalSpec(Stage.CONTACT, 0.60, "A phone number, remote-access ID or crypto address that Community Shield has seen in scams stopped in other homes"),
     "isolation_instruction": SignalSpec(Stage.CONTACT, 0.30, "Told not to hang up, not to call or tell anyone, or that others are listening"),
     "family_emergency_claim": SignalSpec(Stage.CONTACT, 0.35, "Caller claims to be a grandchild or other relative in trouble (arrest, accident, hospital, stranded), or calls on their behalf as a lawyer, officer or doctor, and needs money or secrecy"),
@@ -58,6 +59,12 @@ SIGNALS: dict[str, SignalSpec] = {
     "remote_control_input": SignalSpec(Stage.CONTROL, 0.55, "Someone other than the person is moving the mouse or typing (input injected by a remote-access tool)"),
     "disable_protection": SignalSpec(Stage.CONTROL, 0.50, "Instruction to close a warning, ignore security software, or turn off/uninstall protection"),
     # 4. Access
+    "lookalike_domain": SignalSpec(Stage.ACCESS, 0.70, "Site Check: the browser's real address imitates a real company's (look-alike letters, one letter off, a different ending)"),
+    "brand_domain_mismatch": SignalSpec(Stage.ACCESS, 0.60, "Site Check: a page presenting itself as a known company asks for a password, card or personal details, on an address that is not that company's"),
+    "fake_browser_window": SignalSpec(Stage.ACCESS, 0.85, "Site Check: a 'browser window' with an address bar and padlock is drawn inside the page, and its address differs from the browser's real one"),
+    "new_domain": SignalSpec(Stage.HOOK, 0.25, "Site Check: the site's domain was registered only days ago (public domain records)"),
+    "hosts_file_hijack": SignalSpec(Stage.CONTROL, 0.85, "Device Trust: this computer's hosts file sends a bank's, shop's or agency's real address to another server"),
+    "rogue_certificate": SignalSpec(Stage.CONTROL, 0.85, "Device Trust: the site's padlock comes from a certificate authority installed on this computer that the public internet does not trust"),
     "bank_site_open": SignalSpec(Stage.ACCESS, 0.15, "An online banking or payment site is on screen"),
     "login_instruction": SignalSpec(Stage.ACCESS, 0.35, "Caller tells the user to log in to their bank, email or other account"),
     "bank_open_during_remote": SignalSpec(Stage.ACCESS, 0.55, "A banking site is open while a remote session is active"),
@@ -89,7 +96,8 @@ CHAIN_MULTIPLIER = {0: 0.0, 1: 0.35, 2: 0.6, 3: 0.85, 4: 0.95, 5: 1.0}
 # Raised only by Tripwire's own code (watchers, Community Shield, Sentinel, Code Shield's text check, a relative's
 # answer), never by a model reading the screen or the call: a fooled analyst must not be able to claim them.
 SYSTEM_ONLY = {
-    "cross_modal_brand_match", "bank_open_during_remote", "known_scam_indicator", "sentinel_flag",
+    "cross_modal_brand_match", "bank_open_during_remote", "known_scam_indicator", "known_scam_playbook", "sentinel_flag",
+    "lookalike_domain", "brand_domain_mismatch", "fake_browser_window", "new_domain", "hosts_file_hijack", "rogue_certificate",
     "family_denied_call", "code_received_during_call", "remote_control_input", "bank_code_overheard",
 }
 

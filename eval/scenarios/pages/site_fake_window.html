@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- FICTIONAL rewards page for testing Tripwire's Site Check: a "browser-in-the-browser" fake sign-in window.
+     The window below, with its own address bar and padlock, is drawn by the page; it is not a real browser window. -->
+<html lang="en"><head><meta charset="utf-8"><title>Northgate Market Rewards - Claim your gift</title>
+<style>
+  body { margin: 0; font-family: Segoe UI, Arial, sans-serif; background: #fdf6e3; color: #1d2733; }
+  .top { background: #b45309; color: #fff; padding: 16px 32px; font-size: 22px; font-weight: 700; }
+  .hero { padding: 26px 32px; font-size: 26px; font-weight: 700; }
+  .win { position: absolute; left: 330px; top: 150px; width: 620px; background: #fff; border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,.35); overflow: hidden; }
+  .chrome { background: #dfe1e5; padding: 8px 10px; display: flex; gap: 8px; align-items: center; }
+  .dot { width: 12px; height: 12px; border-radius: 6px; display: inline-block; }
+  .addr { flex: 1; background: #fff; border-radius: 14px; padding: 5px 12px; font-size: 14px; color: #202124; }
+  .inner { padding: 22px 28px; }
+  .field { border: 1px solid #bbb; border-radius: 6px; padding: 9px; color: #999; margin-bottom: 12px; }
+  .btn { background: #145a46; color: #fff; padding: 10px; border-radius: 6px; text-align: center; font-weight: 600; }
+</style></head>
+<body>
+  <div class="top">Northgate Market Rewards</div>
+  <div class="hero">Congratulations! You have a $500 gift waiting. Sign in with your bank to claim it.</div>
+  <div class="win">
+    <div class="chrome">
+      <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+      <span class="addr">&#128274; https://secure.riverbendbank.com/oauth/authorize</span>
+    </div>
+    <div class="inner">
+      <h3 style="margin-top:0">Riverbend Community Bank</h3>
+      <p style="color:#555;font-size:14px;margin-top:-6px">Sign in to link your account to Northgate Market Rewards</p>
+      <div class="field">User ID</div><div class="field">Password</div>
+      <div class="btn">Sign in and claim $500</div>
+    </div>
+  </div>
+</body></html>

@@ -1,0 +1,783 @@
+{
+  "playbooks": [
+    {
+      "title": "Fake Microsoft IP hack tech support",
+      "kind": "tech support",
+      "claimed_to_be": "Microsoft support",
+      "ask": "Get remote access to computer",
+      "steps": [
+        {
+          "tactic": "fake_problem_claim",
+          "line": "As I already told you, the IP address of your computer has been compromised with some form."
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "And ma'am, due to that, whatever data you have in your computer is totally hacked by the hackers, and they are downloading lots of unwanted errors and warning reports and viruses in your computer."
+        },
+        {
+          "tactic": "remote_session_active",
+          "line": "Can you see you are successfully connected to the Microsoft IT department?"
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "Those red color errors, each one contains somewhere around # to # viruses on it."
+        },
+        {
+          "tactic": "impersonation_claim",
+          "line": "We were senior certified technicians on Microsoft."
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "They also want to hack the IP address of your neighbor's IP address as well with the help of your IP address."
+        }
+      ],
+      "id": "call1",
+      "seen": 1
+    },
+    {
+      "title": "Geek Squad premium charge cancellation",
+      "kind": "refund",
+      "claimed_to_be": "Geek Squad",
+      "ask": "fill out cancellation form",
+      "steps": [
+        {
+          "tactic": "refund_pretext",
+          "line": "Your Geek Squad subscription is upgraded to the premium version."
+        },
+        {
+          "tactic": "login_instruction",
+          "line": "Just go to the United States website and you will get to see a cancellation option on the top of the Home Server."
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "You have to fill out the cancellation form."
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "You have to write in the feedback that you want to cancel."
+        }
+      ],
+      "id": "call2",
+      "seen": 1
+    },
+    {
+      "title": "Fake computer service refund, remote access",
+      "kind": "refund",
+      "claimed_to_be": "Cancellation department",
+      "ask": "gain remote access for refund",
+      "steps": [
+        {
+          "tactic": "fake_problem_claim",
+          "line": "Oh yeah, this call is about your computer service that just expired, that's why your account has been charged $#."
+        },
+        {
+          "tactic": "refund_pretext",
+          "line": "So if you want to cancel the service and stop the statement, what you need to do is follow the corporate process so I can help you cancel the service and we can refund the money."
+        },
+        {
+          "tactic": "remote_tool_install_request",
+          "line": "You need to press the Windows key and the letter R, R like Romeo."
+        },
+        {
+          "tactic": "remote_tool_install_request",
+          "line": "And you can type in the Run box."
+        },
+        {
+          "tactic": "remote_tool_install_request",
+          "line": "Type www.techsupport.us."
+        }
+      ],
+      "id": "call3",
+      "seen": 1
+    },
+    {
+      "title": "Fake Microsoft support remote access",
+      "kind": "tech support",
+      "claimed_to_be": "Microsoft support",
+      "ask": "remote access to computer",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "Okay, Benjamin, I'm just guiding you through a few steps that you need to do so that I can connect you with our Microsoft secured server. Then I'll go ahead and see what exactly the problem you're facing, okay?"
+        },
+        {
+          "tactic": "remote_tool_install_request",
+          "line": "Perfect. Now I'm just telling you the website from where I'll connect you with our Microsoft secure server. Just type in the box \"www.fastsupport.com\" and press the Enter key on your keyboard."
+        },
+        {
+          "tactic": "remote_tool_install_request",
+          "line": "Okay, let's use a different tool since this one might be having issues. Please open your browser again and type \"www.teamviewer.com\" and press Enter."
+        },
+        {
+          "tactic": "remote_tool_launched",
+          "line": "Perfect. Once it's installed, you will see the TeamViewer icon on your desktop. Open that icon."
+        },
+        {
+          "tactic": "remote_access_code_shared",
+          "line": "Great. Now, it should show you an ID and a password. Please read those out to me so I can connect to your computer."
+        },
+        {
+          "tactic": "remote_session_active",
+          "line": "Thank you. I will now connect to your computer to help resolve the issue. Please hold on for a moment while I establish the connection."
+        }
+      ],
+      "id": "call4",
+      "seen": 1
+    },
+    {
+      "title": "Fake PayPal Bitcoin charge refund",
+      "kind": "refund",
+      "claimed_to_be": "PayPal",
+      "ask": "remote access via computer",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "Thank you for calling PayPal, how may I help you?"
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "Okay, you have a charge that was being made under your PayPal account buying some Bitcoins."
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "Some people are misusing others' information and creating accounts in PayPal, purchasing something sometimes on eBay, sometimes on Amazon, and in your case, this is Bitcoin."
+        },
+        {
+          "tactic": "refund_pretext",
+          "line": "If you want, we can revert the funds that have been taken from you."
+        },
+        {
+          "tactic": "refund_pretext",
+          "line": "So in order to do that, you would have to fill out a cancellation form."
+        },
+        {
+          "tactic": "remote_tool_install_request",
+          "line": "Just open up your Google Chrome and I will give you a command that will help you connect to our secure server."
+        }
+      ],
+      "id": "call5",
+      "seen": 1
+    },
+    {
+      "title": "Fake Norton renewal refund offer",
+      "kind": "refund",
+      "claimed_to_be": "Norton cancellation department",
+      "ask": "reimburse money for cancelled subscription",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "You called the cancellation department of Norton."
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "This software on your computer has expired, and today is the auto-renewal date."
+        },
+        {
+          "tactic": "isolation_instruction",
+          "line": "No, I'm telling you, just be online with me."
+        },
+        {
+          "tactic": "refund_pretext",
+          "line": "First thing, I believe my colleague who was talking to you explained why you are getting back your money and how you're going to get your funds back."
+        },
+        {
+          "tactic": "impersonation_claim",
+          "line": "I'm going to read out the badge ID of Brad."
+        }
+      ],
+      "id": "call6",
+      "seen": 1
+    },
+    {
+      "title": "Fake invoice cancellation, TeamViewer install",
+      "kind": "refund",
+      "claimed_to_be": "cancellation support",
+      "ask": "install remote-access software",
+      "steps": [
+        {
+          "tactic": "refund_pretext",
+          "line": "Yes, thank you for holding the line, sir. Your invoice number is absolutely correct. You have an online cancellation form on your computer. Are you in front of your computer right now, sir?"
+        },
+        {
+          "tactic": "remote_tool_install_request",
+          "line": "Then \"R\" as in Roger, then put a dot \"com\" C-O-M."
+        },
+        {
+          "tactic": "remote_tool_install_request",
+          "line": "Yes, hit the enter button on your keyboard, sir."
+        },
+        {
+          "tactic": "remote_tool_install_request",
+          "line": "Yeah, do you see that remote connectivity software? Do you see that?"
+        }
+      ],
+      "id": "call7",
+      "seen": 1
+    },
+    {
+      "title": "Fake Amazon order, remote access",
+      "kind": "other",
+      "claimed_to_be": "Amazon",
+      "ask": "remote access to computer",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "This is Amazon, how may I help you?"
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "Ma'am, I see there is an order in your Amazon account for an iPhone # worth $#."
+        },
+        {
+          "tactic": "remote_tool_install_request",
+          "line": "Yeah, I see the download. Click on download."
+        }
+      ],
+      "id": "call8",
+      "seen": 1
+    },
+    {
+      "title": "Fake officer badge confirmation trick",
+      "kind": "government impersonation",
+      "claimed_to_be": "Mr. Peter Anderson, badge #",
+      "ask": "write down fake credentials and trust",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "Yes, you're speaking with Mr. Peter Anderson. How are you doing today?"
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "And who is this I'm speaking with? Do you have a confirmation number?"
+        },
+        {
+          "tactic": "code_request",
+          "line": "Joseph King. And what's your confirmation number?"
+        },
+        {
+          "tactic": "urgency_pressure",
+          "line": "All right, Mr. Joe King. What I can see here is that your confirmation is # U.S. You need to write down that confirmation because the next time you call and ask for it, we can't give it to you again. So, you have to write it down so you can remember it at all times, all right?"
+        },
+        {
+          "tactic": "impersonation_claim",
+          "line": "Right, and next you're going to write down my badge number that I wear on my shirt at work. It's # P.A."
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "Oh my word, I will be gettg into that shortly. That's why I'm providing you with all this information, so you can understand that this isn't a runaround. Remember, there are a lot of schemes and frauds happening, so we want to make sure..."
+        }
+      ],
+      "id": "call9",
+      "seen": 1
+    },
+    {
+      "title": "Fake Publisher Clearing House prize fee",
+      "kind": "prize or reward",
+      "claimed_to_be": "Publisher Clearing House",
+      "ask": "purchase government registration card for prize",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "Publisher Clearing House, James Anderson speaking."
+        },
+        {
+          "tactic": "code_request",
+          "line": "You need to provide me with the claim code number so I can check to see what is here for you."
+        },
+        {
+          "tactic": "prize_or_reward_claim",
+          "line": "Okay, I see where you are supposed to be receiving $# with a # Mercedes-Benz car."
+        },
+        {
+          "tactic": "advance_fee_request",
+          "line": "Okay, in order for you to receive your prize package, Mr. David, there's a government registration card that you have to purchase to show to the delivery team once they get to your home."
+        }
+      ],
+      "id": "call10",
+      "seen": 1
+    },
+    {
+      "title": "Fake Publishers Clearing House prize fee",
+      "kind": "prize or reward",
+      "claimed_to_be": "Publishers Clearing House",
+      "ask": "Send certified check to CPA",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "Yeah, it's Mr. Asleepy from the Publishers Clearing House."
+        },
+        {
+          "tactic": "prize_or_reward_claim",
+          "line": "Did you get my prize with the big check?"
+        },
+        {
+          "tactic": "advance_fee_request",
+          "line": "We're going to write it out to the CPA, right?"
+        },
+        {
+          "tactic": "advance_fee_request",
+          "line": "Okay, so what we're going to do today, my friend, is get you a certified cashier's check sent to the CPA so you can receive your prize on Monday, okay?"
+        },
+        {
+          "tactic": "prize_or_reward_claim",
+          "line": "Remember, you're getting a certified check for $# sent to a CPA."
+        },
+        {
+          "tactic": "urgency_pressure",
+          "line": "All right, tell me when you're ready, because we're going to have everything done for you today."
+        }
+      ],
+      "id": "call11",
+      "seen": 1
+    },
+    {
+      "title": "$# Walmart gift card prize scam",
+      "kind": "prize or reward",
+      "claimed_to_be": "gift card provider",
+      "ask": "mailing address and full name",
+      "steps": [
+        {
+          "tactic": "prize_or_reward_claim",
+          "line": "Your number is qualified to receive a $# Walmart gift card."
+        },
+        {
+          "tactic": "prize_or_reward_claim",
+          "line": "You don't have to pay any money over the counter."
+        },
+        {
+          "tactic": "prize_or_reward_claim",
+          "line": "So, sir, what we can do is send this gift card out to you now within four to five business days at your mailing address."
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "Could you please help me with your real mailing address, starting with your house number?"
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "It's # Wood Lot Lane, Brownsville, Texas, #, right?"
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "Could you please spell out your first and last name?"
+        }
+      ],
+      "id": "call12",
+      "seen": 1
+    },
+    {
+      "title": "Fake officer legal action SSN scam",
+      "kind": "government impersonation",
+      "claimed_to_be": "Officer Eric Roger",
+      "ask": "steal Social Security number",
+      "steps": [
+        {
+          "tactic": "fake_problem_claim",
+          "line": "All right, As I can see in my system, the reason you are contacted today was to inform you regarding some legal enforcement action."
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "All right, so what I'm saying to you, your name has been registered for criminal activities."
+        },
+        {
+          "tactic": "impersonation_claim",
+          "line": "This is Officer Eric Roger."
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "All right, so before I go ahead and give you some more information, I just need to verify your social security number once."
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "Hello, verify me with your social security number."
+        }
+      ],
+      "id": "call13",
+      "seen": 1
+    },
+    {
+      "title": "Fake officer threatens SSN suspension",
+      "kind": "government impersonation",
+      "claimed_to_be": "Officer Robert Wilson, security administration",
+      "ask": "Full Social Security number",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "You have reached the security administration."
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "So, can you help me with your name and your social security number so I can check in my system why you are receiving a call from our department, ma'am?"
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "And what's your social security number?"
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "I asked you to verify your full social security number."
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "There are legal enforcement actions against your name and your social security number."
+        },
+        {
+          "tactic": "urgency_pressure",
+          "line": "We have an order to suspend your social on an immediate basis because your social has been found suspicious for committing some fraudulent activities in Seattle."
+        },
+        {
+          "tactic": "impersonation_claim",
+          "line": "My name is Officer Robert Wilson."
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "Ma'am, here I see there are # bank accounts under your name and # credit cards."
+        }
+      ],
+      "id": "call14",
+      "seen": 1
+    },
+    {
+      "title": "Fake SSA drug car suspension scam",
+      "kind": "government impersonation",
+      "claimed_to_be": "Social Security Administration Officer Donald Jefferson",
+      "ask": "money to clear criminal case",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "Thank you for calling the Social Security Administration."
+        },
+        {
+          "tactic": "impersonation_claim",
+          "line": "So, you're talking to Officer Donald Jefferson in charge of your case."
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "That car contained bloodstains and some drug residues in it."
+        },
+        {
+          "tactic": "urgency_pressure",
+          "line": "That's the reason we're calling you because immediately we're going to go ahead and suspend your social security number."
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "There were like # bank accounts opened up under your name."
+        }
+      ],
+      "id": "call15",
+      "seen": 1
+    },
+    {
+      "title": "Fake Social Security suspension, identity theft",
+      "kind": "government impersonation",
+      "claimed_to_be": "Social Security Administration",
+      "ask": "name and address for identity theft",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "Thank you for calling the Social Security Administration. How may I help you today?"
+        },
+        {
+          "tactic": "fake_problem_claim",
+          "line": "All right, miss. You did not receive a case number, so can you help me out with your name and address so I can pull up your case file from my system and explain why your social number was suspended?"
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "Miss, could you spell out your first and last name?"
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "Lakewood, California. And your zip code is?"
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "All right, miss. Could you repeat your address again?"
+        }
+      ],
+      "id": "call16",
+      "seen": 1
+    },
+    {
+      "title": "Fake Publisher Clearing House prize scam",
+      "kind": "prize or reward",
+      "claimed_to_be": "Publisher Clearing House",
+      "ask": "claim code to release winnings",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "I'm saying to you, my name is John Anderson, and you're calling the Publisher Clearing House."
+        },
+        {
+          "tactic": "personal_info_request",
+          "line": "Okay, and can you state to me your first and last name along with the claiming code number?"
+        },
+        {
+          "tactic": "code_request",
+          "line": "And you have a claim code number, right?"
+        },
+        {
+          "tactic": "prize_or_reward_claim",
+          "line": "I'm going to provide you with some winner information."
+        },
+        {
+          "tactic": "isolation_instruction",
+          "line": "And we're not going to leave the phone line until you receive."
+        }
+      ],
+      "id": "call17",
+      "seen": 1
+    },
+    {
+      "title": "Fake Publisher Clearing House prize win",
+      "kind": "prize or reward",
+      "claimed_to_be": "Publisher Clearing House",
+      "ask": "send money to claim prize",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "This is John Miller with the Publisher."
+        },
+        {
+          "tactic": "impersonation_claim",
+          "line": "Yes, David Miller with Publisher Clearing House."
+        },
+        {
+          "tactic": "code_request",
+          "line": "Did you receive a claim number?"
+        },
+        {
+          "tactic": "prize_or_reward_claim",
+          "line": "Okay, well, Ms. Dy, I see here in the system where you have been the VIP winner here at Publishers Clearing House for $# million and the Mercedes-Benz car."
+        },
+        {
+          "tactic": "advance_fee_request",
+          "line": "If I called you and asked you to send me some money, if I begged you for some money, would you give it to me?"
+        }
+      ],
+      "id": "call18",
+      "seen": 1
+    },
+    null,
+    {
+      "title": "Fake PCH prize with delivery pressure",
+      "kind": "prize or reward",
+      "claimed_to_be": "Peter Anderson from the PCH",
+      "ask": "Accept prize delivery today",
+      "steps": [
+        {
+          "tactic": "impersonation_claim",
+          "line": "This is Peter Anderson from the PCH."
+        },
+        {
+          "tactic": "prize_or_reward_claim",
+          "line": "Hi, what I have seen here, ma'am, is that you have won a certified check of four and a half million dollars along with $# per week for life and also an S-Class Mercedes-Benz."
+        },
+        {
+          "tactic": "prize_or_reward_claim",
+          "line": "Welcome to financial freedom."
+        },
+        {
+          "tactic": "urgency_pressure",
+          "line": "As I was saying, ma'am, are you willing and interested in having this delivered today?"
+        }
+      ],
+      "id": "call20",
+      "seen": 1
+    }
+  ],
+  "receipts": [
+    {
+      "proposed": 6,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 6,
+      "seconds": 20.6
+    },
+    {
+      "proposed": 5,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 1,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 4,
+      "seconds": 21.0
+    },
+    {
+      "proposed": 6,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 1,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 5,
+      "seconds": 19.5
+    },
+    {
+      "proposed": 6,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 6,
+      "seconds": 15.2
+    },
+    {
+      "proposed": 6,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 6,
+      "seconds": 15.2
+    },
+    {
+      "proposed": 5,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 5,
+      "seconds": 19.8
+    },
+    {
+      "proposed": 5,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 1,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 4,
+      "seconds": 20.0
+    },
+    {
+      "proposed": 7,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 4,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 3,
+      "seconds": 16.2
+    },
+    {
+      "proposed": 6,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 6,
+      "seconds": 19.8
+    },
+    {
+      "proposed": 5,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 1,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 4,
+      "seconds": 12.4
+    },
+    {
+      "proposed": 6,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 6,
+      "seconds": 14.3
+    },
+    {
+      "proposed": 6,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 6,
+      "seconds": 16.1
+    },
+    {
+      "proposed": 6,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 1,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 5,
+      "seconds": 17.5
+    },
+    {
+      "proposed": 8,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 8,
+      "seconds": 16.6
+    },
+    {
+      "proposed": 5,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 5,
+      "seconds": 11.7
+    },
+    {
+      "proposed": 6,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 1,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 5,
+      "seconds": 15.6
+    },
+    {
+      "proposed": 5,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 5,
+      "seconds": 17.6
+    },
+    {
+      "proposed": 5,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 0,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 5,
+      "seconds": 21.6
+    },
+    {
+      "outcome": "writer failed (JSONDecodeError)",
+      "seconds": 20.1
+    },
+    {
+      "proposed": 5,
+      "not_said": 0,
+      "bad_tactic": 0,
+      "too_short": 1,
+      "reviewer_dropped": [],
+      "outcome": "learned",
+      "steps": 4,
+      "seconds": 20.9
+    }
+  ]
+}

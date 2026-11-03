@@ -126,17 +126,20 @@ def sentinel_replay(conv: Conversation):
     return lambda turns: scores[min(len(turns), len(scores)) - 1]
 
 
-def run_one(conv: Conversation) -> dict:
+def run_one(conv: Conversation, memory=None) -> dict:
+    """``memory``: an :class:`analysts.playbook.Recall` with the playbooks this call may match (Scam Memory), or None."""
     bus, case = EventBus(), CaseFile()
     sentinel = sentinel_replay(conv) if SENTINEL else None
-    orch = Orchestrator(bus, case, screen=_NoScreen(), log=lambda _: None, sentinel=sentinel)
+    orch = Orchestrator(bus, case, screen=_NoScreen(), log=lambda _: None, sentinel=sentinel, memory=memory)
     orch.start()
-    stop_turn = nudge_turn = None
+    stop_turn = nudge_turn = memory_turn = None
     errs: list[str] = []
     orch.log = lambda m: errs.append(m)
     for i, (speaker, text) in enumerate(conv.turns):
         bus.publish(Event("audio", "transcript", {"speaker": speaker, "text": text[:1200]}))
         orch.drain()  # turn-synchronous: analysis (and any judge call) for this turn completes first
+        if memory_turn is None and any(s.name == "known_scam_playbook" for s in case.signals):
+            memory_turn = i + 1
         if nudge_turn is None and orch.action >= Action.NUDGE:
             nudge_turn = i + 1
         if orch.action == Action.HARD_STOP:
@@ -145,7 +148,7 @@ def run_one(conv: Conversation) -> dict:
     errors = sum("analyst" in m or "judge" in m for m in errs)
     return {
         "source": conv.source, "kind": conv.kind, "is_scam": conv.is_scam, "turns": len(conv.turns),
-        "action": orch.action.label, "stop_turn": stop_turn, "nudge_turn": nudge_turn,
+        "action": orch.action.label, "stop_turn": stop_turn, "nudge_turn": nudge_turn, "memory_turn": memory_turn,
         "stop_fraction": round(stop_turn / len(conv.turns), 2) if stop_turn else None,
         "judge_calls": len(orch.verdicts), "errors": errors, "error_samples": errs[:2],
         "claims": sum(v.verification.get("quotes_checked", len(v.reasons) + len(v.unsupported)) for v in orch.verdicts),

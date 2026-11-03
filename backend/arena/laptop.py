@@ -27,6 +27,18 @@ PAGES: dict[str, tuple[str, str]] = {
     "gift_cards": ("gift_card_checkout", "a Northgate Market gift card checkout"),
     "bitcoin": ("scam_crypto_atm", "instructions for depositing cash at a Bitcoin ATM"),
     "bank_freeze": ("bank_freeze", "the bank's card security page"),
+    "shop_email": ("site_shopwave_email", "her e-mail inbox, open on a ShopWave message about an order of $1,249 she did not place, with a 'Review order' button"),
+    "shop_signin": ("site_shopwave_signin", "the ShopWave sign-in page that opened from the e-mail's 'Review order' button, asking for her e-mail and password"),
+}
+
+# The browser's real address for each page, as the desktop agent reads it from the browser itself (agent/browser.py).
+# The ShopWave sign-in page is a clone: its address uses a Cyrillic "а", so it reads "shopwave.com" but is not.
+URLS: dict[str, str] = {
+    "bank": "https://www.riverbendbank.com/accounts",
+    "wire_transfer": "https://www.riverbendbank.com/transfers/wire",
+    "bank_freeze": "https://www.riverbendbank.com/security/card",
+    "shop_email": "https://mail.example.com/inbox",
+    "shop_signin": "https://www.shopw\u0430ve.com/signin",
 }
 
 # pages Margaret may open herself; bank_freeze is only opened by Tripwire's recovery agent

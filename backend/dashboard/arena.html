@@ -30,6 +30,10 @@
   .screen { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; background:#000; border-radius:4px; }
   .screen iframe { position:absolute; top:0; left:0; width:1280px; height:720px; border:0; transform-origin:0 0; background:#fff; }
   .base { height:12px; background:#3a4047; margin:0 -8px; border-radius:0 0 12px 12px; }
+  /* the browser's own address bar: the real address, which Site Check compares with what the page claims */
+  .urlbar { display:flex; align-items:center; gap:8px; background:#dfe1e5; border-radius:6px 6px 0 0; padding:5px 8px; font:13px "Segoe UI", Arial, sans-serif; }
+  .urlbar .addr { flex:1; background:#fff; border-radius:12px; padding:3px 12px; color:#202124; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .urlbar .tag { font-size:11px; color:#5f6368; }
   body { overflow-x:hidden; }
   .fired { position:absolute; left:3%; right:3%; top:3%; z-index:6; background:#0d1117; color:#fff; border-left:8px solid #2ea043; border-radius:12px; padding:1.2% 2%; box-shadow:0 12px 40px #000a; display:none; }
   .fired.on { display:block; animation: pop .25s ease-out; }
@@ -172,6 +176,7 @@
 <main>
   <section>
     <div class="laptop">
+      <div class="urlbar" id="urlbar" hidden><span class="addr" id="url"></span><span class="tag">the browser's real address</span></div>
       <div class="screen" id="screen">
         <iframe id="page" title="Margaret's screen" src="/arena/pages/desktop"></iframe>
         <div class="nudge" id="nudge"></div>
@@ -412,7 +417,11 @@ function handle(m) {
   switch (m.type) {
     case "busy": say("system", m.text); break;
     case "started": enable(); break;
-    case "laptop": showPage(m.page, m.hash); break;
+    case "laptop":
+      showPage(m.page, m.hash);
+      $("urlbar").hidden = !m.url;
+      $("url").textContent = m.url ? "\u{1F512} " + m.url : "";
+      break;
     case "line":
       say(m.who, m.text);
       if (m.who === "margaret" || m.who === "decoy" || m.who === "scammer") play(m.audio);

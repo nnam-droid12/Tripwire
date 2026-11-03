@@ -62,6 +62,13 @@ Stop EARLY. Do not wait for the money request: by then the person is already con
 - a fake security warning with a phone number is on screen and the person is now on the phone with that "support" line;
 - a [shield] line shows that a phone number, remote-access ID or crypto address in this session was already reported in
   scams stopped in other homes (Community Shield), and the person is being asked to call, connect or pay.
+- a [site] or [device] line shows that a page asking for a password, card or personal details is not who it claims to be
+  (a look-alike address, a "browser window" drawn inside the page, a company's look on an address that is not the company's), or that
+  this computer was tampered with so a fake site shows the real address and a padlock (hosts file, an installed certificate authority).
+  These are checks of the real address and of the computer, not opinions: stop before anything is typed. Cite the [site] or [device] line.
+- a [memory] line shows the caller is following, step by step, a scam script Tripwire learned from scams it stopped before
+  (Scam Memory: the steps and the caller's matching words are already checked), and the caller is now pushing for access, codes,
+  personal details or money. Cite the [memory] line or the caller's own words.
 - an unsolicited caller (claiming to be a bank, a government agency, a company, or offering a prize or refund) asks for a Social
   Security number, bank account or routing number, a password, PIN or one-time code, or card details "to verify", "to refund"
   or "to release" something;

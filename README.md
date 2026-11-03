@@ -28,13 +28,15 @@ What the cases have in common is time. The victims aren't fooled in one moment. 
 
 **Tripwire listens to the call itself, and acts while the scam is still a conversation.** It hears what the caller says, understands which stage of the scam they've reached, and steps in before the money moves: a calm word first, then a hard stop. Then it secures the accounts and tells the family. Every decision it makes must quote what was actually said, and a second, independent model checks it, so it can't act on a hallucination.
 
-Four defences go straight at the scams in those stories:
+Six defences go straight at the scams in those stories:
 
 | The scam | Tripwire's answer |
 |---|---|
 | **"Read me the code we just texted you."** | **Code Shield.** The moment a caller asks for a one-time code, Tripwire stops the call by rule, before the code can be read out. No real bank ever asks for it. |
 | **"Grandma, it's me. I'm in jail. Don't tell Mom."** (a cloned voice) | **Call Tom.** Nobody can hear a voice clone, but anyone can ask the real person. Tripwire texts the real grandchild: "Someone on the phone with Grandma says they're you. Are you OK?" A "That's not me" ends the call, whatever the voice sounded like. |
 | **"The verification department will call. Just tap merge."** / **"Dial star seven two and this number to secure your line."** | **Line Lock.** These tricks get the code without the victim ever saying it: the bank's own automated code call is merged in where the scammer can hear it, or the victim's line is forwarded so the bank's calls ring the scammer. Tripwire stops both on the caller's words. On the phone line it goes further: it hears what the scammer hears, and the moment a bank's automated voice starts announcing a code there, it **mutes the victim's side before the digits are read**. |
+| **"I sent you an e-mail. Click the link and sign in so I can cancel the order."** The page is a perfect clone, with an address that reads right and a padlock. | **Site Check.** A clone is pixel-for-pixel the real page, so Tripwire doesn't judge the pixels. A Meta vision model reads what the page *claims* to be and what it asks for; Tripwire reads where the browser *really* is, from the browser itself, and compares. Look-alike letters (a Cyrillic "а" in "аmazon.com"), a fake browser window painted inside the page, a bank's look on someone else's address: stopped before anything is typed. For the case where the address and padlock really are the real ones, **Device Trust** checks the computer: a tampered hosts file, or a padlock from a certificate authority a "technician" installed. |
+| **A new scammer, a new number, the same script.** | **Scam Memory.** Every stopped scam teaches Tripwire its *script*, not just its phone number: Muse Spark writes the playbook from the scammer's own words, a second model checks it, and on the next call Muse Spark Open recognises the same script in different words. Nothing about the victim is ever remembered. |
 | **"Our courier will come to your house tomorrow at 3 pm."** | **Swap in Margaret.** When Tripwire is sure, it takes the real person off the call and puts an AI decoy in their place, played by **Muse Wonder**. The decoy keeps the scammer talking to learn how they get paid: the courier's time and description, the callback number, the wallet, the account. Every detail is checked against the scammer's own words. The family is told about the pickup live, every Tripwire home learns the scammer's number, and Muse Wonder writes a case file for the police. |
 
 Tripwire works in two places:
@@ -47,6 +49,8 @@ Built for the Meta Global AI Developer Hackathon (indie track). Everything in th
 **At a glance:**
 - **Third-party phone calls** (scored once, on calls we didn't write): **100%** of 160 scam calls stopped with **0%** false alarms on 160 legitimate calls, and **95%** of 20 real recorded scam calls.
 - **Scripted whole sessions:** every scam stopped, a median of about **22 s** after the first sign, and **62–88%** of them before money was asked for (two runs; see [Results](#results)).
+- **Cloned websites:** Site Check caught **14 of 14** clone checks (look-alike letters, a fake browser window, a brand on the wrong address) with **0** false alarms on 10 checks of real pages (fictional test brands, two runs each).
+- **Scam Memory:** learned a playbook from 19 of 20 real scam calls; with every one of them in memory, **0** false alarms on 160 legitimate calls.
 - **No action without evidence:** no stop has ever been taken on a claim that failed verification.
 
 See [Results](#results).
@@ -101,6 +105,42 @@ All three are rules, not model judgements: no legitimate caller asks for any of 
 
 In the live scam test, "just tap merge" and "dial star seven two and then…" each stopped the call the moment they were said.
 
+## Site Check: when the website is a perfect clone
+
+"Check the address and look for the padlock" no longer protects anyone. A scammer can clone a bank's or a shop's site in minutes, and get a real padlock for free. There are four ways a clone passes that test, and Site Check (`core/site_check.py`, `core/device_trust.py`) has a check for each:
+
+| How the clone passes | What Tripwire checks |
+|---|---|
+| **Look-alike address.** `аmazon.com` spelt with a Cyrillic "а", `arnazon.com` ("rn" reads as "m"), `paypa1.com`, `amazon.co`. The scammer owns that domain, so the padlock is real. | The address is compared with the brand's official domains after folding look-alike characters (a subset of Unicode's confusables, plus "rn"/"m", "vv"/"w" and digit swaps). Foreign letters in a brand's name stop the call **from the address alone, before any model runs**: no honest site does that. |
+| **A fake browser window.** A "Sign in with your bank" pop-up drawn *inside* the page, with its own painted address bar showing the bank's real address and a padlock. | Muse Spark Open (vision) lists every address drawn inside the page; Tripwire compares each with the browser's real address. A difference is a painted window. |
+| **Right look, wrong address.** The page looks exactly like the bank and asks for the password, on `riverbend-secure-verify.top` or on `riverbendbank.com.account-verify.help`. | Muse Spark Open says which company the page presents itself as and whether it asks for a password, card or personal details; Tripwire checks whether the real address is that company's. A brand-new domain (public RDAP records) is extra evidence. |
+| **Same address, same padlock, tampered computer.** During a "tech support" session, the scammer adds one line to the hosts file (`203.0.113.7 www.yourbank.com`) and installs their own certificate authority. The real address now opens their server, padlock and all. Nothing on screen differs. | **Device Trust** checks the computer itself: hosts-file lines that redirect a bank's, shop's or agency's domain, and the site's certificate, opened once trusting this computer's store (what the browser does) and once trusting only the public roots every browser ships. A padlock that only this computer trusts is a padlock someone installed. |
+
+**The real address never comes from the pixels.** On Windows, Tripwire reads the browser's own address bar through UI Automation, the accessibility interface screen readers use (`agent/browser.py`). A page can paint a fake address bar, but it can't change the real one: in testing, a page painted "🔒 https://www.amazon.com" and UI Automation still returned the browser's true address.
+
+**Facts stop at once; readings go to the judge.** A window painted inside the page, foreign look-alike letters, a look-alike address on a page asking for a password, a hijacked hosts file or an installed certificate authority are facts Tripwire checked itself, so they stop the session by rule, like Code Shield. "Right look, wrong address" rests on the model's reading of the page, so it goes to the CaseJudge, which can cite the `[site]` line.
+
+In the live scam test, the **"The cloned website"** scenario plays it out: a fake ShopWave e-mail, then a call from "ShopWave's fraud department" asking Margaret to click the link and sign in. Her browser's address bar reads `shopwаve.com` with a padlock. In the test run, **Site Check stopped the call 0.1 s after the page opened**, before she could type anything, and the decoy took over.
+
+## Scam Memory: every stopped scam teaches the next stop
+
+Community Shield remembers *who* the scammer was. A new scammer with a new number but the same script would start from zero. Scam Memory remembers *how the scam worked* (`core/memory.py`, `analysts/playbook.py`, `backend/memory.py`).
+
+**Learning**, after a stop, from the caller's side only:
+1. **Muse Spark writes the playbook**: 3 to 8 steps in order, each a tactic from the fixed vocabulary and the caller's exact words for it.
+2. **Deterministic checks**: every line must really be something the caller said (a model can't put words in a scammer's mouth); system-only tactics are rejected; digits, e-mail addresses and the protected person's name are scrubbed before anything is stored.
+3. **Muse Spark Open reviews it**: a different model must confirm the steps, read in order, are a scam and not an honest call, and drops filler. No second opinion, no learning.
+4. **The same script learned twice is merged** ("seen in 4 stopped scams"), not stored twice.
+
+**Recognising**, on every call line, cheap first:
+1. A word-overlap score, step by step and in order, picks candidate playbooks, so a model is only asked when there is something to ask.
+2. **Muse Spark Open** reads the call and says which steps the caller has already done *in other words*, copying the caller's lines.
+3. Those lines are checked against the record. Two or more verified steps raise `known_scam_playbook`, which the judge can cite: "the caller is following a scam script Tripwire learned from 3 stopped scams, 2 of 4 steps so far".
+
+A memory match never stops a call by itself: the judge still needs the caller's own words pushing for access, codes or money, and every stop is verified. Memory is data, never instructions: playbook text reaches models only inside tags, under the same untrusted-evidence rules as a transcript. Only scams Tripwire actually stopped are ever learned, so a visitor can't teach it a script by talking.
+
+In the live scam test, every stopped scam is learned. Run "The cloned website" twice: the second time, Scam Memory recognises the script on the caller's first line, and after the stop says it has now been seen in 2 stopped scams.
+
 ## "This is what the scam looked like": the family's explainer card
 
 After a stop, the family's incident page opens with a picture they can understand at a glance and show their parent. Muse Image (`muse-image-1.0`, image editing) takes the real scam screen, already redacted, and turns it into a large-print card:
@@ -124,8 +164,8 @@ Tested on four of Margaret's screens: the fake pop-up, the remote-access app and
 
 | Tool | Job in Tripwire |
 |---|---|
-| **Muse Spark Open** (`meta-models/muse-spark-open-1026`, on Baseten) | Always-on Tier-1 narrator: reads every changed screenshot and every call line, and tags kill-chain signals |
-| **Muse Spark** (`muse-spark-1.3`, Meta Model API) | The CaseJudge: reasons over the whole session and is the only component that can authorize a hard stop. Also plays Margaret in the live scam test, runs the tool-calling recovery agent, and writes the family's plain-language incident story |
+| **Muse Spark Open** (`meta-models/muse-spark-open-1026`, on Baseten) | Always-on Tier-1 narrator: reads every changed screenshot and every call line, and tags kill-chain signals. For Site Check it also reads which company a page presents itself as, what it asks for, and any address painted inside it. The independent reviewer of the judge's reasons and of every Scam Memory playbook, and the Recall check that recognises a learned script in a live call |
+| **Muse Spark** (`muse-spark-1.3`, Meta Model API) | The CaseJudge: reasons over the whole session and is the only component that can authorize a hard stop. Also writes each stopped scam's playbook for Scam Memory, plays Margaret in the live scam test, runs the tool-calling recovery agent, and writes the family's plain-language incident story |
 | **Muse Voice Transcribe** (`muse-voice-transcribe-1.0`) | Live, speaker-separated transcription of the speakerphone call (realtime WebSocket, diarization mode), and push-to-talk transcription of the scammer in the live scam test |
 | **SAM 3.1** (`sam-3.1`) | Outlines the threat (the fake warning, the scammer's number) on already-redacted screenshots for the family |
 | **Muse Wonder** (`muse-wonder-1.0`) | The decoy that keeps the scammer talking after a stop, and the investigator that writes the police case file |
@@ -181,13 +221,16 @@ You're the scammer. Hold the button and speak, or type. Margaret, 78, answers ou
 
 When it stops you, a **recovery agent** takes over. Muse Spark uses tools to end the remote session, freeze her card on the bank's security page, draft an FTC fraud report and alert her family. Your score is how far you got.
 
-**One click, no script to think of:** the start screen offers six real 2026 scams:
+**One click, no script to think of:** the start screen offers seven real 2026 scams:
 - "Read me the code";
 - "Just tap merge";
 - "Dial star seven two";
 - "Grandma, it's me, Tom";
 - the gold courier;
+- "The cloned website" (a fake e-mail, a call, and a clone of the shop's sign-in page: Site Check);
 - the fake virus pop-up.
+
+Every stopped scam is learned by **Scam Memory**, so a script used again, in any words, is recognised on the next test call.
 
 The scammer's lines are scripted from the news stories above and voiced. Everything else is live: Margaret, every defence and every model call. When Tripwire stops the call, a banner over Margaret's screen names the defence that fired, how many seconds after the caller's line, and how it decided. Every test call then gets a **shareable replay page** (`/replay/<id>`): every line, signal, model call with its answer, verification check, defence, decoy intel and the case file, timed from the start.
 
@@ -306,14 +349,14 @@ python -m pytest -q tests
 ```
 
 Expected results:
-- **Windows:** `59 passed`.
-- **macOS / Linux:** `57 passed, 2 skipped`. The two skipped tests cover the Windows-only desktop agent (Windows input hooks, closing a remote-access tool).
+- **Windows:** `87 passed`.
+- **macOS / Linux:** `85 passed, 2 skipped`. The two skipped tests cover the Windows-only desktop agent (Windows input hooks, closing a remote-access tool).
 
 The tests never call a model. They were run from a fresh clone, with no `.env`, on Windows and in a clean Linux container (`python:3.12-slim`).
 
 ### Optional: the evaluation, the desktop agent, Sentinel
 
-- **Evaluation** (uses your API credits, about 10–30 minutes each): `python -m eval.run_eval` (12 scripted scenarios), `python -m eval.run_external --split val` (128 third-party calls). Results are written to `eval/results/`.
+- **Evaluation** (uses your API credits, about 10–30 minutes each): `python -m eval.run_eval` (12 scripted scenarios), `python -m eval.run_external --split val` (128 third-party calls), `python -m eval.run_sites` (Site Check on cloned pages, a few minutes), `python -m eval.run_memory` (Scam Memory, leave-one-out, about 90 minutes). Results are written to `eval/results/`.
 - **The desktop agent** (Windows 10/11 only): `pip install -r requirements.txt`, then see [Running the on-device capture](#running-the-on-device-capture-tier-0) and [Replaying a scripted scam](#replaying-a-scripted-scam).
 - **Training Sentinel** (Modal, CPU only): see the usage notes at the top of `modal_app/sentinel.py`.
 
@@ -418,6 +461,35 @@ Scoring well on your own scripts proves little, so Tripwire is also measured on 
 **Real calls.** The 20 real scam-baiting calls are long and rambling (up to 71 turns). There is no training split for them, so nothing was ever tuned on them. The judge-only system stopped 55%: it recognised the patterns but kept nudging. Sentinel, trained on different data, was the second opinion that broke the tie: 95%. The one miss is a 19-turn tech-support call that ended in a nudge.
 
 **How Sentinel was added without tuning to the test.** Sentinel trained on the training split, so its scores there aren't honest. The integration rule (a `sentinel_flag` signal and one judge instruction) was developed on the 128 training calls Sentinel never saw: 84% → 100% stopped, 0% false alarms. The 12 scripted scenarios came next, then the test split, scored once. Eight test conversations logged temporary API errors (rate limits under 6 parallel runs). All eight were legitimate calls that ended correctly, and all eight reran cleanly with the same result.
+
+### Site Check on cloned pages
+
+The same test page checked at its real address and at clone addresses; only the address differs, exactly as with a real clone. Muse Spark Open reads each page; Site Check's rules compare. 12 cases, two runs each (`eval/results/sites.md`, `python -m eval.run_sites`). The pages use Tripwire's fictional brands only.
+
+| Page | Browser's real address | Expected | Result (both runs) |
+|---|---|---|---|
+| ShopWave sign-in | `shopwave.com` | nothing (real page) | nothing ✓ |
+| ShopWave sign-in | `shopwаve.com` (Cyrillic "а") | look-alike | look-alike ✓ |
+| ShopWave sign-in | `shopvvave.com` | look-alike | look-alike ✓ |
+| ShopWave sign-in | `shopwave.co` | look-alike | look-alike ✓ |
+| ShopWave sign-in | `shopwave-order-review.help` | brand on the wrong address | brand on the wrong address ✓ |
+| Riverbend bank sign-in | `riverbendbank.com`, `online.riverbendbank.com` | nothing (real pages) | nothing ✓ |
+| Riverbend bank sign-in | `riverbend-secure-verify.top` | brand on the wrong address | brand on the wrong address ✓ |
+| Riverbend bank sign-in | `riverbendbank.com.account-verify.help` | brand on the wrong address | brand on the wrong address ✓ |
+| "Sign in with your bank" rewards page | `northgate-rewards.click` (painted window shows `secure.riverbendbank.com`) | fake browser window | fake browser window (and brand on the wrong address) ✓ |
+| Northgate checkout selling a ShopWave gift card | `northgatemarket.com` | nothing (another brand's product is not a clone) | nothing ✓ |
+| News article naming the bank and the shop | `valleydaily.example` | nothing | nothing ✓ |
+
+**Clones caught: 14 of 14. False alarms on real pages: 0 of 10.** This is a small, hand-built set: it shows each check working end to end with the real model, not a rate on the open web. Device Trust's hosts-file and certificate checks are covered by unit tests (`tests/test_site_check.py`), including a simulated rogue certificate authority.
+
+### Scam Memory (leave-one-out on the real scam calls)
+
+For each of the 20 real scam calls, Tripwire was replayed with a memory learned only from the *other* 19 (so it never remembers the call it is tested on), and the same call was replayed without memory on the same day (`eval/results/memory.md`, `python -m eval.run_memory`, Sentinel on).
+
+- **Learning:** a playbook was learned from 19 of the 20 calls (17 distinct scripts after merging). One writer reply was malformed twice, so nothing was learned from it.
+- **No new false alarms:** the 160 legitimate calls of the test set, replayed with every playbook in memory: **0 false alarms, and memory matched none of them**.
+- **Where memory recognised the script** (5 of the 20 calls, the ones that reuse a script another scammer used), the stop came earlier or at the same turn, never later: turn **2 instead of 13**, 18 instead of 27, 5 instead of 6, and the same turn twice.
+- **Overall**, the median stop moved from turn 7.5 to 7. In the 15 calls where memory never fired, the differences are the models' run-to-run variation, not memory: one of those calls (#2) went unstopped in the memory run. We report it as measured. These calls come from different scammers, and only a quarter of them reuse a script seen in another; a memory built from thousands of stopped scams would recognise far more.
 
 ### Tripwire Sentinel: a small model of our own
 
@@ -588,7 +660,7 @@ The service is public so a family member's phone can open the alert link, but ev
 
 ## Open-source libraries
 
-`openai`, `python-dotenv`, `websockets`, `mss`, `pillow`, `imagehash`, `numpy`, `sounddevice`, `psutil`, `pywin32`, `pystray`, `winrt` (Windows OCR bindings), `fastapi`, `uvicorn`, `google-auth`, `requests`, `google-cloud-storage` (backend), `pytest`, `httpx`.
+`openai`, `python-dotenv`, `websockets`, `mss`, `pillow`, `imagehash`, `numpy`, `sounddevice`, `psutil`, `pywin32`, `pystray`, `winrt` (Windows OCR bindings), `comtypes` (Windows UI Automation, for the browser's real address), `certifi` (the public root certificates, for Device Trust), `fastapi`, `uvicorn`, `google-auth`, `requests`, `google-cloud-storage` (backend), `pytest`, `httpx`.
 
 ## License
 
