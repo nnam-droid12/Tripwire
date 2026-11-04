@@ -1,5 +1,44 @@
 # Tripwire
 
+## Contents
+
+- [Why we built it: a call, a warrant, and $158,000 in gold](#why-we-built-it-a-call-a-warrant-and-158000-in-gold)
+- [The problem](#the-problem)
+- [The solution](#the-solution)
+- [Three defences against the scams draining savings now](#three-defences-against-the-scams-draining-savings-now)
+- [Line Lock: when the phone line itself is the weapon](#line-lock-when-the-phone-line-itself-is-the-weapon)
+- [Site Check: when the website is a perfect clone](#site-check-when-the-website-is-a-perfect-clone)
+- [Scam Memory: every stopped scam teaches the next stop](#scam-memory-every-stopped-scam-teaches-the-next-stop)
+- ["This is what the scam looked like": the family's explainer card](#this-is-what-the-scam-looked-like-the-familys-explainer-card)
+- [Meta tools, and what each one does here](#meta-tools-and-what-each-one-does-here)
+- [On any phone: the Tripwire phone line](#on-any-phone-the-tripwire-phone-line)
+- [Try it now: the live scam test ("Can you scam Margaret?")](#try-it-now-the-live-scam-test-can-you-scam-margaret)
+- [How it works](#how-it-works)
+- [Run it yourself](#run-it-yourself)
+  - [1. No install: the live site](#1-no-install-the-live-site)
+  - [2. Run the web app on your computer (Windows, macOS or Linux, about 5 minutes)](#2-run-the-web-app-on-your-computer-windows-macos-or-linux-about-5-minutes)
+  - [3. Run the tests (no API key needed)](#3-run-the-tests-no-api-key-needed)
+  - [Optional: the evaluation, the desktop agent, Sentinel](#optional-the-evaluation-the-desktop-agent-sentinel)
+  - [If something goes wrong](#if-something-goes-wrong)
+- [Running the on-device capture (Tier 0)](#running-the-on-device-capture-tier-0)
+- [Results](#results)
+  - [Scenario replays (whole sessions)](#scenario-replays-whole-sessions)
+  - [Calls we did not write (independent test)](#calls-we-did-not-write-independent-test)
+  - [Site Check on cloned pages](#site-check-on-cloned-pages)
+  - [Scam Memory (leave-one-out on the real scam calls)](#scam-memory-leave-one-out-on-the-real-scam-calls)
+  - [Tripwire Sentinel: a small model of our own](#tripwire-sentinel-a-small-model-of-our-own)
+  - [Screen analyst on single screens](#screen-analyst-on-single-screens)
+- [Replaying a scripted scam](#replaying-a-scripted-scam)
+- [Verification: Tripwire checks its own work before it acts](#verification-tripwire-checks-its-own-work-before-it-acts)
+- [Interventions](#interventions)
+- [Who's in control, and family rules before payments](#whos-in-control-and-family-rules-before-payments)
+- [Community Shield](#community-shield)
+- [Privacy and family alerts](#privacy-and-family-alerts)
+- [Deployment](#deployment)
+- [Safety](#safety)
+- [Open-source libraries](#open-source-libraries)
+- [License](#license)
+
 ## Why we built it: a call, a warrant, and $158,000 in gold
 
 In October 2026, a retired couple in Douglas County, Nebraska got a call from a "federal agent". There was a warrant, he said, and their money was at risk. Over the following days their retirement savings were withdrawn, turned into **gold bars worth $158,000**, and handed to a courier who came to the house. The gold was only recovered because the sheriff's fraud investigator followed it to Sterling, Illinois ([Hoodline](https://hoodline.com/2026/10/douglas-county-detective-chases-down-158k-in-scammed-gold-to-illinois)).
