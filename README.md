@@ -267,7 +267,7 @@ Three ways, from no setup at all to the full project. Only a **Meta Model API ke
 
 ### 1. No install: the live site
 
-Open **https://tripwire-4j2p5vomta-ue.a.run.app/arena** in Chrome or Edge, turn your sound on, and click one of the six scams (for example **"Read me the code"**). Keep the **"Meta model calls, live"** panel in view. When it's over, open the replay link on the result screen.
+Open **https://tripwire-4j2p5vomta-ue.a.run.app/arena** in Chrome or Edge, turn your sound on, and click one of the seven scams (for example **"Read me the code"**, or **"The cloned website"** for Site Check). Keep the **"Meta model calls, live"** panel in view. When it's over, open the replay link on the result screen.
 
 ### 2. Run the web app on your computer (Windows, macOS or Linux, about 5 minutes)
 
@@ -352,7 +352,9 @@ Expected results:
 - **Windows:** `87 passed`.
 - **macOS / Linux:** `85 passed, 2 skipped`. The two skipped tests cover the Windows-only desktop agent (Windows input hooks, closing a remote-access tool).
 
-The tests never call a model. They were run from a fresh clone, with no `.env`, on Windows and in a clean Linux container (`python:3.12-slim`).
+The tests never call a model. They were run from a fresh copy, with no `.env`, on Windows and on Linux (Ubuntu, Python 3.12).
+
+These steps were last checked on 2026-11-04 by following them exactly on a clean Linux machine with only `META_API_KEY`: the server started, every page loaded, and a full "Read me the code" test call ran to the result screen (Code Shield stop, decoy, replay link).
 
 ### Optional: the evaluation, the desktop agent, Sentinel
 
@@ -367,7 +369,7 @@ The tests never call a model. They were run from a fresh clone, with no `.env`, 
 | `Provider 'meta' is missing env vars: META_API_KEY` | The `.env` file must be in the repository's root folder (next to `README.md`) and contain `META_API_KEY=…` |
 | `Address already in use` | Another program uses port 8765: start with `--port 8766` and open that port instead |
 | No voices in the live scam test | Expected without Google Cloud credentials; the text shows everything |
-| Margaret takes a few seconds to answer | Normal: every turn is several live model calls (you can watch them in the model-calls panel) |
+| Margaret takes a few seconds to answer (up to about 20 s for her very first line) | Normal: every turn is several live model calls, and the first ones of a session are the slowest. You can watch them in the model-calls panel |
 | The microphone button does nothing | Use Chrome or Edge, allow microphone access, or type instead |
 
 ## Running the on-device capture (Tier 0)
